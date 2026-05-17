@@ -124,7 +124,7 @@ tr:hover td { background:rgba(255,255,255,.03); }
 .cmp-pill-val { font-family:'Playfair Display',serif; font-size:18px; font-weight:600; }
 
 /* Filtros Dinámicos */
-.filter-bar { display:flex; gap:16px; margin-bottom:28px; background:rgba(0,0,0,0.15); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); }
+.filter-bar { display:flex; gap:16px; margin-bottom:28px; background:rgba(0,0,0,0.15); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); flex-wrap:wrap; }
 .f-group { display:flex; flex-direction:column; gap:6px; flex:1; max-width:260px; }
 .f-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600; }
 .f-sel {
@@ -189,11 +189,39 @@ tr:hover td { background:rgba(255,255,255,.03); }
   .g3 > .card:nth-child(2) { grid-column: span 6; }
   .g3 > .card:nth-child(3) { grid-column: span 6; }
 }
-@media(max-width:1200px){ .kpi-strip{grid-template-columns:repeat(3,1fr)} .status-strip{grid-template-columns:repeat(2,1fr)} .g2{grid-template-columns:1fr} }
+@media(max-width:1200px){ 
+  .kpi-strip{grid-template-columns:repeat(3,1fr)} 
+  .status-strip{grid-template-columns:repeat(2,1fr)} 
+  .g2{grid-template-columns:1fr} 
+}
 @media(max-width:900px){ 
   .g3 > .card:nth-child(2), .g3 > .card:nth-child(3) { grid-column: span 12; }
+  .kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .status-strip{grid-template-columns:1fr}
 }
-@media(max-width:700px){ .wrap{padding:16px 12px 60px} .kpi-strip{grid-template-columns:repeat(2,1fr)} header{flex-direction:column;gap:16px;align-items:flex-start} .h-center{display:none} }
+@media(max-width:768px){
+  .wrap{padding:16px 12px 60px} 
+  header{flex-direction:column;gap:16px;align-items:flex-start;padding-bottom:18px;margin-bottom:24px;}
+  .h-brand{width:100%;justify-content:space-between;align-items:center;}
+  .h-center{display:none}
+  .h-right{width:100%;flex-wrap:wrap;gap:8px;}
+  .h-right .chip, .h-right .btn {flex:1 1 auto; justify-content:center; text-align:center;}
+  .card-hdr{flex-direction:column;gap:12px;align-items:stretch;}
+  .cmp-inline{justify-content:flex-start;margin-top:6px;}
+  .filter-bar{flex-direction:column;gap:12px;padding:12px;}
+  .f-group{max-width:100%;width:100%;}
+  .f-sel{width:100%;min-width:100%;}
+}
+@media(max-width:480px){
+  .kpi-strip{grid-template-columns:1fr}
+  .dist-grid{grid-template-columns:1fr}
+  .h-brand{flex-direction:column;align-items:center;text-align:center;gap:10px;}
+  .h-right{flex-direction:column;align-items:stretch;}
+  .h-right .chip, .h-right .btn {width:100%;}
+}
+@media(max-width:360px){
+  .login-card{padding:24px 16px;}
+}
 
 /* ESTILOS DE AUTENTICACIÓN (LOGIN) */
 .login-container {
