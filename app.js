@@ -208,63 +208,85 @@ class UIRenderer {
     
     const maxV = Math.max(...rows.map(r => Number(r.precio_m2_mediana)));
     const tb = document.getElementById('benchTbl'); if (!tb) return;
-    
-    tb.innerHTML = rows.length ? rows.map(r => {
-      const sc = Utils.confScore(r.cantidad_muestras, r.desviacion_std, r.precio_m2_mediana, r.p25, r.p75);
-      const cf = Utils.confLabel(sc);
-      const pct = ((Number(r.precio_m2_mediana) / maxV) * 100).toFixed(0);
-      const cv = ((Number(r.desviacion_std) / Number(r.precio_m2_mediana)) * 100).toFixed(1);
-      const cvC = Number(cv) > 30 ? 'var(--red)' : Number(cv) > 15 ? 'var(--amb)' : 'var(--grn)';
-      const tC = r.tipo === 'APARTAMENTO' ? 'var(--blu)' : 'var(--amb)';
-      
-      return `<tr>
-        <td><div class="td-name">${r.zona}</div><div><span class="tag-t" style="color:${tC};border-color:${tC}40">${r.tipo}</span></div></td>
-        <td><div class="mini-bar"><div class="mini-bar-f" style="width:${pct}%"></div></div></td>
-        <td class="mono-v">${Utils.fU(r.precio_m2_mediana)}</td>
-        <td class="mono" style="font-size:10px;color:var(--ink3)">$${Utils.fmt(r.p25)} – $${Utils.fmt(r.p75)}</td>
-        <td class="mono" style="color:${cvC}">${cv}%</td>
-        <td class="mono" style="text-align:center">${r.cantidad_muestras}</td>
-        <td><span class="cbadge" style="color:${cf.c};border-color:${cf.c}">${cf.l} ${sc}</span></td>
-      </tr>`;
-    }).join('') : '<tr class="empty-row"><td colspan="7">Sin datos con ≥3 muestras</td></tr>';
+
+    const PAGE = 10;
+    let shown = PAGE;
+
+    const renderRows = () => {
+      const slice = rows.slice(0, shown);
+      tb.innerHTML = slice.length ? slice.map(r => {
+        const sc = Utils.confScore(r.cantidad_muestras, r.desviacion_std, r.precio_m2_mediana, r.p25, r.p75);
+        const cf = Utils.confLabel(sc);
+        const pct = ((Number(r.precio_m2_mediana) / maxV) * 100).toFixed(0);
+        const cv = ((Number(r.desviacion_std) / Number(r.precio_m2_mediana)) * 100).toFixed(1);
+        const cvC = Number(cv) > 30 ? 'var(--red)' : Number(cv) > 15 ? 'var(--amb)' : 'var(--grn)';
+        const tC = r.tipo === 'APARTAMENTO' ? 'var(--blu)' : 'var(--amb)';
+        return `<tr>
+          <td><div class="td-name">${r.zona}</div><div><span class="tag-t" style="color:${tC};border-color:${tC}40">${r.tipo}</span></div></td>
+          <td><div class="mini-bar"><div class="mini-bar-f" style="width:${pct}%"></div></div></td>
+          <td class="mono-v">${Utils.fU(r.precio_m2_mediana)}</td>
+          <td class="mono" style="font-size:10px;color:var(--ink3)">$${Utils.fmt(r.p25)} – $${Utils.fmt(r.p75)}</td>
+          <td class="mono" style="color:${cvC}">${cv}%</td>
+          <td class="mono" style="text-align:center">${r.cantidad_muestras}</td>
+          <td><span class="cbadge" style="color:${cf.c};border-color:${cf.c}">${cf.l} ${sc}</span></td>
+        </tr>`;
+      }).join('') : '<tr class="empty-row"><td colspan="7">Sin datos con ≥3 muestras</td></tr>';
+
+      const wrap = document.getElementById('benchMore');
+      if (wrap) wrap.style.display = shown >= rows.length ? 'none' : 'flex';
+    };
+
+    renderRows();
+    const moreBtn = document.getElementById('benchMoreBtn');
+    if (moreBtn) moreBtn.onclick = () => { shown += PAGE; renderRows(); };
   }
 
   static renderFeed(deals, metrics) {
+    const top = deals.filter(d => d.precio_m2 && d.diferencia_vs_mercado);
     const tb = document.getElementById('feedTbl'); if (!tb) return;
-    const top = deals.filter(d => d.precio_m2 && d.diferencia_vs_mercado).slice(0, 20);
-    
+
     if (!top.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="4">Sin datos disponibles</td></tr>'; return; }
-    
-    tb.innerHTML = top.map(d => {
-      const diff = Number(d.diferencia_vs_mercado || 0) * 100;
-      const dStr = (diff > 0 ? '+' : '') + diff.toFixed(1) + '%';
-      const dc = diff <= -25 ? 'var(--grn)' : diff <= -10 ? 'var(--blu)' : diff >= 20 ? 'var(--red)' : 'var(--slt)';
-      const st = (d.estatus_inversion || '—').replace('VALOR DE MERCADO', 'MERCADO').replace('VALOR SUBVALUADO', 'SUBVALUADO');
-      const conf = (d.indice_validacion || '—').replace('CONFIRMACIÓN: ', '').replace('VALIDACIÓN EN PROCESO', 'EN PROCESO');
-      const nota = (d.nota_analista || 'Sin nota');
-      
-      // Buscar zona y tipo
-      const m = metrics ? metrics.find(x => x.snapshot_id === d.snapshot_id) : null;
-      const zona = m?.market_snapshot?.dim_zone?.zona || 'Zona no asignada';
-      const tipo = m?.market_snapshot?.dim_property_type?.tipo_inmueble || '';
-      const tC = tipo === 'APARTAMENTO' ? 'var(--blu)' : 'var(--amb)';
-      
-      return `<tr>
-        <td>
-          <div class="td-name" style="font-size:12px;" title="${nota}">${zona}</div>
-          <div style="display:flex;gap:6px;align-items:center;margin-top:2px;">
-            <span class="tag-t" style="color:${tC};border-color:${tC}40;font-size:8px;padding:2px 4px;">${tipo.substring(0,4)}</span>
-            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ID: ${d.listing_id}</span>
-          </div>
-        </td>
-        <td class="mono-v">${Utils.fU(d.precio_m2)}</td>
-        <td><span class="diff-tag" style="background:${dc}18;color:${dc};border:1px solid ${dc}35" title="${nota}">${dStr}</span></td>
-        <td>
-          <div class="mono" style="font-size:10px;color:${dc};font-weight:600;">${st}</div>
-          <div class="mono" style="font-size:9px;color:var(--ink3);margin-top:2px;">${conf}</div>
-        </td>
-      </tr>`;
-    }).join('');
+
+    const PAGE = 10;
+    let shown = PAGE;
+
+    const renderRows = () => {
+      const slice = top.slice(0, shown);
+      tb.innerHTML = slice.map(d => {
+        const diff = Number(d.diferencia_vs_mercado || 0) * 100;
+        const dStr = (diff > 0 ? '+' : '') + diff.toFixed(1) + '%';
+        const dc = diff <= -25 ? 'var(--grn)' : diff <= -10 ? 'var(--blu)' : diff >= 20 ? 'var(--red)' : 'var(--slt)';
+        const st = (d.estatus_inversion || '—').replace('VALOR DE MERCADO', 'MERCADO').replace('VALOR SUBVALUADO', 'SUBVALUADO');
+        const conf = (d.indice_validacion || '—').replace('CONFIRMACIÓN: ', '').replace('VALIDACIÓN EN PROCESO', 'EN PROCESO');
+        const nota = (d.nota_analista || 'Sin nota');
+        const m = metrics ? metrics.find(x => x.snapshot_id === d.snapshot_id) : null;
+        const zona = m?.market_snapshot?.dim_zone?.zona || 'Zona no asignada';
+        const tipo = m?.market_snapshot?.dim_property_type?.tipo_inmueble || '';
+        const tC = tipo === 'APARTAMENTO' ? 'var(--blu)' : 'var(--amb)';
+        return `<tr>
+          <td>
+            <div class="td-name" style="font-size:12px;" title="${nota}">${zona}</div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:2px;">
+              <span class="tag-t" style="color:${tC};border-color:${tC}40;font-size:8px;padding:2px 4px;">${tipo.substring(0,4)}</span>
+              <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">ID: ${d.listing_id}</span>
+            </div>
+          </td>
+          <td class="mono-v">${Utils.fU(d.precio_m2)}</td>
+          <td><span class="diff-tag" style="background:${dc}18;color:${dc};border:1px solid ${dc}35" title="${nota}">${dStr}</span></td>
+          <td>
+            <div class="mono" style="font-size:10px;color:${dc};font-weight:600;">${st}</div>
+            <div class="mono" style="font-size:9px;color:var(--muted);margin-top:2px;">${conf}</div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      const wrap = document.getElementById('feedMore');
+      if (wrap) wrap.style.display = shown >= top.length ? 'none' : 'flex';
+    };
+
+    renderRows();
+    const moreBtn = document.getElementById('feedMoreBtn');
+    if (moreBtn) moreBtn.onclick = () => { shown += PAGE; renderRows(); };
   }
 
   static renderHealth(D, zonasConB, cob) {
@@ -278,7 +300,6 @@ class UIRenderer {
   }
 
   static renderSnaps(metrics) {
-    const tb = document.getElementById('snapTbl'); if (!tb) return;
     const rows = metrics.map(m => ({
       zona: m.market_snapshot?.dim_zone?.zona || '—',
       tipo: m.market_snapshot?.dim_property_type?.tipo_inmueble || '—',
@@ -288,24 +309,37 @@ class UIRenderer {
       p25: Number(m.p25), p75: Number(m.p75), std: Number(m.desviacion_std),
       score: Utils.confScore(m.cantidad_muestras, m.desviacion_std, m.precio_m2_mediana, m.p25, m.p75)
     })).sort((a, b) => b.fecha.localeCompare(a.fecha));
-    
-    tb.innerHTML = rows.length ? rows.map(r => {
-      const cf = Utils.confLabel(r.score);
-      const cv = r.med > 0 ? ((r.std / r.med) * 100).toFixed(1) : '—';
-      const cvC = Number(cv) > 30 ? 'var(--red)' : Number(cv) > 15 ? 'var(--amb)' : 'var(--grn)';
-      const tC = r.tipo === 'APARTAMENTO' ? 'var(--blu)' : 'var(--amb)';
-      
-      return `<tr>
-        <td class="mono" style="font-size:10px;color:var(--ink3)">${r.fecha}</td>
-        <td class="td-name" style="font-size:12px">${r.zona}</td>
-        <td><span class="tag-t" style="color:${tC};border-color:${tC}40">${r.tipo}</span></td>
-        <td class="mono-v">${Utils.fU(r.med)}</td>
-        <td class="mono" style="font-size:10px;color:var(--ink3)">$${Utils.fmt(r.p25)} – $${Utils.fmt(r.p75)}</td>
-        <td class="mono" style="color:${cvC}">${cv}%</td>
-        <td class="mono" style="text-align:center">${r.muestras}</td>
-        <td><span class="cbadge" style="color:${cf.c};border-color:${cf.c}">${cf.l} ${r.score}</span></td>
-      </tr>`;
-    }).join('') : '<tr class="empty-row"><td colspan="8">Sin snapshots disponibles</td></tr>';
+
+    const PAGE = 10;
+    let shown = PAGE;
+
+    const renderRows = () => {
+      const tb = document.getElementById('snapTbl'); if (!tb) return;
+      const slice = rows.slice(0, shown);
+      tb.innerHTML = slice.length ? slice.map(r => {
+        const cf = Utils.confLabel(r.score);
+        const cv = r.med > 0 ? ((r.std / r.med) * 100).toFixed(1) : '—';
+        const cvC = Number(cv) > 30 ? 'var(--red)' : Number(cv) > 15 ? 'var(--amb)' : 'var(--grn)';
+        const tC = r.tipo === 'APARTAMENTO' ? 'var(--blu)' : 'var(--amb)';
+        return `<tr>
+          <td class="mono" style="font-size:10px;color:var(--ink3)">${r.fecha}</td>
+          <td class="td-name" style="font-size:12px">${r.zona}</td>
+          <td><span class="tag-t" style="color:${tC};border-color:${tC}40">${r.tipo}</span></td>
+          <td class="mono-v">${Utils.fU(r.med)}</td>
+          <td class="mono" style="font-size:10px;color:var(--ink3)">$${Utils.fmt(r.p25)} – $${Utils.fmt(r.p75)}</td>
+          <td class="mono" style="color:${cvC}">${cv}%</td>
+          <td class="mono" style="text-align:center">${r.muestras}</td>
+          <td><span class="cbadge" style="color:${cf.c};border-color:${cf.c}">${cf.l} ${r.score}</span></td>
+        </tr>`;
+      }).join('') : '<tr class="empty-row"><td colspan="8">Sin snapshots disponibles</td></tr>';
+
+      const wrap = document.getElementById('snapMore');
+      if (wrap) wrap.style.display = shown >= rows.length ? 'none' : 'flex';
+    };
+
+    renderRows();
+    const moreBtn = document.getElementById('snapMoreBtn');
+    if (moreBtn) moreBtn.onclick = () => { shown += PAGE; renderRows(); };
   }
 
   static renderChart(metrics, currentType) {
@@ -376,7 +410,7 @@ class UIRenderer {
           tooltip: { backgroundColor: 'rgba(16, 22, 31, 0.9)', titleFont: { family: 'DM Mono' }, bodyFont: { family: 'Inter' }, padding: 12, cornerRadius: 8, borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 }
         },
         scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { family: 'DM Mono', size: 9 }, callback: function(v) { return this.getLabelForValue(v).substring(5); } } },
+          x: { display: true, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { display: true, color: 'rgba(255,255,255,0.5)', font: { family: 'DM Mono', size: 9 }, maxRotation: 0, callback: function(v) { return this.getLabelForValue(v).substring(5); } } },
           y: { min: 0, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { family: 'DM Mono', size: 10 }, callback: v => '$' + v } }
         }
       }

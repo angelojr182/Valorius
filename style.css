@@ -167,6 +167,23 @@ tr:hover td { background:rgba(255,255,255,.03); }
   background: rgba(45, 212, 160, 0.2) !important;
 }
 
+/* Botón Cargar Más */
+.load-more-wrap {
+  justify-content: center;
+  padding: 12px 0 4px;
+}
+.load-more-btn {
+  font-size: 10px !important;
+  padding: 8px 24px !important;
+  color: var(--muted) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  letter-spacing: 1px;
+}
+.load-more-btn:hover {
+  color: var(--cyan) !important;
+  border-color: rgba(103,232,249,0.3) !important;
+}
+
 @media(max-width:1400px){ 
   .g3 > .card:nth-child(1) { grid-column: span 12; }
   .g3 > .card:nth-child(2) { grid-column: span 6; }
