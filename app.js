@@ -404,13 +404,14 @@ class UIRenderer {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { bottom: 10, left: 4, right: 4, top: 4 } },
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { position: 'top', labels: { color: 'rgba(255,255,255,0.6)', font: { family: 'DM Mono', size: 10 }, usePointStyle: true, boxWidth: 6 } },
           tooltip: { backgroundColor: 'rgba(16, 22, 31, 0.9)', titleFont: { family: 'DM Mono' }, bodyFont: { family: 'Inter' }, padding: 12, cornerRadius: 8, borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 }
         },
         scales: {
-          x: { display: true, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { display: true, color: 'rgba(255,255,255,0.5)', font: { family: 'DM Mono', size: 9 }, maxRotation: 0, callback: function(v) { return this.getLabelForValue(v).substring(5); } } },
+          x: { display: true, grid: { color: 'rgba(255,255,255,0.03)' }, border: { display: false }, ticks: { display: true, color: 'rgba(255,255,255,0.55)', font: { family: 'DM Mono', size: 10 }, maxRotation: 0, padding: 8, callback: function(v) { return this.getLabelForValue(v).substring(5); } } },
           y: { min: 0, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { family: 'DM Mono', size: 10 }, callback: v => '$' + v } }
         }
       }

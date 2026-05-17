@@ -74,7 +74,7 @@ header { display:flex; justify-content:space-between; align-items:center; paddin
 
 /* Chart Area */
 .chart-area { padding:18px 22px 16px; height: 100%; display: flex; flex-direction: column; }
-.chart-box { background:rgba(0,0,0,.2); border:1px solid rgba(255,255,255,.03); border-radius:8px; padding:12px; flex-grow: 1; min-height: 250px; }
+.chart-box { background:rgba(0,0,0,.2); border:1px solid rgba(255,255,255,.03); border-radius:8px; padding:12px 12px 24px; flex-grow: 1; min-height: 270px; overflow: visible; }
 
 /* Dist Grid */
 .dist-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px; }
