@@ -209,7 +209,7 @@ class UIRenderer {
     const maxV = Math.max(...rows.map(r => Number(r.precio_m2_mediana)));
     const tb = document.getElementById('benchTbl'); if (!tb) return;
 
-    const PAGE = 10;
+    const PAGE = 5;
     let shown = PAGE;
 
     const renderRows = () => {
@@ -247,7 +247,7 @@ class UIRenderer {
 
     if (!top.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="4">Sin datos disponibles</td></tr>'; return; }
 
-    const PAGE = 10;
+    const PAGE = 5;
     let shown = PAGE;
 
     const renderRows = () => {
@@ -310,7 +310,7 @@ class UIRenderer {
       score: Utils.confScore(m.cantidad_muestras, m.desviacion_std, m.precio_m2_mediana, m.p25, m.p75)
     })).sort((a, b) => b.fecha.localeCompare(a.fecha));
 
-    const PAGE = 10;
+    const PAGE = 5;
     let shown = PAGE;
 
     const renderRows = () => {
