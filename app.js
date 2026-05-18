@@ -107,10 +107,11 @@ class DataService {
       scraper: '/rest/v1/listing?select=listing_id&fuente=eq.Propiedades Honduras',
       metrics: '/rest/v1/market_metrics?select=precio_m2_mediana,cantidad_muestras,p25,p75,desviacion_std,snapshot_id,market_snapshot!inner(fecha_snapshot,zone_id,property_type_id,dim_zone!inner(zona),dim_property_type!inner(tipo_inmueble))&order=created_at.desc&limit=200',
       deals: '/rest/v1/v_deals?select=*&order=diferencia_vs_mercado.asc&limit=150',
-      historical: '/rest/v1/v_deals_historical?select=*'
+      historical: '/rest/v1/v_deals_historical?select=*',
+      snapsList: '/rest/v1/market_snapshot?select=snapshot_id,fecha_snapshot'
     };
 
-    const [props, listings, zones, snaps, sinArea, scraper, metrics, deals, historical] = await Promise.all([
+    const [props, listings, zones, snaps, sinArea, scraper, metrics, deals, historical, snapsList] = await Promise.all([
       this.fetchCount(endpoints.props),
       this.fetchCount(endpoints.listings),
       this.fetchCount(endpoints.zones),
@@ -119,10 +120,11 @@ class DataService {
       this.fetchCount(endpoints.scraper),
       this.fetchData(endpoints.metrics),
       this.fetchData(endpoints.deals),
-      this.fetchData(endpoints.historical)
+      this.fetchData(endpoints.historical),
+      this.fetchData(endpoints.snapsList)
     ]);
 
-    return { props, listings, zones, snaps, sinArea, scraper, metrics, deals, historical };
+    return { props, listings, zones, snaps, sinArea, scraper, metrics, deals, historical, snapsList };
   }
 }
 
@@ -486,12 +488,30 @@ class UIRenderer {
   static renderHistoricalTrendBadge(historicalData, propertyId) {
     if (!historicalData || historicalData.length === 0) return '';
     
+    // Crear un mapa de snapshot_id -> fecha_snapshot para ordenamiento rápido
+    const snapshotDates = {};
+    if (window.AppData) {
+      if (window.AppData.snapsList) {
+        window.AppData.snapsList.forEach(s => {
+          if (s.snapshot_id && s.fecha_snapshot) snapshotDates[s.snapshot_id] = s.fecha_snapshot;
+        });
+      }
+      if (window.AppData.metrics) {
+        window.AppData.metrics.forEach(m => {
+          if (m.snapshot_id && m.market_snapshot?.fecha_snapshot) {
+            snapshotDates[m.snapshot_id] = m.market_snapshot.fecha_snapshot;
+          }
+        });
+      }
+    }
+
     // Filtrar snapshots de esta propiedad específica
     const propertySnapshots = historicalData
-      .filter(h => h.property_id === propertyId)
+      .filter(h => h.property_id === propertyId && h.precio_m2_mercado > 0)
       .sort((a, b) => {
-        // Ordenar por fecha del snapshot (ascendente = más viejo primero)
-        return new Date(a.snapshot_id.split('-')[0]) - new Date(b.snapshot_id.split('-')[0]);
+        const dateA = snapshotDates[a.snapshot_id] || '';
+        const dateB = snapshotDates[b.snapshot_id] || '';
+        return dateA.localeCompare(dateB);
       });
     
     // Necesita al menos 2 snapshots para mostrar evolución
@@ -504,37 +524,40 @@ class UIRenderer {
     const cambioMercado = (
       ((ultimo.precio_m2_mercado - primero.precio_m2_mercado) / 
        (primero.precio_m2_mercado || 1)) * 100
-    ).toFixed(1);
+    );
+    const cambioMercadoSigno = cambioMercado >= 0 ? '+' : '';
     
     // Determinar color del cambio de benchmark
     const colorMercado = cambioMercado >= 0 ? 'var(--grn)' : 'var(--amb)';
-    const iconoMercado = cambioMercado >= 0 ? '▲' : '▼';
+    const iconoMercado = cambioMercado >= 0 ? '📈' : '📉';
+    
+    const spreadUltimo = (ultimo.diferencia_vs_mercado * 100).toFixed(1);
     
     // Construir un micro-badge de tendencia sumamente premium e institucional
     const html = `
       <div class="trend-card" style="
         margin-top: 8px; 
         padding: 8px 10px; 
-        background: rgba(255,255,255,0.01); 
-        border: 1px solid rgba(255,255,255,0.04); 
-        border-left: 3px solid ${colorMercado}; 
+        background: rgba(45, 212, 160, 0.03); 
+        border: 1px solid rgba(45, 212, 160, 0.1); 
+        border-left: 3px solid var(--grn); 
         border-radius: 6px; 
         font-size: 10px;
         width: 100%;
         max-width: 280px;
       ">
         <div style="color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between;">
-          <span>📊 HISTORIAL (${propertySnapshots.length} SNAPS)</span>
+          <span>📊 Análisis Temporal (${propertySnapshots.length} snapshots)</span>
         </div>
-        <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 2px;">
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px; line-height: 1.4;">
           <div>
-            <span style="color: var(--muted);">Mercado:</span>
-            <strong style="color: ${colorMercado}; font-family: 'DM Mono', monospace; font-size: 11px;">${iconoMercado} ${Math.abs(cambioMercado).toFixed(1)}%</strong>
-            <span style="font-size: 8px; color: var(--muted);">($${Math.round(primero.precio_m2_mercado)} → $${Math.round(ultimo.precio_m2_mercado)})</span>
+            <span style="color: var(--muted);">${iconoMercado} Mercado:</span>
+            <strong style="color: ${colorMercado}; font-family: 'DM Mono', monospace; font-size: 11px;">${cambioMercadoSigno}${cambioMercado.toFixed(1)}%</strong>
+            <span style="font-size: 8px; color: var(--muted);">($${Math.round(primero.precio_m2_mercado)} → $${Math.round(ultimo.precio_m2_mercado)}/m²)</span>
           </div>
           <div>
-            <span style="color: var(--muted);">Spread:</span>
-            <strong style="color: #ffffff; font-family: 'DM Mono', monospace; font-size: 11px;">${(ultimo.diferencia_vs_mercado * 100).toFixed(1)}%</strong>
+            <span style="color: var(--muted);">📍 Oportunidad actual:</span>
+            <strong style="color: #ffffff; font-family: 'DM Mono', monospace; font-size: 11px;">${spreadUltimo}%</strong>
           </div>
         </div>
       </div>
