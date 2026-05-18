@@ -417,7 +417,25 @@ class UIRenderer {
           tooltip: { backgroundColor: 'rgba(16, 22, 31, 0.9)', titleFont: { family: 'DM Mono' }, bodyFont: { family: 'Inter' }, padding: 12, cornerRadius: 8, borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 }
         },
         scales: {
-          x: { display: true, grid: { color: 'rgba(255,255,255,0.03)' }, border: { display: false }, ticks: { display: true, color: 'rgba(255,255,255,0.7)', font: { family: 'DM Mono', size: 10 }, maxRotation: 0, padding: 8, callback: function(val, index) { const label = fa[index]; return label ? label.substring(5) : ''; } } },
+          x: {
+            display: true,
+            grid: { color: 'rgba(255,255,255,0.03)' },
+            border: { display: false },
+            ticks: {
+              display: true,
+              color: 'rgba(255,255,255,0.7)',
+              font: { family: 'DM Mono', size: 10 },
+              maxRotation: 0,
+              padding: 8,
+              callback: function(val) {
+                const label = fa[val];
+                if (!label) return '';
+                // Formatear de YYYY-MM-DD a DD/MM para que sea compacto y legible
+                const parts = label.split('-');
+                return parts.length === 3 ? `${parts[2]}/${parts[1]}` : label;
+              }
+            }
+          },
           y: { min: 0, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { family: 'DM Mono', size: 10 }, callback: v => '$' + v } }
         }
       }
@@ -529,35 +547,37 @@ class UIRenderer {
     
     // Determinar color del cambio de benchmark
     const colorMercado = cambioMercado >= 0 ? 'var(--grn)' : 'var(--amb)';
-    const iconoMercado = cambioMercado >= 0 ? '📈' : '📉';
+    const tendenciaTexto = cambioMercado >= 0 ? 'Alcista' : 'Bajista';
     
     const spreadUltimo = (ultimo.diferencia_vs_mercado * 100).toFixed(1);
     
-    // Construir un micro-badge de tendencia sumamente premium e institucional
+    // Construir un micro-badge de tendencia sumamente premium e institucional (sin emojis de tipo ChatGPT)
     const html = `
       <div class="trend-card" style="
         margin-top: 8px; 
-        padding: 8px 10px; 
-        background: rgba(45, 212, 160, 0.03); 
-        border: 1px solid rgba(45, 212, 160, 0.1); 
-        border-left: 3px solid var(--grn); 
+        padding: 8px 12px; 
+        background: rgba(255, 255, 255, 0.01); 
+        border: 1px solid rgba(255, 255, 255, 0.04); 
+        border-left: 3px solid ${colorMercado}; 
         border-radius: 6px; 
         font-size: 10px;
         width: 100%;
-        max-width: 280px;
+        max-width: 290px;
       ">
-        <div style="color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between;">
-          <span>📊 Análisis Temporal (${propertySnapshots.length} snapshots)</span>
+        <div style="color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600;">
+          ANÁLISIS TEMPORAL &bull; ${propertySnapshots.length} SNAPSHOTS
         </div>
-        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px; line-height: 1.4;">
-          <div>
-            <span style="color: var(--muted);">${iconoMercado} Mercado:</span>
-            <strong style="color: ${colorMercado}; font-family: 'DM Mono', monospace; font-size: 11px;">${cambioMercadoSigno}${cambioMercado.toFixed(1)}%</strong>
-            <span style="font-size: 8px; color: var(--muted);">($${Math.round(primero.precio_m2_mercado)} → $${Math.round(ultimo.precio_m2_mercado)}/m²)</span>
+        <div style="display: flex; flex-direction: column; gap: 3px; line-height: 1.4;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted);">Tendencia Mercado:</span>
+            <span>
+              <strong style="color: ${colorMercado}; font-family: 'DM Mono', monospace; font-weight: 600;">${cambioMercadoSigno}${cambioMercado.toFixed(1)}% (${tendenciaTexto})</strong>
+              <span style="font-size: 8px; color: var(--muted); margin-left: 2px;">($${Math.round(primero.precio_m2_mercado)} &rarr; $${Math.round(ultimo.precio_m2_mercado)})</span>
+            </span>
           </div>
-          <div>
-            <span style="color: var(--muted);">📍 Oportunidad actual:</span>
-            <strong style="color: #ffffff; font-family: 'DM Mono', monospace; font-size: 11px;">${spreadUltimo}%</strong>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted);">Spread Actual:</span>
+            <strong style="color: #ffffff; font-family: 'DM Mono', monospace; font-weight: 600;">${spreadUltimo}%</strong>
           </div>
         </div>
       </div>

@@ -201,38 +201,35 @@
   </div>
 </div>
 
-<!-- FILA 3: FEED + SALUD -->
-<div class="sec">Radar de oportunidades · Salud del sistema</div>
-<div class="g2">
-  <div class="card">
-    <div class="card-hdr">
-      <div><div class="ch-label">Motor analítico · v_deals</div><div class="ch-title">Feed de oportunidades</div></div>
-      <span class="badge">LIVE</span>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Oportunidad</th><th>USD/m²</th><th>Desviación</th><th>Estatus / Validación</th></tr></thead>
-        <tbody id="feedTbl"><tr class="empty-row"><td colspan="4">Cargando...</td></tr></tbody>
-      </table>
-    </div>
-    <div id="feedMore" class="load-more-wrap" style="display:none;">
-      <button id="feedMoreBtn" class="btn load-more-btn">▼ Cargar 5 más</button>
-    </div>
+<!-- FILA 3: FEED DE OPORTUNIDADES -->
+<div class="sec">Radar de oportunidades</div>
+<div class="card gfull">
+  <div class="card-hdr">
+    <div><div class="ch-label">Motor analítico · v_deals</div><div class="ch-title">Feed de oportunidades</div></div>
+    <span class="badge">LIVE</span>
   </div>
-  <div class="card">
-    <div class="card-hdr">
-      <div><div class="ch-label">Monitoreo interno</div><div class="ch-title">Salud de datos</div></div>
-    </div>
-    <div class="health-body">
-      <div class="h-item" style="--c:var(--red)"><span class="h-label">Listings sin área m²</span><strong class="h-val" id="h1">—</strong></div>
-      <div class="h-item" style="--c:var(--grn)"><span class="h-label">Duplicados detectados</span><strong class="h-val" id="h2">—</strong></div>
-      <div class="h-item" style="--c:var(--slt)"><span class="h-label">Zonas sin benchmark</span><strong class="h-val" id="h3">—</strong></div>
-      <div class="h-item" style="--c:var(--amb)"><span class="h-label">Cobertura benchmark</span><strong class="h-val" id="h4">—</strong></div>
-      <div class="h-item" style="--c:var(--blu)"><span class="h-label">Último snapshot</span><strong class="h-val" id="h5">—</strong></div>
-      <div class="h-item" style="--c:var(--grn)"><span class="h-label">Origen de datos</span><strong class="h-val" id="h6">—</strong></div>
-    </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Oportunidad</th><th>USD/m²</th><th>Desviación</th><th>Estatus / Validación</th></tr></thead>
+      <tbody id="feedTbl"><tr class="empty-row"><td colspan="4">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+  <div id="feedMore" class="load-more-wrap" style="display:none;">
+    <button id="feedMoreBtn" class="btn load-more-btn">▼ Cargar 5 más</button>
   </div>
 </div>
+
+<!-- FILA 3.5: SALUD DEL SISTEMA (HORIZONTAL STRIP) -->
+<div class="sec">Salud y Monitoreo del Sistema</div>
+<div class="health-strip">
+  <div class="hs-item" style="--c:var(--red)"><div class="hs-label">Listings sin área m²</div><strong class="hs-val" id="h1">—</strong></div>
+  <div class="hs-item" style="--c:var(--grn)"><div class="hs-label">Duplicados detectados</div><strong class="hs-val" id="h2">—</strong></div>
+  <div class="hs-item" style="--c:var(--slate)"><div class="hs-label">Zonas sin benchmark</div><strong class="hs-val" id="h3">—</strong></div>
+  <div class="hs-item" style="--c:var(--gold)"><div class="hs-label">Cobertura benchmark</div><strong class="hs-val" id="h4">—</strong></div>
+  <div class="hs-item" style="--c:var(--blue)"><div class="hs-label">Último snapshot</div><strong class="hs-val" id="h5">—</strong></div>
+  <div class="hs-item" style="--c:var(--grn)"><div class="hs-label">Origen de datos</div><strong class="hs-val" id="h6">—</strong></div>
+</div>
+
 
 <!-- FILA 4: SNAPSHOTS HISTÓRICOS -->
 <div class="sec">Historial de mercado · Activo diferenciador de Valorius</div>
