@@ -106,10 +106,11 @@ class DataService {
       sinArea: '/rest/v1/listing?select=listing_id&area_construccion=is.null',
       scraper: '/rest/v1/listing?select=listing_id&fuente=eq.Propiedades Honduras',
       metrics: '/rest/v1/market_metrics?select=precio_m2_mediana,cantidad_muestras,p25,p75,desviacion_std,snapshot_id,market_snapshot!inner(fecha_snapshot,zone_id,property_type_id,dim_zone!inner(zona),dim_property_type!inner(tipo_inmueble))&order=created_at.desc&limit=200',
-      deals: '/rest/v1/v_deals?select=*&order=diferencia_vs_mercado.asc&limit=150'
+      deals: '/rest/v1/v_deals?select=*&order=diferencia_vs_mercado.asc&limit=150',
+      historical: '/rest/v1/v_deals_historical?select=*'
     };
 
-    const [props, listings, zones, snaps, sinArea, scraper, metrics, deals] = await Promise.all([
+    const [props, listings, zones, snaps, sinArea, scraper, metrics, deals, historical] = await Promise.all([
       this.fetchCount(endpoints.props),
       this.fetchCount(endpoints.listings),
       this.fetchCount(endpoints.zones),
@@ -117,10 +118,11 @@ class DataService {
       this.fetchCount(endpoints.sinArea),
       this.fetchCount(endpoints.scraper),
       this.fetchData(endpoints.metrics),
-      this.fetchData(endpoints.deals)
+      this.fetchData(endpoints.deals),
+      this.fetchData(endpoints.historical)
     ]);
 
-    return { props, listings, zones, snaps, sinArea, scraper, metrics, deals };
+    return { props, listings, zones, snaps, sinArea, scraper, metrics, deals, historical };
   }
 }
 
@@ -241,7 +243,7 @@ class UIRenderer {
     if (moreBtn) moreBtn.onclick = () => { shown += PAGE; renderRows(); };
   }
 
-  static renderFeed(deals, metrics) {
+  static renderFeed(deals, metrics, historical) {
     const top = deals.filter(d => d.precio_m2 && d.diferencia_vs_mercado);
     const tb = document.getElementById('feedTbl'); if (!tb) return;
 
@@ -263,13 +265,15 @@ class UIRenderer {
         const zona = m?.market_snapshot?.dim_zone?.zona || 'Zona no asignada';
         const tipo = m?.market_snapshot?.dim_property_type?.tipo_inmueble || '';
         const tC = tipo === 'APARTAMENTO' ? 'var(--blu)' : 'var(--amb)';
+        const trendBadge = UIRenderer.renderHistoricalTrendBadge(historical, d.property_id);
         return `<tr>
           <td>
             <div class="td-name" style="font-size:12px;" title="${nota}">${zona}</div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:2px;">
+            <div style="display:flex;gap:6px;align-items:center;margin-top:2px;margin-bottom:2px;">
               <span class="tag-t" style="color:${tC};border-color:${tC}40;font-size:8px;padding:2px 4px;">${tipo.substring(0,4)}</span>
               <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">ID: ${d.listing_id}</span>
             </div>
+            ${trendBadge}
           </td>
           <td class="mono-v">${Utils.fU(d.precio_m2)}</td>
           <td><span class="diff-tag" style="background:${dc}18;color:${dc};border:1px solid ${dc}35" title="${nota}">${dStr}</span></td>
@@ -478,6 +482,66 @@ class UIRenderer {
       }
     });
   }
+
+  static renderHistoricalTrendBadge(historicalData, propertyId) {
+    if (!historicalData || historicalData.length === 0) return '';
+    
+    // Filtrar snapshots de esta propiedad específica
+    const propertySnapshots = historicalData
+      .filter(h => h.property_id === propertyId)
+      .sort((a, b) => {
+        // Ordenar por fecha del snapshot (ascendente = más viejo primero)
+        return new Date(a.snapshot_id.split('-')[0]) - new Date(b.snapshot_id.split('-')[0]);
+      });
+    
+    // Necesita al menos 2 snapshots para mostrar evolución
+    if (propertySnapshots.length < 2) return '';
+    
+    const primero = propertySnapshots[0];
+    const ultimo = propertySnapshots[propertySnapshots.length - 1];
+    
+    // Calcular cambios
+    const cambioMercado = (
+      ((ultimo.precio_m2_mercado - primero.precio_m2_mercado) / 
+       (primero.precio_m2_mercado || 1)) * 100
+    ).toFixed(1);
+    
+    // Determinar color del cambio de benchmark
+    const colorMercado = cambioMercado >= 0 ? 'var(--grn)' : 'var(--amb)';
+    const iconoMercado = cambioMercado >= 0 ? '▲' : '▼';
+    
+    // Construir un micro-badge de tendencia sumamente premium e institucional
+    const html = `
+      <div class="trend-card" style="
+        margin-top: 8px; 
+        padding: 8px 10px; 
+        background: rgba(255,255,255,0.01); 
+        border: 1px solid rgba(255,255,255,0.04); 
+        border-left: 3px solid ${colorMercado}; 
+        border-radius: 6px; 
+        font-size: 10px;
+        width: 100%;
+        max-width: 280px;
+      ">
+        <div style="color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between;">
+          <span>📊 HISTORIAL (${propertySnapshots.length} SNAPS)</span>
+        </div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 2px;">
+          <div>
+            <span style="color: var(--muted);">Mercado:</span>
+            <strong style="color: ${colorMercado}; font-family: 'DM Mono', monospace; font-size: 11px;">${iconoMercado} ${Math.abs(cambioMercado).toFixed(1)}%</strong>
+            <span style="font-size: 8px; color: var(--muted);">($${Math.round(primero.precio_m2_mercado)} → $${Math.round(ultimo.precio_m2_mercado)})</span>
+          </div>
+          <div>
+            <span style="color: var(--muted);">Spread:</span>
+            <strong style="color: #ffffff; font-family: 'DM Mono', monospace; font-size: 11px;">${(ultimo.diferencia_vs_mercado * 100).toFixed(1)}%</strong>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    return html;
+  }
 }
 
 window.applyFilters = function() {
@@ -525,7 +589,7 @@ window.applyFilters = function() {
   UIRenderer.renderKPIs(filteredD);
   UIRenderer.renderInsights(filteredDeals, filteredMetrics);
   UIRenderer.renderBench(filteredMetrics);
-  UIRenderer.renderFeed(filteredDeals, filteredMetrics);
+  UIRenderer.renderFeed(filteredDeals, filteredMetrics, D.historical);
   UIRenderer.renderSnaps(filteredMetrics);
   UIRenderer.renderChart(filteredMetrics, fType);
   UIRenderer.renderMap(filteredDeals, filteredMetrics);
