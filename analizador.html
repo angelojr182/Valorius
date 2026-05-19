@@ -1,181 +1,466 @@
-<script>
+<!DOCTYPE html>
+<html lang="es">
 
-const ZONAS_FALLBACK = [
-  { zona: "Anillo Periférico", cluster_name: "COMERCIAL_CENTRO" },
-  { zona: "Bulevar Morazán", cluster_name: "COMERCIAL_CENTRO" },
-  { zona: "Colonia Palmira", cluster_name: "COMERCIAL_CENTRO" },
-  { zona: "El Trapiche", cluster_name: "PREMIUM_NORTE" },
-  { zona: "Las Colinas", cluster_name: "PREMIUM_NORTE" },
-  { zona: "Las Uvas", cluster_name: "RESIDENCIAL_ESTE" },
-  { zona: "Lomas del Guijarro", cluster_name: "PREMIUM_NORTE" },
-  { zona: "Miraflores", cluster_name: "PREMIUM_NORTE" },
-  { zona: "Residencial Buena Vista", cluster_name: "PREMIUM_NORTE" },
-  { zona: "Residencial Centroamérica", cluster_name: "RESIDENCIAL_ESTE" },
-  { zona: "Residencial El Sauce", cluster_name: "RESIDENCIAL_ESTE" },
-  { zona: "Residencial Hacienda Real", cluster_name: "RESIDENCIAL_ESTE" },
-  { zona: "Residencial Las Casitas", cluster_name: "RESIDENCIAL_ESTE" },
-  { zona: "Residencial Los Cerezos", cluster_name: "PREMIUM_NORTE" },
-  { zona: "Residencial Portal del Bosque 1", cluster_name: "RESIDENCIAL_ESTE" },
-  { zona: "Residencial Quinta Isabel", cluster_name: "RESIDENCIAL_ESTE" },
-  { zona: "Residencial Villa Elena", cluster_name: "PREMIUM_NORTE" },
-  { zona: "San Ignacio", cluster_name: "PREMIUM_NORTE" }
-];
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-const AZ_SURL = typeof SECRETS !== "undefined" ? SECRETS.SURL : "";
-const AZ_SKEY = typeof SECRETS !== "undefined" ? SECRETS.SKEY : "";
+  <title>Property Analyzer — Valorius</title>
 
-const AZ_HEADERS = {
-  apikey: AZ_SKEY,
-  Authorization: "Bearer " + AZ_SKEY,
-  "Content-Type": "application/json",
-  "Accept-Profile": "core"
-};
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-let azZonas = [];
-let azSubzonas = [];
-let azProyectos = [];
+  <link rel="stylesheet" href="analizador.css?v=2.0">
 
-async function azFetch(endpoint) {
-  try {
-    const res = await fetch(AZ_SURL + endpoint, {
-      headers: AZ_HEADERS
-    });
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    if (!res.ok) {
-      console.error("Fetch error:", res.status);
-      return null;
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+
+  <div class="topnav-mobile">
+    <div class="tm-logo">V</div>
+    <div class="tm-title">Property Analyzer</div>
+    <a href="index.html" class="tm-btn">Dashboard →</a>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sb-brand">
+      <div class="sb-logo-v">V</div>
+    </div>
+
+    <nav class="sb-nav">
+
+      <a href="index.html" class="sb-link">
+        Dashboard
+      </a>
+
+      <a href="analizador.html" class="sb-link active">
+        Analizar
+      </a>
+
+    </nav>
+
+  </aside>
+
+  <main class="main-content">
+
+    <div class="page-hdr">
+      <h1 class="page-title">Property Analyzer</h1>
+      <p class="page-sub">Valorius Market Intelligence</p>
+    </div>
+
+    <section class="panel">
+
+      <div class="panel-title">
+        Datos de la propiedad
+      </div>
+
+      <form
+        onsubmit="event.preventDefault(); actualizarAnalisis();"
+      >
+
+        <div class="formulario-grid">
+
+          <div class="form-group-horizontal">
+
+            <label class="form-label">
+              Tipo de inmueble
+            </label>
+
+            <select
+              id="selTipo"
+              class="form-input"
+            >
+              <option value="APARTAMENTO">
+                Apartamento
+              </option>
+
+              <option value="CASA">
+                Casa
+              </option>
+            </select>
+
+          </div>
+
+          <div class="form-group-horizontal">
+
+            <label class="form-label">
+              Zona
+            </label>
+
+            <select
+              id="selZona"
+              class="form-input"
+              onchange="filtrarSubzonasYProyectos()"
+            >
+              <option value="">
+                Seleccioná una zona
+              </option>
+            </select>
+
+          </div>
+
+          <div class="form-group-horizontal">
+
+            <label class="form-label">
+              Subzona
+            </label>
+
+            <select
+              id="selSubzona"
+              class="form-input"
+            >
+              <option value="">
+                Todas
+              </option>
+            </select>
+
+          </div>
+
+          <div class="form-group-horizontal">
+
+            <label class="form-label">
+              Proyecto
+            </label>
+
+            <select
+              id="selProyecto"
+              class="form-input"
+            >
+              <option value="">
+                Todos
+              </option>
+            </select>
+
+          </div>
+
+          <div class="form-group-horizontal">
+
+            <label class="form-label">
+              Área (m²)
+            </label>
+
+            <input
+              type="number"
+              id="inpArea"
+              class="form-input"
+              value="85"
+              required
+            />
+
+          </div>
+
+          <div class="form-group-horizontal">
+
+            <label class="form-label">
+              Precio USD
+            </label>
+
+            <input
+              type="text"
+              id="inpPrecio"
+              class="form-input"
+              value="$180,000"
+              required
+            />
+
+          </div>
+
+        </div>
+
+        <div class="form-row-actions">
+
+          <button
+            type="submit"
+            class="btn-gold"
+          >
+            Analizar propiedad
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </main>
+
+  <script src="secrets.js?v=1.2"></script>
+
+  <script>
+
+    const ZONAS_FALLBACK = [
+      { zona: "Miraflores", cluster_name: "PREMIUM_NORTE" },
+      { zona: "San Ignacio", cluster_name: "PREMIUM_NORTE" },
+      { zona: "El Trapiche", cluster_name: "PREMIUM_NORTE" },
+      { zona: "Bulevar Morazán", cluster_name: "COMERCIAL_CENTRO" },
+      { zona: "Lomas del Guijarro", cluster_name: "PREMIUM_NORTE" }
+    ];
+
+    const AZ_SURL =
+      typeof SECRETS !== "undefined"
+        ? SECRETS.SURL
+        : "";
+
+    const AZ_SKEY =
+      typeof SECRETS !== "undefined"
+        ? SECRETS.SKEY
+        : "";
+
+    const AZ_HEADERS = {
+      apikey: AZ_SKEY,
+      Authorization: "Bearer " + AZ_SKEY,
+      "Content-Type": "application/json",
+      "Accept-Profile": "core"
+    };
+
+    let azZonas = [];
+    let azSubzonas = [];
+    let azProyectos = [];
+
+    async function azFetch(endpoint) {
+
+      try {
+
+        const res = await fetch(
+          AZ_SURL + endpoint,
+          {
+            headers: AZ_HEADERS
+          }
+        );
+
+        if (!res.ok) {
+
+          console.error(
+            "Fetch error:",
+            res.status
+          );
+
+          return null;
+        }
+
+        return await res.json();
+
+      } catch (e) {
+
+        console.error(
+          "azFetch error:",
+          e
+        );
+
+        return null;
+      }
     }
 
-    return await res.json();
+    async function azLoadZonas() {
 
-  } catch (e) {
-    console.error("azFetch error:", e);
-    return null;
-  }
-}
+      const tipo =
+        document.getElementById("selTipo").value;
 
-async function azLoadZonas() {
+      const data = await azFetch(
+        "/rest/v1/v_zones_with_cluster?select=zone_id,zona,cluster_name,tipo_inmueble"
+      );
 
-  const tipo = document.getElementById("selTipo").value;
+      if (!data || !Array.isArray(data)) {
+        return ZONAS_FALLBACK;
+      }
 
-  const data = await azFetch(
-    `/rest/v1/v_zones_with_cluster?select=zone_id,zona,cluster_name,tipo_inmueble`
-  );
+      const filtradas =
+        data.filter(z =>
+          !z.tipo_inmueble ||
+          z.tipo_inmueble === tipo
+        );
 
-  if (!data || !Array.isArray(data)) {
-    return ZONAS_FALLBACK;
-  }
+      const seen = new Set();
 
-  const filtradas = data.filter(
-    z => !z.tipo_inmueble || z.tipo_inmueble === tipo
-  );
+      return filtradas.filter(z => {
 
-  const unicas = [];
-  const seen = new Set();
+        if (seen.has(z.zona)) {
+          return false;
+        }
 
-  filtradas.forEach(z => {
-    if (!seen.has(z.zona)) {
-      seen.add(z.zona);
-      unicas.push(z);
+        seen.add(z.zona);
+
+        return true;
+
+      });
     }
-  });
 
-  return unicas;
-}
+    async function azLoadSubzonas() {
 
-async function azLoadSubzonas() {
+      const data = await azFetch(
+        "/rest/v1/dim_subzona?select=subzona_id,subzona,zone_id&order=subzona"
+      );
 
-  const data = await azFetch(
-    "/rest/v1/dim_subzona?select=subzona_id,subzona,zone_id&order=subzona"
-  );
+      return data || [];
+    }
 
-  return data || [];
-}
+    async function azLoadProyectos() {
 
-async function azLoadProyectos() {
+      const data = await azFetch(
+        "/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id&order=proyecto"
+      );
 
-  const data = await azFetch(
-    "/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id&order=proyecto"
-  );
+      return data || [];
+    }
 
-  return data || [];
-}
+    async function cargarZonas() {
 
-async function cargarZonas() {
+      azZonas = await azLoadZonas();
 
-  azZonas = await azLoadZonas();
+      const selZona =
+        document.getElementById("selZona");
 
-  const selZona = document.getElementById("selZona");
+      selZona.innerHTML =
+        '<option value="">Seleccioná una zona</option>' +
 
-  selZona.innerHTML =
-    '<option value="">Seleccioná una zona</option>' +
-    azZonas.map(z =>
-      `<option value="${z.zona}">${z.zona}</option>`
-    ).join("");
+        azZonas.map(z =>
+          `<option value="${z.zona}">
+            ${z.zona}
+          </option>`
+        ).join("");
 
-  document.getElementById("selSubzona").innerHTML =
-    '<option value="">Todas</option>';
+      document.getElementById("selSubzona").innerHTML =
+        '<option value="">Todas</option>';
 
-  document.getElementById("selProyecto").innerHTML =
-    '<option value="">Todos</option>';
-}
+      document.getElementById("selProyecto").innerHTML =
+        '<option value="">Todos</option>';
+    }
 
-window.filtrarSubzonasYProyectos = function () {
+    function filtrarSubzonasYProyectos() {
 
-  const zona = document.getElementById("selZona").value;
+      const zona =
+        document.getElementById("selZona").value;
 
-  const selSubzona = document.getElementById("selSubzona");
-  const selProyecto = document.getElementById("selProyecto");
+      const selSubzona =
+        document.getElementById("selSubzona");
 
-  if (!zona) {
+      const selProyecto =
+        document.getElementById("selProyecto");
 
-    selSubzona.innerHTML =
-      '<option value="">Todas</option>';
+      if (!zona) {
 
-    selProyecto.innerHTML =
-      '<option value="">Todos</option>';
+        selSubzona.innerHTML =
+          '<option value="">Todas</option>';
 
-    return;
-  }
+        selProyecto.innerHTML =
+          '<option value="">Todos</option>';
 
-  const zonaObj = azZonas.find(
-    z => z.zona === zona
-  );
+        return;
+      }
 
-  if (!zonaObj) return;
+      const zonaObj =
+        azZonas.find(
+          z => z.zona === zona
+        );
 
-  const subzonasFiltradas = azSubzonas.filter(
-    s => String(s.zone_id) === String(zonaObj.zone_id)
-  );
+      if (!zonaObj) return;
 
-  const proyectosFiltrados = azProyectos.filter(
-    p => String(p.zone_id) === String(zonaObj.zone_id)
-  );
+      const subzonasFiltradas =
+        azSubzonas.filter(
+          s =>
+            String(s.zone_id) ===
+            String(zonaObj.zone_id)
+        );
 
-  selSubzona.innerHTML =
-    '<option value="">Todas</option>' +
-    subzonasFiltradas.map(s =>
-      `<option value="${s.subzona}">${s.subzona}</option>`
-    ).join("");
+      const proyectosFiltrados =
+        azProyectos.filter(
+          p =>
+            String(p.zone_id) ===
+            String(zonaObj.zone_id)
+        );
 
-  selProyecto.innerHTML =
-    '<option value="">Todos</option>' +
-    proyectosFiltrados.map(p =>
-      `<option value="${p.proyecto}">${p.proyecto}</option>`
-    ).join("");
-};
+      selSubzona.innerHTML =
+        '<option value="">Todas</option>' +
 
-document.addEventListener("DOMContentLoaded", async () => {
+        subzonasFiltradas.map(s =>
+          `<option value="${s.subzona}">
+            ${s.subzona}
+          </option>`
+        ).join("");
 
-  azSubzonas = await azLoadSubzonas();
-  azProyectos = await azLoadProyectos();
+      selProyecto.innerHTML =
+        '<option value="">Todos</option>' +
 
-  await cargarZonas();
+        proyectosFiltrados.map(p =>
+          `<option value="${p.proyecto}">
+            ${p.proyecto}
+          </option>`
+        ).join("");
+    }
 
-  document
-    .getElementById("selTipo")
-    .addEventListener("change", cargarZonas);
+    async function actualizarAnalisis() {
 
-});
+      const zona =
+        document.getElementById("selZona").value;
 
-</script>
+      const tipo =
+        document.getElementById("selTipo").value;
+
+      const area =
+        parseFloat(
+          document.getElementById("inpArea").value
+        ) || 0;
+
+      const precio =
+        parseFloat(
+          document.getElementById("inpPrecio")
+            .value
+            .replace(/[^0-9.]/g, "")
+        ) || 0;
+
+      if (!zona) {
+        alert("Seleccioná una zona.");
+        return;
+      }
+
+      if (area <= 0) {
+        alert("Ingresá un área válida.");
+        return;
+      }
+
+      if (precio < 1000) {
+        alert("Verificá el precio.");
+        return;
+      }
+
+      console.log({
+        zona,
+        tipo,
+        area,
+        precio
+      });
+
+      alert(
+        "Análisis ejecutado correctamente."
+      );
+    }
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      async () => {
+
+        azSubzonas =
+          await azLoadSubzonas();
+
+        azProyectos =
+          await azLoadProyectos();
+
+        await cargarZonas();
+
+        document
+          .getElementById("selTipo")
+          .addEventListener(
+            "change",
+            cargarZonas
+          );
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
