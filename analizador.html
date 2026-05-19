@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valorius — Analizador de Propiedad</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="style.css?v=1.2">
+<link rel="stylesheet" href="analizador.css?v=2.0">
+<style>
+/* ── Overrides para integración con style.css del dashboard ── */
+body { display: block; }
+
+/* LOGIN — reutiliza el de index.html */
+.login-container {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: radial-gradient(circle at top left,#1e293b 0%,#0b1020 35%,#060b16 100%);
+  align-items: center; justify-content: center;
+}
+
+/* LAYOUT PRINCIPAL: sidebar fijo + contenido */
+.az-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR — idéntico al del dashboard principal */
+.az-sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #040810;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 10;
+}
+
+.az-sb-header {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.az-sb-logo {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #67e8f9, #0284c7);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.az-sb-logo svg {
+  width: 16px; height: 16px;
+  fill: none; stroke: #fff; stroke-width: 2.5;
+}
+
+.az-sb-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 600;
+  color: #fff;
+}
+
+.az-sb-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; letter-spacing: .16em;
+  color: #64748b; text-transform: uppercase;
+}
+
+.az-sb-nav {
+  padding: 16px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  flex: 1;
+}
+
+.az-sb-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #64748b;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 2px solid transparent;
+}
+
+.az-sb-link:hover {
+  color: #f1f5f9;
+  background: rgba(255,255,255,0.03);
+}
+
+.az-sb-link.active {
+  color: #e2b05c;
+  background: rgba(226,176,92,0.06);
+  border-left: 2px solid #e2b05c;
+}
+
+.az-sb-link svg {
+  width: 16px; height: 16px;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.az-sb-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.az-sb-user {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; color: #64748b;
+  margin-bottom: 8px;
+  letter-spacing: .06em;
+}
+
+.az-sb-logout {
+  display: block; width: 100%;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid rgba(248,113,113,0.2);
+  color: #f87171;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .08em;
+  border-radius: 6px; cursor: pointer;
+  text-align: center;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.az-sb-logout:hover {
+  background: rgba(248,113,113,0.06);
+  border-color: rgba(248,113,113,0.4);
+}
+
+/* TOPNAV MOBILE */
+.az-topnav {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 52px; z-index: 100;
+  background: #040810;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 0 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.az-topnav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 600;
+  color: #e2b05c;
+}
+
+.az-topnav-back {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: #64748b;
+  text-decoration: none; letter-spacing: .06em;
+}
+
+/* CONTENIDO PRINCIPAL */
+.az-main {
+  flex: 1;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Header de página */
+.az-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  margin-bottom: 4px;
+}
+
+.az-page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 600;
+  color: #fff; letter-spacing: -.3px;
+}
+
+.az-page-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: #64748b;
+  letter-spacing: .1em; text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.az-back-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: #64748b;
+  text-decoration: none;
+  padding: 8px 16px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.az-back-btn:hover { color: #f1f5f9; border-color: rgba(255,255,255,.15); }
+
+/* FORMULARIO — hereda panel del dashboard */
+.az-form-panel {
+  background: linear-gradient(180deg, rgba(17,24,39,0.6), rgba(11,15,25,0.8));
+  border: 1px solid rgba(255,255,255,.04);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  padding: 20px 24px 24px;
+}
+
+.az-form-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .16em;
+  text-transform: uppercase; color: #64748b;
+  margin-bottom: 16px; font-weight: 600;
+}
+
+.az-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.az-form-group {
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.az-form-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .08em;
+  color: #64748b; text-transform: uppercase; font-weight: 600;
+}
+
+.az-form-input {
+  background: rgba(8,13,26,0.6);
+  border: 1px solid rgba(255,255,255,.06);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+  width: 100%; height: 42px;
+  transition: border-color 0.2s ease;
+}
+
+.az-form-input:focus {
+  border-color: #e2b05c;
+  box-shadow: 0 0 0 2px rgba(226,176,92,0.15);
+}
+
+.az-form-actions {
+  margin-top: 14px;
+}
+
+.az-btn-analizar {
+  background: transparent;
+  border: 1px solid #e2b05c;
+  color: #e2b05c;
+  padding: 10px 28px;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 600; font-size: 11px;
+  cursor: pointer; height: 40px;
+  letter-spacing: .1em; text-transform: uppercase;
+  transition: all 0.3s ease;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+
+.az-btn-analizar:hover {
+  background: #e2b05c; color: #030712;
+}
+
+.az-btn-analizar.loading {
+  opacity: 0.7; cursor: not-allowed;
+}
+
+/* ERROR / ADVERTENCIA */
+.az-alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; line-height: 1.5;
+  display: none;
+}
+
+.az-alert.error {
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  color: #f87171;
+}
+
+.az-alert.warning {
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  color: #fbbf24;
+}
+
+/* RESULTADOS — 3 columnas */
+.az-results {
+  display: none;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.az-results.visible { display: grid; }
+
+.az-card {
+  background: linear-gradient(180deg, rgba(17,24,39,0.6), rgba(11,15,25,0.8));
+  border: 1px solid rgba(255,255,255,.04);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  padding: 20px;
+  display: flex; flex-direction: column;
+}
+
+.az-card-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .16em;
+  text-transform: uppercase; color: #64748b;
+  margin-bottom: 14px; font-weight: 600;
+}
+
+/* GAUGE */
+.az-gauge-wrap {
+  display: flex; justify-content: center; align-items: center;
+  position: relative; height: 160px; margin: 4px 0 12px;
+}
+
+.az-gauge-svg { width: 160px; height: 160px; transform: rotate(-90deg); }
+.az-gauge-bg { fill: none; stroke: #1E2235; stroke-width: 8; }
+.az-gauge-fill {
+  fill: none; stroke: url(#azGaugeGrad);
+  stroke-width: 8; stroke-dasharray: 283; stroke-dashoffset: 140;
+  stroke-linecap: round; transition: stroke-dashoffset 0.8s ease;
+}
+.az-gauge-dot-start { fill: rgba(255,255,255,0.3); }
+.az-gauge-dot-end { fill: #e2b05c; filter: drop-shadow(0 0 6px #e2b05c); transition: cx 0.8s ease, cy 0.8s ease; }
+
+.az-gauge-content {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.az-gauge-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px; font-weight: 600;
+  color: #e2b05c; line-height: 1;
+}
+
+.az-gauge-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; color: #e2b05c; opacity: 0.7;
+  letter-spacing: .1em; text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.az-pos-text {
+  font-size: 11px; color: #8ea0bd;
+  line-height: 1.6; text-align: left;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  margin-bottom: 0;
+}
+
+.az-slider-wrap {
+  margin-top: auto; padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  pointer-events: none;
+}
+
+.az-slider-bar {
+  height: 5px; border-radius: 3px; position: relative;
+  background: linear-gradient(90deg, #10b981 0%, #10b981 33%, #f59e0b 33%, #f59e0b 66%, #ef4444 66%, #ef4444 100%);
+  box-shadow: 0 0 8px rgba(16,185,129,0.25), 0 0 8px rgba(239,68,68,0.25);
+}
+
+.az-slider-thumb {
+  width: 13px; height: 13px;
+  background: #e2b05c;
+  border: 2px solid #060b16;
+  border-radius: 50%;
+  position: absolute; top: -4px; left: 80%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(226,176,92,0.5);
+  transition: left 0.8s ease;
+}
+
+.az-slider-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; color: #64748b;
+}
+
+/* CONTEXTO / BARRA ESPECTRAL */
+.az-spectrum-wrap { position: relative; padding-top: 22px; }
+
+.az-spectrum-tooltip {
+  background: rgba(17,24,39,0.98);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #e2b05c; font-family: 'DM Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 6px;
+  position: absolute; top: -10px; left: 80%;
+  transform: translateX(-50%);
+  transition: left 0.8s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.az-spectrum-tooltip::after {
+  content: '';
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(17,24,39,0.98);
+}
+
+.az-spectrum-bar {
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+}
+
+.az-spectrum-nums {
+  display: flex; justify-content: space-between;
+  margin-top: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; color: #64748b;
+}
+
+/* CHART DE COMPARABLES */
+.az-chart-area {
+  height: 150px; position: relative; margin-top: 10px;
+}
+
+.az-chart-svg {
+  width: 100%; height: 100%; overflow: visible;
+  filter: drop-shadow(0 0 4px rgba(14,165,233,0.15));
+}
+
+.az-curve-path {
+  fill: none; stroke: rgba(14,165,233,0.45);
+  stroke-width: 2; stroke-dasharray: 4 4;
+}
+
+.az-node { fill: #0ea5e9; stroke: rgba(255,255,255,0.6); stroke-width: 1.5; filter: drop-shadow(0 0 4px #0ea5e9); }
+.az-node.target { fill: #e2b05c; stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 8px #e2b05c); }
+
+/* CRITERIO */
+.az-criterio-wrap { margin-top: 12px; }
+
+.az-criterio-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; color: #64748b;
+  margin-bottom: 6px; font-weight: 600;
+}
+
+.az-criterio-box {
+  background: rgba(8,13,26,0.5);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 11px; color: #8ea0bd; line-height: 1.6;
+}
+
+/* MÉTRICAS */
+.az-metrics-list { display: flex; flex-direction: column; flex: 1; }
+
+.az-metric {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.az-metric:last-child { border-bottom: none; }
+
+.az-metric-left {
+  display: flex; flex-direction: column; gap: 3px;
+  max-width: 55%; padding-right: 10px;
+}
+
+.az-metric-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  color: #3a3e55; letter-spacing: 1.4px; text-transform: uppercase;
+}
+
+.az-metric-desc {
+  font-size: 10px; color: #4a4e65; line-height: 1.35;
+  text-align: justify;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.az-metric-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 600;
+  text-align: right; white-space: nowrap;
+  flex-shrink: 0; padding-left: 10px;
+  border-left: 1px solid rgba(255,255,255,0.04);
+}
+
+.az-metric-val.gold   { color: #E8C97A; }
+.az-metric-val.white  { color: #EDF0F7; }
+.az-metric-val.pos    { color: #e2b05c; }
+.az-metric-val.neg    { color: #2dd4a0; }
+.az-metric-val.muted  { color: #8ea0bd; font-size: 17px; }
+
+/* FOOTER */
+.az-footer {
+  background: linear-gradient(180deg, rgba(17,24,39,0.6), rgba(11,15,25,0.8));
+  border: 1px solid rgba(255,255,255,.04);
+  border-radius: 16px;
+  padding: 14px 22px;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 20px;
+}
+
+.az-footer-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: #64748b; line-height: 1.6;
+}
+
+.az-btn-pdf {
+  background: transparent;
+  border: 1px solid #e2b05c;
+  color: #e2b05c;
+  padding: 8px 22px;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 600; font-size: 11px;
+  cursor: pointer; height: 36px;
+  letter-spacing: .08em; text-transform: uppercase;
+  transition: all 0.3s ease;
+  flex-shrink: 0; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.az-btn-pdf:hover { background: #e2b05c; color: #030712; }
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+  .az-results { grid-template-columns: 1fr 1fr; }
+  .az-card:last-child { grid-column: 1 / -1; }
+  .az-metrics-list { flex-direction: row; flex-wrap: wrap; }
+  .az-metric { width: 50%; border-right: 1px solid rgba(255,255,255,0.04); border-bottom: none; }
+  .az-metric:nth-child(even) { border-right: none; }
+  .az-metric-val { font-size: 24px; border-left: none; padding-left: 0; }
+  .az-metric-left { max-width: 100%; }
+  .az-form-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .az-sidebar { display: none; }
+  .az-topnav { display: flex; }
+  .az-layout { padding-top: 52px; }
+  .az-main { padding: 16px; gap: 12px; }
+  .az-page-title { font-size: 22px; }
+  .az-form-grid { grid-template-columns: 1fr 1fr; }
+  .az-results { grid-template-columns: 1fr; }
+  .az-card:last-child { grid-column: 1; }
+  .az-metrics-list { flex-direction: column; }
+  .az-metric { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .az-footer { flex-direction: column; gap: 12px; text-align: center; }
+  .az-btn-pdf { width: 100%; justify-content: center; }
+  .az-btn-analizar { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .az-form-grid { grid-template-columns: 1fr; }
+  .az-gauge-num { font-size: 28px; }
+  .az-gauge-wrap { height: 130px; }
+  .az-gauge-svg { width: 130px; height: 130px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN (mismo flujo que index.html) -->
+<div id="azLoginWrap" class="login-container">
+  <div class="login-card">
+    <div class="h-logo" style="margin: 0 auto 16px; width: 42px; height: 42px;">
+      <svg viewBox="0 0 18 18" style="width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.5;"><polyline points="2,14 6,8 10,11 16,3"/></svg>
+    </div>
+    <div class="login-title">VALORIUS TERMINAL</div>
+    <div class="login-sub">MARKET INTELLIGENCE & ANALYTICS</div>
+    <div id="azLoginError" class="login-error" style="display:none;"></div>
+    <form id="azLoginForm">
+      <div class="login-group">
+        <label class="login-label">Usuario / Correo</label>
+        <input type="email" id="azLoginEmail" class="login-input" placeholder="analista@valorius.com" required />
+      </div>
+      <div class="login-group" style="margin-bottom:24px;">
+        <label class="login-label">Contraseña</label>
+        <input type="password" id="azLoginPassword" class="login-input" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn-login">Autenticar Credenciales</button>
+    </form>
+  </div>
+</div>
+
+<!-- TOPNAV MOBILE -->
+<div class="az-topnav" id="azTopnav">
+  <span class="az-topnav-logo">Valorius</span>
+  <a href="index.html" class="az-topnav-back">← Dashboard</a>
+</div>
+
+<!-- LAYOUT PRINCIPAL -->
+<div class="az-layout" id="azDashboard" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <aside class="az-sidebar">
+    <div class="az-sb-header">
+      <div class="az-sb-logo">
+        <svg viewBox="0 0 18 18"><polyline points="2,14 6,8 10,11 16,3"/></svg>
+      </div>
+      <div>
+        <div class="az-sb-name">Valorius</div>
+        <div class="az-sb-sub">Market Intelligence</div>
+      </div>
+    </div>
+
+    <nav class="az-sb-nav">
+      <a href="index.html" class="az-sb-link">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="index.html" class="az-sb-link">
+        <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Deals
+      </a>
+      <a href="index.html" class="az-sb-link">
+        <svg viewBox="0 0 24 24"><polygon points="1 6 8 2 15 6 23 2 23 18 15 22 8 18 1 22"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="15" y1="6" x2="15" y2="22"/></svg>
+        Zonas
+      </a>
+      <a href="analizador.html" class="az-sb-link active">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analizar
+      </a>
+    </nav>
+
+    <div class="az-sb-footer">
+      <div class="az-sb-user" id="azSbUser">—</div>
+      <button class="az-sb-logout" onclick="AzAuth.logout()">Cerrar Sesión</button>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="az-main">
+
+    <!-- HEADER -->
+    <div class="az-page-header">
+      <div>
+        <div class="az-page-title">Analizador de Propiedad</div>
+        <div class="az-page-sub">Posicioná cualquier propiedad frente al mercado observable · Tegucigalpa</div>
+      </div>
+      <a href="index.html" class="az-back-btn">← Dashboard</a>
+    </div>
+
+    <!-- FORMULARIO -->
+    <div class="az-form-panel">
+      <div class="az-form-title">Datos de la Propiedad</div>
+      <form id="azForm" onsubmit="event.preventDefault(); AzAnalyzer.run();">
+        <div class="az-form-grid">
+          <div class="az-form-group">
+            <label class="az-form-label">Zona</label>
+            <select id="azZona" class="az-form-input">
+              <option value="">Cargando zonas...</option>
+            </select>
+          </div>
+          <div class="az-form-group">
+            <label class="az-form-label">Tipo de Inmueble</label>
+            <select id="azTipo" class="az-form-input">
+              <option value="APARTAMENTO">Apartamento</option>
+              <option value="CASA">Casa</option>
+            </select>
+          </div>
+          <div class="az-form-group">
+            <label class="az-form-label">Subzona (opcional)</label>
+            <select id="azSubzona" class="az-form-input">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="az-form-group">
+            <label class="az-form-label">Proyecto (opcional)</label>
+            <select id="azProyecto" class="az-form-input">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="az-form-group">
+            <label class="az-form-label">Área de Construcción (m²)</label>
+            <input type="number" id="azArea" class="az-form-input" placeholder="Ej: 85" min="10" max="5000" required />
+          </div>
+          <div class="az-form-group">
+            <label class="az-form-label">Precio Solicitado (USD)</label>
+            <input type="text" id="azPrecio" class="az-form-input" placeholder="Ej: 185,000" required />
+          </div>
+        </div>
+        <div class="az-form-actions">
+          <button type="submit" class="az-btn-analizar" id="azBtnAnalizar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Analizar Propiedad
+          </button>
+        </div>
+      </form>
+
+      <!-- ALERTAS -->
+      <div id="azError" class="az-alert error" style="margin-top:12px;"></div>
+      <div id="azWarning" class="az-alert warning" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="az-results" id="azResults">
+
+      <!-- CARD 1: POSICIÓN EN EL MERCADO -->
+      <div class="az-card">
+        <div class="az-card-title">Posición en el Mercado</div>
+
+        <div class="az-gauge-wrap">
+          <svg class="az-gauge-svg" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="azGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0ea5e9"/>
+                <stop offset="60%" stop-color="#f59e0b"/>
+                <stop offset="100%" stop-color="#e2b05c"/>
+              </linearGradient>
+            </defs>
+            <circle class="az-gauge-bg" cx="50" cy="50" r="45"/>
+            <circle class="az-gauge-fill" id="azGaugeFill" cx="50" cy="50" r="45"/>
+            <circle class="az-gauge-dot-start" cx="18.2" cy="81.8" r="3"/>
+            <circle class="az-gauge-dot-end" id="azGaugeDot" cx="50" cy="5" r="4.5"/>
+          </svg>
+          <div class="az-gauge-content">
+            <span class="az-gauge-num" id="azGaugeNum">—</span>
+            <span class="az-gauge-lbl">vs mediana</span>
+          </div>
+        </div>
+
+        <div class="az-pos-text" id="azPosText">
+          Ingresá los datos de la propiedad y presioná Analizar.
+        </div>
+
+        <div class="az-slider-wrap">
+          <div class="az-slider-bar">
+            <div class="az-slider-thumb" id="azSliderThumb"></div>
+          </div>
+          <div class="az-slider-labels">
+            <span>Bajo</span><span>En rango</span><span>Sobre</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: CONTEXTO DEL MERCADO -->
+      <div class="az-card">
+        <div class="az-card-title">Contexto del Mercado Observable</div>
+
+        <div class="az-spectrum-wrap">
+          <div class="az-spectrum-tooltip" id="azTooltip">—</div>
+          <div class="az-spectrum-bar"></div>
+          <div class="az-spectrum-nums">
+            <span id="azMin">—</span>
+            <span id="azMed">—</span>
+            <span id="azMax">—</span>
+          </div>
+        </div>
+
+        <div class="az-chart-area">
+          <svg class="az-chart-svg" id="azChartSvg" viewBox="0 0 300 150">
+            <path class="az-curve-path" id="azCurvePath" d=""/>
+            <g id="azNodes"></g>
+          </svg>
+        </div>
+
+        <div class="az-criterio-wrap">
+          <div class="az-criterio-label">Criterio del Mercado Observable</div>
+          <div class="az-criterio-box" id="azCriterio">
+            —
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: MÉTRICAS -->
+      <div class="az-card">
+        <div class="az-card-title">Métricas</div>
+        <div class="az-metrics-list">
+          <div class="az-metric">
+            <div class="az-metric-left">
+              <span class="az-metric-label">Tu Precio / m²</span>
+              <span class="az-metric-desc">Precio por metro cuadrado implícito en la oferta que estás evaluando.</span>
+            </div>
+            <span class="az-metric-val gold" id="azMPrecio">—</span>
+          </div>
+          <div class="az-metric">
+            <div class="az-metric-left">
+              <span class="az-metric-label">Mediana de Zona</span>
+              <span class="az-metric-desc">Precio de referencia del mercado observable en esta zona.</span>
+            </div>
+            <span class="az-metric-val white" id="azMMediana">—</span>
+          </div>
+          <div class="az-metric">
+            <div class="az-metric-left">
+              <span class="az-metric-label">Diferencia</span>
+              <span class="az-metric-desc">Qué tan alejado está el precio respecto a la mediana de la zona.</span>
+            </div>
+            <span class="az-metric-val pos" id="azMDiff">—</span>
+          </div>
+          <div class="az-metric">
+            <div class="az-metric-left">
+              <span class="az-metric-label">Rango Observable</span>
+              <span class="az-metric-desc">Rango de precios totales observado en comparables activos en esta zona.</span>
+            </div>
+            <span class="az-metric-val muted" id="azMRango">—</span>
+          </div>
+          <div class="az-metric">
+            <div class="az-metric-left">
+              <span class="az-metric-label">Comparables</span>
+              <span class="az-metric-desc">Propiedades similares activas usadas como referencia en este análisis.</span>
+            </div>
+            <span class="az-metric-val white" id="azMComp">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /az-results -->
+
+    <!-- FOOTER -->
+    <div class="az-footer" id="azFooter" style="display:none;">
+      <div class="az-footer-text" id="azFooterText">
+        Este análisis refleja precios de oferta observable. No constituye valuación formal ni avalúo profesional.
+      </div>
+      <button class="az-btn-pdf" id="azBtnPdf">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar PDF
+      </button>
+    </div>
+
+  </main>
+</div><!-- /az-layout -->
+
+<script src="secrets.js?v=1.2"></script>
+<script>
+// ============================================================
+// AUTENTICACIÓN — idéntica a app.js
+// ============================================================
+const AzAuth = {
+  login: async function(email, password) {
+    const SURL = typeof SECRETS !== 'undefined' ? SECRETS.SURL : '';
+    const SKEY = typeof SECRETS !== 'undefined' ? SECRETS.SKEY : '';
+    const res = await fetch(`${SURL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': SKEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.message || 'Credenciales inválidas');
+    localStorage.setItem('valorius_token', data.access_token);
+    localStorage.setItem('valorius_user', JSON.stringify(data.user));
+    return data;
+  },
+  logout: function() {
+    localStorage.removeItem('valorius_token');
+    localStorage.removeItem('valorius_user');
+    location.reload();
+  },
+  isAuth: function() { return !!localStorage.getItem('valorius_token'); },
+  user: function() {
+    try { return JSON.parse(localStorage.getItem('valorius_user')); } catch { return null; }
+  }
+};
+
+// ============================================================
+// DATA SERVICE — queries a Supabase (solo lectura)
+// ============================================================
+const AzData = {
+  SURL: typeof SECRETS !== 'undefined' ? SECRETS.SURL : '',
+  SKEY: typeof SECRETS !== 'undefined' ? SECRETS.SKEY : '',
+
+  headers: function() {
+    return {
+      'apikey': this.SKEY,
+      'Authorization': 'Bearer ' + this.SKEY,
+      'Content-Type': 'application/json',
+      'Accept-Profile': 'core'
+    };
+  },
+
+  fetch: async function(endpoint) {
+    try {
+      const res = await fetch(this.SURL + endpoint, { headers: this.headers() });
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch(e) { console.warn('AzData error:', e); return []; }
+  },
+
+  // Cargar zonas que tienen benchmarks (v_zones_with_cluster)
+  loadZonas: async function() {
+    return await this.fetch('/rest/v1/v_zones_with_cluster?select=zone_id,zona,cluster_name&order=zona');
+  },
+
+  // Cargar tipos de inmueble
+  loadTipos: async function() {
+    return await this.fetch('/rest/v1/dim_property_type?select=property_type_id,tipo_inmueble&order=tipo_inmueble');
+  },
+
+  // Cargar subzonas
+  loadSubzonas: async function() {
+    return await this.fetch('/rest/v1/dim_subzona?select=subzona_id,subzona&order=subzona');
+  },
+
+  // Cargar proyectos
+  loadProyectos: async function() {
+    return await this.fetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto&order=proyecto');
+  },
+
+  // Benchmark del cluster de esa zona + tipo
+  loadBenchmark: async function(clusterName, tipoInmueble) {
+    const enc = encodeURIComponent;
+    return await this.fetch(
+      `/rest/v1/v_cluster_benchmarks?cluster_name=eq.${enc(clusterName)}&tipo_inmueble=eq.${enc(tipoInmueble)}&limit=1`
+    );
+  },
+
+  // Comparables individuales de la zona
+  loadComparables: async function(zona, tipoInmueble) {
+    const enc = encodeURIComponent;
+    return await this.fetch(
+      `/rest/v1/v_deals_full?zona=eq.${enc(zona)}&tipo_inmueble=eq.${enc(tipoInmueble)}&select=property_id,zona,tipo_inmueble,precio_m2,area_construccion&order=precio_m2`
+    );
+  }
+};
+
+// ============================================================
+// ANALIZADOR — lógica de cálculo y render
+// ============================================================
+const AzAnalyzer = {
+
+  zonas: [],
+  lastResult: null,
+
+  init: async function() {
+    // Cargar dropdowns
+    const [zonas, subzonas, proyectos] = await Promise.all([
+      AzData.loadZonas(),
+      AzData.loadSubzonas(),
+      AzData.loadProyectos()
+    ]);
+
+    this.zonas = zonas;
+
+    const selZona = document.getElementById('azZona');
+    selZona.innerHTML = '<option value="">Seleccioná una zona</option>' +
+      zonas.map(z => `<option value="${z.zona}" data-cluster="${z.cluster_name}">${z.zona}</option>`).join('');
+
+    const selSub = document.getElementById('azSubzona');
+    selSub.innerHTML = '<option value="">Todas</option>' +
+      subzonas.map(s => `<option value="${s.subzona}">${s.subzona}</option>`).join('');
+
+    const selProy = document.getElementById('azProyecto');
+    selProy.innerHTML = '<option value="">Todos</option>' +
+      proyectos.map(p => `<option value="${p.proyecto}">${p.proyecto}</option>`).join('');
+  },
+
+  run: async function() {
+    const zona    = document.getElementById('azZona').value;
+    const tipo    = document.getElementById('azTipo').value;
+    const areaVal = document.getElementById('azArea').value;
+    const precioRaw = document.getElementById('azPrecio').value.replace(/[^0-9.]/g, '');
+
+    const area   = parseFloat(areaVal);
+    const precio = parseFloat(precioRaw);
+
+    // Ocultar resultados anteriores
+    this.hideResults();
+
+    // Validaciones
+    if (!zona) return this.showError('Seleccioná una zona antes de analizar.');
+    if (!area || area <= 0) return this.showError('Ingresá un área válida en m².');
+    if (!precio || precio <= 0) return this.showError('Ingresá un precio válido en USD.');
+    if (precio < 1000) return this.showError('¿El precio está en USD? Verificá que el monto sea correcto. Ej: 115000');
+    if (area < 10) return this.showError('El área parece muy pequeña. Verificá que esté en m².');
+
+    // Formatear precio en el input
+    document.getElementById('azPrecio').value = '$' + Math.round(precio).toLocaleString('en-US');
+
+    // Obtener cluster de la zona
+    const zonaObj = this.zonas.find(z => z.zona === zona);
+    if (!zonaObj || !zonaObj.cluster_name) return this.showError('No hay benchmark disponible para esta zona todavía.');
+
+    // Loading state
+    const btn = document.getElementById('azBtnAnalizar');
+    btn.classList.add('loading');
+    btn.textContent = 'Analizando...';
+
+    try {
+      // Cargar benchmark y comparables en paralelo
+      const [benchArr, comparables] = await Promise.all([
+        AzData.loadBenchmark(zonaObj.cluster_name, tipo),
+        AzData.loadComparables(zona, tipo)
+      ]);
+
+      if (!benchArr || benchArr.length === 0) {
+        return this.showError('No hay benchmark disponible para esta zona y tipo de inmueble. Probá con otra zona.');
+      }
+
+      const bench = benchArr[0];
+
+      // Advertencia si pocas muestras
+      if (bench.cantidad_muestras < 3) {
+        this.showWarning(`Zona con datos limitados (${bench.cantidad_muestras} comparables). Interpretá con cautela.`);
+      }
+
+      // Calcular
+      const resultado = this.calcular({ precio, area, zona, tipo }, bench);
+      this.lastResult = { resultado, bench, zona, tipo, precio, area };
+
+      // Renderizar
+      this.render(resultado, bench, comparables, zona, tipo);
+
+    } catch(e) {
+      console.error('Error en análisis:', e);
+      this.showError('Error al conectar con la base de datos. Intentá de nuevo.');
+    } finally {
+      btn.classList.remove('loading');
+      btn.textContent = 'Analizar Propiedad';
+      // Restaurar ícono
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analizar Propiedad`;
+    }
+  },
+
+  calcular: function(inputs, bench) {
+    const { precio, area } = inputs;
+    const { mediana_usd_m2, p25, p75, cantidad_muestras, nivel_confianza } = bench;
+
+    const precioM2    = precio / area;
+    const mediana     = Number(mediana_usd_m2);
+    const p25n        = Number(p25 || mediana * 0.85);
+    const p75n        = Number(p75 || mediana * 1.15);
+    const diferencia  = (precioM2 - mediana) / mediana;
+
+    let clasificacion;
+    if (diferencia <= -0.10)     clasificacion = 'BAJO_MERCADO';
+    else if (diferencia >= 0.10) clasificacion = 'SOBRE_MERCADO';
+    else                          clasificacion = 'EN_RANGO';
+
+    const iqr        = p75n - p25n;
+    const minObs     = Math.max(0, p25n - 1.5 * iqr);
+    const maxObs     = p75n + 1.5 * iqr;
+    const rango      = (maxObs - minObs) + 500;
+    const posSlider  = Math.min(1.02, Math.max(0, (precioM2 - minObs) / rango));
+
+    // Porcentaje para gauge (0-1 donde 0.5 = en rango)
+    const gaugeNorm  = Math.min(0.95, Math.max(0.05, (diferencia + 0.5) / 1.0));
+
+    return {
+      precioM2:    Math.round(precioM2),
+      diferencia,
+      diffDisplay: (diferencia >= 0 ? '+' : '') + (diferencia * 100).toFixed(1) + '%',
+      clasificacion,
+      posSlider,
+      gaugeNorm,
+      minObs:      Math.round(minObs),
+      maxObs:      Math.round(maxObs),
+      mediana:     Math.round(mediana),
+      p25:         Math.round(p25n),
+      p75:         Math.round(p75n),
+      rangoDisplay:`$${Math.round(p25n * area / 1000)}K–$${Math.round(p75n * area / 1000)}K`,
+      confianza:   nivel_confianza || '—',
+      muestras:    cantidad_muestras
+    };
+  },
+
+  render: function(r, bench, comparables, zona, tipo) {
+    const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+
+    // ── GAUGE ──
+    const fill = document.getElementById('azGaugeFill');
+    const dot  = document.getElementById('azGaugeDot');
+    const num  = document.getElementById('azGaugeNum');
+
+    const dashOffset = 283 - (213 * r.gaugeNorm);
+    fill.style.strokeDashoffset = dashOffset;
+
+    const startAngle = 135, endAngle = 455;
+    const angle = startAngle + (r.gaugeNorm * (endAngle - startAngle));
+    const rad   = angle * Math.PI / 180;
+    dot.setAttribute('cx', (50 + 45 * Math.cos(rad)).toFixed(2));
+    dot.setAttribute('cy', (50 + 45 * Math.sin(rad)).toFixed(2));
+
+    num.textContent = r.diffDisplay;
+
+    // ── SLIDER ──
+    const thumb = document.getElementById('azSliderThumb');
+    const pos   = Math.min(93, Math.max(5, r.posSlider * 100));
+    thumb.style.left = pos + '%';
+    thumb.style.background = r.clasificacion === 'BAJO_MERCADO' ? '#10b981'
+                           : r.clasificacion === 'SOBRE_MERCADO' ? '#ef4444'
+                           : '#f59e0b';
+
+    // ── TEXTO POSICIÓN ──
+    const posTexts = {
+      BAJO_MERCADO:   `La propiedad se posiciona por debajo del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Confianza: ${r.confianza} · ${r.muestras} comparables · 60 días.`,
+      EN_RANGO:       `La propiedad se posiciona dentro del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Confianza: ${r.confianza} · ${r.muestras} comparables · 60 días.`,
+      SOBRE_MERCADO:  `La propiedad se posiciona por encima del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Confianza: ${r.confianza} · ${r.muestras} comparables · 60 días.`
+    };
+    document.getElementById('azPosText').textContent = posTexts[r.clasificacion];
+
+    // ── ESPECTRO ──
+    document.getElementById('azMin').textContent = fmt(r.minObs) + '/m²';
+    document.getElementById('azMed').textContent = fmt(r.mediana) + '/m²';
+    document.getElementById('azMax').textContent = fmt(r.maxObs) + '/m²';
+
+    const tooltipPct = Math.min(95, Math.max(5, ((r.precioM2 - r.minObs) / (r.maxObs - r.minObs + 500)) * 100));
+    const tooltip = document.getElementById('azTooltip');
+    tooltip.textContent = fmt(r.precioM2) + '/m²';
+    tooltip.style.left = tooltipPct + '%';
+
+    // ── CHART COMPARABLES ──
+    this.renderChart(comparables, r.precioM2, r.minObs, r.maxObs);
+
+    // ── CRITERIO ──
+    const criterios = {
+      BAJO_MERCADO:  `La propiedad se posiciona por debajo del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Se recomienda validar los datos ingresados y las condiciones específicas de la propiedad antes de tomar una decisión.`,
+      EN_RANGO:      `La propiedad se encuentra dentro del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. El posicionamiento es consistente con el mercado actual.`,
+      SOBRE_MERCADO: `La propiedad se posiciona por encima del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Existe margen razonable para negociación o para explorar alternativas en la misma zona.`
+    };
+    document.getElementById('azCriterio').textContent = criterios[r.clasificacion];
+
+    // ── MÉTRICAS ──
+    const diffEl = document.getElementById('azMDiff');
+    diffEl.textContent = r.diffDisplay;
+    diffEl.className = 'az-metric-val ' + (r.diferencia < 0 ? 'neg' : r.diferencia > 0 ? 'pos' : 'white');
+
+    document.getElementById('azMPrecio').textContent  = fmt(r.precioM2);
+    document.getElementById('azMMediana').textContent = fmt(r.mediana);
+    document.getElementById('azMRango').textContent   = r.rangoDisplay;
+    document.getElementById('azMComp').textContent    = r.muestras;
+
+    // ── FOOTER METODOLOGÍA ──
+    document.getElementById('azFooterText').textContent =
+      `Referencia construida con ${r.muestras} propiedades comparables activas en ${zona} · ${tipo} · últimos 60 días. Este análisis refleja precios de oferta observable. No constituye valuación formal ni avalúo profesional.`;
+
+    // ── MOSTRAR ──
+    document.getElementById('azResults').classList.add('visible');
+    document.getElementById('azFooter').style.display = 'flex';
+  },
+
+  renderChart: function(comparables, tuPrecioM2, minObs, maxObs) {
+    const nodesG = document.getElementById('azNodes');
+    const pathEl = document.getElementById('azCurvePath');
+    nodesG.innerHTML = '';
+
+    const allPrices = comparables.map(c => Number(c.precio_m2)).filter(v => v > 0);
+    if (allPrices.length === 0) { pathEl.setAttribute('d', ''); return; }
+
+    const points = [...allPrices];
+    let targetIdx = points.findIndex(p => p > tuPrecioM2);
+    if (targetIdx === -1) { points.push(tuPrecioM2); targetIdx = points.length - 1; }
+    else points.splice(targetIdx, 0, tuPrecioM2);
+
+    const h = 150, totalW = 270;
+    const xStep = totalW / Math.max(points.length - 1, 1);
+    const minP = Math.min(...points) * 0.95;
+    const maxP = Math.max(...points) * 1.05;
+    let dPath = '';
+
+    const coords = points.map((val, idx) => {
+      const x = 15 + idx * xStep;
+      let y = h - ((val - minP) / (maxP - minP)) * h * 0.80;
+      if (idx > 0 && idx < points.length - 1) y += idx % 2 === 0 ? -18 : 18;
+      y = Math.min(Math.max(y, 8), h - 8);
+      return { x, y, val, isTarget: idx === targetIdx };
+    });
+
+    coords.forEach(({ x, y }, i) => {
+      if (i === 0) { dPath += `M ${x} ${y}`; return; }
+      const prev = coords[i - 1];
+      const cpX1 = prev.x + xStep / 2;
+      const cpX2 = x - xStep / 2;
+      dPath += ` C ${cpX1} ${prev.y}, ${cpX2} ${y}, ${x} ${y}`;
+    });
+
+    pathEl.setAttribute('d', dPath);
+
+    coords.forEach(({ x, y, isTarget }) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', x); c.setAttribute('cy', y);
+      c.setAttribute('r', isTarget ? '6' : '4');
+      c.setAttribute('class', 'az-node' + (isTarget ? ' target' : ''));
+      nodesG.appendChild(c);
+    });
+  },
+
+  showError: function(msg) {
+    const el = document.getElementById('azError');
+    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('azWarning').style.display = 'none';
+    const btn = document.getElementById('azBtnAnalizar');
+    btn.classList.remove('loading');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analizar Propiedad`;
+  },
+
+  showWarning: function(msg) {
+    const el = document.getElementById('azWarning');
+    el.textContent = msg; el.style.display = 'block';
+  },
+
+  hideResults: function() {
+    document.getElementById('azError').style.display = 'none';
+    document.getElementById('azWarning').style.display = 'none';
+    document.getElementById('azResults').classList.remove('visible');
+    document.getElementById('azFooter').style.display = 'none';
+  }
+};
+
+// ── EXPORTAR PDF ──
+document.getElementById('azBtnPdf').addEventListener('click', function() {
+  window.print();
+});
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+(async function() {
+  const loginWrap    = document.getElementById('azLoginWrap');
+  const dashboard    = document.getElementById('azDashboard');
+  const loginForm    = document.getElementById('azLoginForm');
+  const loginError   = document.getElementById('azLoginError');
+
+  // Si no está autenticado → mostrar login
+  if (!AzAuth.isAuth()) {
+    loginWrap.style.display = 'flex';
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('azLoginEmail').value;
+      const pass  = document.getElementById('azLoginPassword').value;
+      const btn   = loginForm.querySelector('.btn-login');
+
+      btn.disabled = true; btn.textContent = 'Autenticando...';
+      loginError.style.display = 'none';
+
+      try {
+        await AzAuth.login(email, pass);
+        location.reload();
+      } catch(err) {
+        loginError.textContent = err.message || 'Credenciales inválidas';
+        loginError.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Autenticar Credenciales';
+      }
+    });
+    return;
+  }
+
+  // Autenticado → mostrar dashboard
+  loginWrap.style.display = 'none';
+  dashboard.style.display = 'flex';
+
+  // Mostrar usuario en sidebar
+  const user = AzAuth.user();
+  if (user) {
+    const email = user.email || '';
+    document.getElementById('azSbUser').textContent = email;
+  }
+
+  // Inicializar dropdowns desde Supabase
+  await AzAnalyzer.init();
+
+})();
+</script>
+</body>
+</html>
