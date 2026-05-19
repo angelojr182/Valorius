@@ -272,7 +272,6 @@ const proyectosFiltrados = azProyectos.filter(p => p.zone_id === zonaObj.zone_id
 
 selSubzona.innerHTML = '<option value="">Todas</option>' + subzonasFiltradas.map(s => `<option value="${s.subzona}">${s.subzona}</option>`).join('');
 selProyecto.innerHTML = '<option value="">Todos</option>' + proyectosFiltrados.map(p => `<option value="${p.proyecto}">${p.proyecto}</option>`).join('');
-```
 
 };
 
@@ -290,7 +289,6 @@ const tuPrecioM2 = Math.round(precio / area);
 const desviacion = ((tuPrecioM2 - mediana) / mediana) * 100;
 const desviacionSigno = desviacion >= 0 ? ‘+’ : ‘’;
 
-```
 lastAnalysisData = {zona, tipo, area, precio, mediana, p25, p75, N, nivel, min, max, tuPrecioM2, desviacion, desviacionSigno};
 
 document.getElementById('inpPrecio').value = `$${Math.round(precio).toLocaleString()}`;
@@ -348,7 +346,6 @@ const btnPDF = document.getElementById('btnExportPDF');
 btnPDF.disabled = false;
 btnPDF.style.opacity = '1';
 btnPDF.style.cursor = 'pointer';
-```
 
 }
 
@@ -423,7 +420,6 @@ const btn = document.getElementById(‘btnExportPDF’);
 btn.disabled = true;
 btn.textContent = ‘Generando PDF…’;
 
-```
 try {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p', 'mm', 'a4');
@@ -542,7 +538,6 @@ try {
   btn.disabled = false;
   btn.textContent = '✦ Exportar PDF';
 }
-```
 
 };
 
