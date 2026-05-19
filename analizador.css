@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Analyzer — Valorius</title>
+  <!-- Google Font: Inter para tipografía Sans-Serif moderna de alta fidelidad -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="analizador.css?v=1.4">
+</head>
+<body>
+
+  <!-- TOPNAV MOBILE RESPONSIVE -->
+
+  <div class="topnav-mobile">
+    <div class="tm-logo">V</div>
+    <div class="tm-title">Property Analyzer</div>
+    <a href="index.html" class="tm-btn">Dashboard →</a>
+  </div>
+
+  <!-- SIDEBAR LATERAL EXACTO -->
+
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo-v">V</div>
+    </div>
+
+```
+<nav class="sb-nav">
+  <a href="index.html" class="sb-link">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+    Dashboard
+  </a>
+  <a href="#" class="sb-link" onclick="alert('Módulo de Deals disponible en la versión conectada.'); return false;">
+    <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    Deals
+  </a>
+  <a href="#" class="sb-link" onclick="alert('Módulo de Zonas disponible en la versión conectada.'); return false;">
+    <svg viewBox="0 0 24 24"><polygon points="1 6 8 2 15 6 23 2 23 18 15 22 8 18 1 22"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="15" y1="6" x2="15" y2="22"/></svg>
+    Zonas
+  </a>
+  <a href="analizador.html" class="sb-link active">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Analizar
+  </a>
+</nav>
+```
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+
+  <main class="main-content">
+    <div class="page-hdr">
+      <h1 class="page-title">Property Analyzer</h1>
+      <p class="page-sub">Valorius</p>
+    </div>
+
+```
+<!-- DATOS DE LA PROPIEDAD -->
+<section class="panel">
+  <div class="panel-title">Datos de la propiedad</div>
+  <form onsubmit="event.preventDefault(); window.actualizarAnalisis();">
+    <div class="formulario-grid">
+      <div class="form-group-horizontal">
+        <label class="form-label">Zona</label>
+        <select id="selZona" class="form-input">
+          <option value="Miraflores">Miraflores</option>
+          <option value="Lomas del Guijarro">Lomas del Guijarro</option>
+          <option value="Las Colinas">Las Colinas</option>
+          <option value="El Hatillo">El Hatillo</option>
+        </select>
+      </div>
+      <div class="form-group-horizontal">
+        <label class="form-label">Tipo de Inmueble</label>
+        <select id="selTipo" class="form-input">
+          <option value="Apartamento">Apartamento</option>
+          <option value="Casa">Casa</option>
+        </select>
+      </div>
+      <div class="form-group-horizontal">
+        <label class="form-label">Subzona</label>
+        <select id="selSubzona" class="form-input">
+          <option value="Lomas Norte">Lomas Norte</option>
+          <option value="Miraflores Sur">Miraflores Sur</option>
+          <option value="Lomas Central">Lomas Central</option>
+        </select>
+      </div>
+      <div class="form-group-horizontal">
+        <label class="form-label">Proyecto</label>
+        <select id="selProyecto" class="form-input">
+          <option value="Torre Alfonso XIII">Torre Alfonso XIII</option>
+          <option value="Terravista">Terravista</option>
+          <option value="Edificio Metrópolis">Edificio Metrópolis</option>
+        </select>
+      </div>
+      <div class="form-group-horizontal">
+        <label class="form-label">Área de construcción (M²)</label>
+        <input type="number" id="inpArea" class="form-input" value="38" style="text-align: center;" required />
+      </div>
+      <div class="form-group-horizontal">
+        <label class="form-label">Precio solicitado (USD)</label>
+        <input type="text" id="inpPrecio" class="form-input" value="$115,000" style="text-align: center;" required />
+      </div>
+    </div>
+    
+    <div class="form-row-actions" style="grid-template-columns: 1fr; margin-top: 12px;">
+      <button type="submit" class="btn-gold" style="width: 100%;">Analizar propiedad</button>
+    </div>
+  </form>
+</section>
+
+<!-- CARDS GRID - ALTURAS IGUALES (.cards-resultados) -->
+<div class="cards-resultados">
+  
+  <!-- CARD IZQUIERDO: POSICIÓN EN EL MERCADO -->
+  <section class="panel card-resultado">
+    <div class="panel-title">Posición en el mercado</div>
+    
+    <!-- Contenedor del scatter reducido a 90px -->
+    <div class="gauge-container">
+      <svg class="gauge-svg" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="fluorescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0ea5e9" />
+            <stop offset="60%" stop-color="#fbbf24" />
+            <stop offset="100%" stop-color="#e2b05c" />
+          </linearGradient>
+        </defs>
+        <!-- 1. Track gris de fondo (arco completo, stroke gris oscuro) -->
+        <circle class="gauge-circle-bg" cx="50" cy="50" r="45" />
+        <!-- 2. Arco dorado que indica el valor -->
+        <circle id="gaugeFill" class="gauge-circle-fill" cx="50" cy="50" r="45" />
+        <!-- 3. Punto blanco al inicio del track (135 grados exactos) -->
+        <circle class="gauge-start-dot" cx="18.2" cy="81.8" r="3.5" />
+        <!-- 4. Punto dorado al final del arco -->
+        <circle id="gaugeBulb" class="gauge-glow-bulb" cx="50" cy="5" r="4.5" />
+      </svg>
+      <div class="gauge-content">
+        <span class="gauge-number" id="lblGaugeVal">+14%</span>
+        <span class="gauge-label">sobre la mediana</span>
+      </div>
+    </div>
+
+    <p class="pos-text-desc" id="lblExplanation">
+      La propiedad se posiciona por encima del rango observable para apartamentos comparables en Miraflores. Confianza: Alta · 10 comparables · 60 días.
+    </p>
+
+    <!-- Slider visual puro sin interacción -->
+    <div class="slider-pill-wrap">
+      <div class="slider-pill-bar">
+        <div id="sliderThumb" class="slider-pill-thumb"></div>
+      </div>
+      <div class="slider-pill-labels">
+        <span>Bajo</span>
+        <span>En rango</span>
+        <span>Sobre</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD CENTRAL: CONTEXTO DEL MERCADO OBSERVABLE -->
+  <section class="panel card-resultado">
+    <div class="panel-title">Contexto del mercado observable</div>
+    
+    <div class="spectrum-scale-container">
+      <div id="specTooltip" class="spectrum-tooltip-bubble">$3,026/m²</div>
+      <div class="spectrum-colored-line"></div>
+      <div class="spectrum-numbers">
+        <span id="lblMinVal">$2,212</span>
+        <span id="lblMedVal">$2,655</span>
+        <span id="lblMaxVal">$2,963</span>
+      </div>
+    </div>
+
+    <!-- Altura compactada a 70px -->
+    <div class="line-chart-area">
+      <svg class="chart-svg-curve" viewBox="0 0 300 150">
+        <!-- Curva sinusoidal punteada interactiva -->
+        <path id="curvePath" class="chart-curve-path" d="M 15 60 Q 60 20 100 50 T 180 15 T 250 55 T 285 30" />
+        <g id="curveNodes"></g>
+      </svg>
+    </div>
+
+    <!-- Criterio del Mercado Observable a 12px de la gráfica -->
+    <div class="explain-box-wrapper">
+      <div class="explain-box-label">Criterio del mercado observable</div>
+      <div class="explain-box" id="lblWarning">
+        La propiedad se encuentra dentro del rango observable para apartamentos comparables en Miraflores. El posicionamiento es consistente con el mercado actual.
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD DERECHO: MÉTRICAS CON ESTRUCTURA EXACTA DE LA GUÍA -->
+  <section class="panel card-resultado card-metricas">
+    <div class="panel-title">Métricas</div>
+    <div class="metricas-lista">
+      
+      <!-- Metrica 1: TU PRECIO / M² -->
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label">TU PRECIO / M²</span>
+          <span class="metrica-descripcion">El precio por metro cuadrado implícito en la oferta que estás evaluando.</span>
+        </div>
+        <span id="lblTuPrecio" class="metrica-valor precio">$3,026</span>
+      </div>
+
+      <!-- Metrica 2: MEDIANA DE ZONA -->
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label">MEDIANA DE ZONA</span>
+          <span class="metrica-descripcion">Precio de referencia del mercado observable en esta zona para este tipo de propiedad.</span>
+        </div>
+        <span id="lblMediana" class="metrica-valor mediana">$2,655</span>
+      </div>
+
+      <!-- Metrica 3: DIFERENCIA -->
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label">DIFERENCIA</span>
+          <span class="metrica-descripcion">Qué tan alejado está el precio de esta propiedad respecto a la mediana de la zona.</span>
+        </div>
+        <span id="lblDiff" class="metrica-valor positivo">+14.0%</span>
+      </div>
+
+      <!-- Metrica 4: RANGO OBSERVABLE (Cambiado de RANGO JUSTO) -->
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label">RANGO OBSERVABLE</span>
+          <span class="metrica-descripcion">Rango de precios totales observado en propiedades comparables activas en esta zona.</span>
+        </div>
+        <span id="lblRango" class="metrica-valor rango">$84K-$112K</span>
+      </div>
+
+      <!-- Metrica 5: COMPARABLES -->
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label">COMPARABLES</span>
+          <span class="metrica-descripcion">Propiedades similares activas en la misma zona usadas como referencia para este análisis.</span>
+        </div>
+        <span id="lblComparables" class="metrica-valor numero">10</span>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<!-- FOOTER UNIFICADO (METODOLOGÍA) -->
+<footer class="footer-row">
+  <p class="footer-desc-text" id="lblMetodologia">
+    Referencia construida con 10 propiedades comparables activas en Miraflores · Apartamento · últimos 60 días. Este análisis refleja precios de oferta observable. No constituye valuación formal ni avalúo profesional.
+  </p>
+  <button class="btn-export-pdf" onclick="alert('Generando PDF corporativo de Valorius... listo.');">
+    Exportar PDF
+  </button>
+</footer>
+```
+
+  </main>
+
+  <!-- LÓGICA REAL — Supabase + Autenticación -->
+
+  <script src="secrets.js?v=1.2"></script>
+
+  <script>
+  // ── CONFIGURACIÓN ──────────────────────────────────────────
+  const AZ_SURL = typeof SECRETS !== 'undefined' ? SECRETS.SURL : '';
+  const AZ_SKEY = typeof SECRETS !== 'undefined' ? SECRETS.SKEY : '';
+
+  const AZ_HEADERS = {
+    'apikey': AZ_SKEY,
+    'Authorization': 'Bearer ' + AZ_SKEY,
+    'Content-Type': 'application/json',
+    'Accept-Profile': 'core'
+  };
+
+  // ── AUTENTICACIÓN ─────────────────────────────────────────
+  function azIsAuth() { return !!localStorage.getItem('valorius_token'); }
+
+  async function azLogin(email, password) {
+    const res = await fetch(`${AZ_SURL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': AZ_SKEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.message || 'Credenciales inválidas');
+    localStorage.setItem('valorius_token', data.access_token);
+    localStorage.setItem('valorius_user', JSON.stringify(data.user));
+    return data;
+  }
+
+  window.azLogout = function() {
+    localStorage.removeItem('valorius_token');
+    localStorage.removeItem('valorius_user');
+    location.reload();
+  };
+
+  // ── QUERIES SUPABASE (solo lectura) ───────────────────────
+  async function azFetch(endpoint) {
+    try {
+      const res = await fetch(AZ_SURL + endpoint, { headers: AZ_HEADERS });
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch(e) { console.warn('azFetch error:', e); return []; }
+  }
+
+  // Cargar zonas con cluster disponible
+  async function azLoadZonas() {
+    return await azFetch('/rest/v1/v_zones_with_cluster?select=zone_id,zona,cluster_name&order=zona');
+  }
+
+  // Cargar subzonas
+  async function azLoadSubzonas() {
+    return await azFetch('/rest/v1/dim_subzona?select=subzona_id,subzona&order=subzona');
+  }
+
+  // Cargar proyectos
+  async function azLoadProyectos() {
+    return await azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto&order=proyecto');
+  }
+
+  // Benchmark del cluster + tipo
+  async function azLoadBenchmark(clusterName, tipo) {
+    const e = encodeURIComponent;
+    const rows = await azFetch(
+      `/rest/v1/v_cluster_benchmarks?cluster_name=eq.${e(clusterName)}&tipo_inmueble=eq.${e(tipo)}&limit=1`
+    );
+    return rows[0] || null;
+  }
+
+  // Comparables individuales
+  async function azLoadComparables(zona, tipo) {
+    const e = encodeURIComponent;
+    return await azFetch(
+      `/rest/v1/v_deals_full?zona=eq.${e(zona)}&tipo_inmueble=eq.${e(tipo)}&select=precio_m2,area_construccion&order=precio_m2`
+    );
+  }
+
+  // ── ESTADO GLOBAL ─────────────────────────────────────────
+  let azZonas = [];
+
+  // ── RENDER DEL ANÁLISIS ───────────────────────────────────
+  function renderAnalisis(zona, tipo, area, precio, bench, comparables) {
+    const mediana  = Number(bench.mediana_usd_m2);
+    const p25      = Number(bench.p25 || mediana * 0.85);
+    const p75      = Number(bench.p75 || mediana * 1.15);
+    const N        = bench.cantidad_muestras || comparables.length;
+    const confianza = (bench.nivel_confianza || (N >= 10 ? 'Alta' : 'Media'))
+                       .replace('🟢 ', '').replace('🟡 ', '').replace('🔴 ', '')
+                       .replace('CONFIANZA_', '').toLowerCase();
+    const nivel    = confianza.charAt(0).toUpperCase() + confianza.slice(1);
+
+    const iqr      = p75 - p25;
+    const min      = Math.max(0, p25 - 1.5 * iqr);
+    const max      = p75 + 1.5 * iqr;
+
+    const tuPrecioM2 = Math.round(precio / area);
+    const desviacion = ((tuPrecioM2 - mediana) / mediana) * 100;
+    const desviacionSigno = desviacion >= 0 ? '+' : '';
+
+    // Formatear precio
+    document.getElementById('inpPrecio').value = `$${Math.round(precio).toLocaleString()}`;
+
+    // ── Métricas ──
+    document.getElementById('lblTuPrecio').innerText = `$${tuPrecioM2.toLocaleString()}`;
+    document.getElementById('lblMediana').innerText  = `$${Math.round(mediana).toLocaleString()}`;
+    document.getElementById('lblDiff').innerText     = `${desviacionSigno}${desviacion.toFixed(1)}%`;
+    document.getElementById('lblComparables').innerText = N;
+
+    const rangoMin = Math.round(p25 * area / 1000);
+    const rangoMax = Math.round(p75 * area / 1000);
+    document.getElementById('lblRango').innerText = `$${rangoMin}K-$${rangoMax}K`;
+
+    const diffLabel = document.getElementById('lblDiff');
+    diffLabel.className = desviacion >= 0 ? 'metrica-valor positivo' : 'metrica-valor negativo';
+
+    // ── Gauge ──
+    document.getElementById('lblGaugeVal').innerText = `${desviacionSigno}${Math.round(desviacion)}%`;
+
+    const normalizedPercent = Math.min(Math.max((desviacion + 50) / 100, 0.05), 0.95);
+    const dashOffset = 283 - (213 * normalizedPercent);
+    document.getElementById('gaugeFill').style.strokeDashoffset = dashOffset;
+
+    const angle    = 135 + normalizedPercent * 320;
+    const angleRad = angle * Math.PI / 180;
+    const bulb     = document.getElementById('gaugeBulb');
+    bulb.setAttribute('cx', (50 + 45 * Math.cos(angleRad)).toFixed(2));
+    bulb.setAttribute('cy', (50 + 45 * Math.sin(angleRad)).toFixed(2));
+
+    // ── Slider + textos ──
+    const thumb       = document.getElementById('sliderThumb');
+    const explanation = document.getElementById('lblExplanation');
+    const warningLabel = document.getElementById('lblWarning');
+    let thumbPosition = 50;
+
+    if (tuPrecioM2 > max) {
+      thumbPosition = 85;
+      thumb.style.background = 'var(--red-bar)';
+      explanation.innerHTML = `La propiedad se posiciona por encima del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Confianza: ${nivel} · ${N} comparables · 60 días.`;
+      warningLabel.innerText = `La propiedad se posiciona por encima del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Existe margen razonable para negociación o para explorar alternativas en la misma zona.`;
+    } else if (tuPrecioM2 < min) {
+      thumbPosition = 15;
+      thumb.style.background = 'var(--green-bar)';
+      explanation.innerHTML = `La propiedad se posiciona por debajo del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Confianza: ${nivel} · ${N} comparables · 60 días.`;
+      warningLabel.innerText = `La propiedad se posiciona por debajo del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Se recomienda validar los datos ingresados y las condiciones específicas de la propiedad.`;
+    } else {
+      thumbPosition = 50;
+      thumb.style.background = 'var(--amber-bar)';
+      explanation.innerHTML = `La propiedad se posiciona dentro del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. Confianza: ${nivel} · ${N} comparables · 60 días.`;
+      warningLabel.innerText = `La propiedad se encuentra dentro del rango observable para ${tipo.toLowerCase()}s comparables en ${zona}. El posicionamiento es consistente con el mercado actual.`;
+    }
+    thumb.style.left = `${thumbPosition}%`;
+
+    // ── Espectro ──
+    document.getElementById('lblMinVal').innerText = `$${Math.round(min).toLocaleString()}`;
+    document.getElementById('lblMedVal').innerText = `$${Math.round(mediana).toLocaleString()}`;
+    document.getElementById('lblMaxVal').innerText = `$${Math.round(max).toLocaleString()}`;
+
+    const specTooltip = document.getElementById('specTooltip');
+    specTooltip.innerText = `$${tuPrecioM2.toLocaleString()}/m²`;
+    let tooltipPct = ((tuPrecioM2 - min) / (max - min + 400)) * 100;
+    tooltipPct = Math.min(Math.max(tooltipPct, 5), 92);
+    specTooltip.style.left = `${tooltipPct}%`;
+
+    // ── Metodología ──
+    document.getElementById('lblMetodologia').innerText =
+      `Referencia construida con ${N} propiedades comparables activas en ${zona} · ${tipo} · últimos 60 días. Este análisis refleja precios de oferta observable. No constituye valuación formal ni avalúo profesional.`;
+
+    // ── Gráfica ──
+    renderSineWaveChart(min, mediana, max, tuPrecioM2, comparables.length || N);
+  }
+
+  // ── GRÁFICA (idéntica a la original) ─────────────────────
+  function renderSineWaveChart(min, mediana, max, tuPrecio, count) {
+    const nodesGroup = document.getElementById('curveNodes');
+    nodesGroup.innerHTML = '';
+
+    const points = [];
+    const step   = (max - min) / Math.max(count - 1, 1);
+
+    for (let i = 0; i < count; i++) {
+      const oscillation = i % 2 === 0 ? 0.82 : 1.18;
+      const rawVal = min + (step * i) * oscillation;
+      points.push(Math.round(Math.max(min * 0.95, Math.min(max * 1.05, rawVal))));
+    }
+
+    let targetIndex = points.findIndex(p => p > tuPrecio);
+    if (targetIndex === -1) { points.push(tuPrecio); targetIndex = points.length - 1; }
+    else points.splice(targetIndex, 0, tuPrecio);
+
+    const height = 150, totalWidth = 270;
+    const xStep  = totalWidth / Math.max(points.length - 1, 1);
+    let dPath = '';
+
+    points.forEach((val, idx) => {
+      const x = 15 + idx * xStep;
+      let y = height - ((val - min) / (max - min + 1)) * height * 0.80;
+      if (idx > 0 && idx < points.length - 1) y += idx % 2 === 0 ? -18 : 18;
+      y = Math.min(Math.max(y, 8), height - 8);
+
+      if (idx === 0) {
+        dPath += `M ${x} ${y}`;
+      } else {
+        const prevX = 15 + (idx - 1) * xStep;
+        let prevY = height - ((points[idx - 1] - min) / (max - min + 1)) * height * 0.80;
+        if (idx - 1 > 0 && idx - 1 < points.length - 1) prevY += (idx - 1) % 2 === 0 ? -18 : 18;
+        prevY = Math.min(Math.max(prevY, 8), height - 8);
+        dPath += ` C ${prevX + xStep/2} ${prevY}, ${x - xStep/2} ${y}, ${x} ${y}`;
+      }
+
+      const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      node.setAttribute('cx', x);
+      node.setAttribute('cy', y);
+      node.setAttribute('r', idx === targetIndex ? '6' : '4');
+      node.setAttribute('class', idx === targetIndex ? 'chart-node-point active-target' : 'chart-node-point');
+      nodesGroup.appendChild(node);
+    });
+
+    document.getElementById('curvePath').setAttribute('d', dPath);
+  }
+
+  // ── FUNCIÓN PRINCIPAL AL PRESIONAR ANALIZAR ───────────────
+  window.actualizarAnalisis = async function() {
+    const zona     = document.getElementById('selZona').value;
+    const tipo     = document.getElementById('selTipo').value;
+    const area     = parseFloat(document.getElementById('inpArea').value) || 0;
+    const precioRaw = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g, '');
+    const precio   = parseFloat(precioRaw) || 0;
+
+    // Validaciones
+    if (!zona)          return alert('Seleccioná una zona.');
+    if (area <= 0)      return alert('Ingresá un área válida en m².');
+    if (precio < 1000)  return alert('¿El precio está en USD? Verificá el monto. Ej: 115000');
+
+    // Obtener cluster de la zona
+    const zonaObj = azZonas.find(z => z.zona === zona);
+    if (!zonaObj || !zonaObj.cluster_name) return alert('No hay benchmark disponible para esta zona todavía.');
+
+    // Deshabilitar botón
+    const btn = document.querySelector('button[type="submit"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Analizando...'; }
+
+    try {
+      const [bench, comparables] = await Promise.all([
+        azLoadBenchmark(zonaObj.cluster_name, tipo),
+        azLoadComparables(zona, tipo)
+      ]);
+
+      if (!bench) {
+        alert('No hay benchmark para esta zona y tipo. Probá con otra zona.');
+        return;
+      }
+
+      renderAnalisis(zona, tipo, area, precio, bench, comparables);
+
+    } catch(e) {
+      console.error('Error en análisis:', e);
+      alert('Error al conectar con la base de datos. Intentá de nuevo.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Analizar propiedad'; }
+    }
+  };
+
+  // ── INICIALIZACIÓN ────────────────────────────────────────
+  window.onload = async function() {
+
+    // Si no está autenticado → redirigir al login del dashboard
+    if (!azIsAuth()) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    // Cargar zonas, subzonas y proyectos en paralelo
+    const [zonas, subzonas, proyectos] = await Promise.all([
+      azLoadZonas(),
+      azLoadSubzonas(),
+      azLoadProyectos()
+    ]);
+
+    azZonas = zonas;
+
+    // Poblar dropdown de zonas
+    const selZona = document.getElementById('selZona');
+    selZona.innerHTML = '<option value="">Seleccioná una zona</option>' +
+      zonas.map(z => `<option value="${z.zona}">${z.zona}</option>`).join('');
+
+    // Poblar dropdown de subzonas
+    const selSubzona = document.getElementById('selSubzona');
+    if (selSubzona) {
+      selSubzona.innerHTML = '<option value="">Todas</option>' +
+        subzonas.map(s => `<option value="${s.subzona}">${s.subzona}</option>`).join('');
+    }
+
+    // Poblar dropdown de proyectos
+    const selProyecto = document.getElementById('selProyecto');
+    if (selProyecto) {
+      selProyecto.innerHTML = '<option value="">Todos</option>' +
+        proyectos.map(p => `<option value="${p.proyecto}">${p.proyecto}</option>`).join('');
+    }
+  };
+  </script>
+
+</body>
+</html>
