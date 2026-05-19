@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Property Analyzer — Valorius</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="analizador.css?v=1.4">
+  <link rel="stylesheet" href="analizador.css?v=1.5">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -177,23 +177,77 @@
   </main>
   <script src="secrets.js?v=1.2"></script>
   <script>
-  const AZ_SURL = typeof SECRETS !== 'undefined' ? SECRETS.SURL : '';
-  const AZ_SKEY = typeof SECRETS !== 'undefined' ? SECRETS.SKEY : '';
-  const AZ_HEADERS = {'apikey': AZ_SKEY,'Authorization': 'Bearer ' + AZ_SKEY,'Content-Type': 'application/json','Accept-Profile': 'core'};
-  function azIsAuth() { return !!localStorage.getItem('valorius_token'); }
-  window.azLogout = function() {localStorage.removeItem('valorius_token');localStorage.removeItem('valorius_user');location.reload();};
-  async function azFetch(endpoint) {try {const res = await fetch(AZ_SURL + endpoint, { headers: AZ_HEADERS });const data = await res.json();return Array.isArray(data) ? data : [];} catch(e) { console.warn('azFetch error:', e); return []; }}
+  // ZONAS HARDCODEADAS (FALLBACK)
+  const ZONAS_FALLBACK = [
+    {zona: "Anillo Periférico", cluster_name: "COMERCIAL_CENTRO"},
+    {zona: "Bulevar Morazán", cluster_name: "COMERCIAL_CENTRO"},
+    {zona: "Colonia Palmira", cluster_name: "COMERCIAL_CENTRO"},
+    {zona: "El Trapiche", cluster_name: "PREMIUM_NORTE"},
+    {zona: "Las Colinas", cluster_name: "PREMIUM_NORTE"},
+    {zona: "Las Uvas", cluster_name: "RESIDENCIAL_ESTE"},
+    {zona: "Lomas del Guijarro", cluster_name: "PREMIUM_NORTE"},
+    {zona: "Miraflores", cluster_name: "PREMIUM_NORTE"},
+    {zona: "Residencial Buena Vista", cluster_name: "PREMIUM_NORTE"},
+    {zona: "Residencial Centroamérica", cluster_name: "RESIDENCIAL_ESTE"},
+    {zona: "Residencial El Sauce", cluster_name: "RESIDENCIAL_ESTE"},
+    {zona: "Residencial Hacienda Real", cluster_name: "RESIDENCIAL_ESTE"},
+    {zona: "Residencial Las Casitas", cluster_name: "RESIDENCIAL_ESTE"},
+    {zona: "Residencial Los Cerezos", cluster_name: "PREMIUM_NORTE"},
+    {zona: "Residencial Portal del Bosque 1", cluster_name: "RESIDENCIAL_ESTE"},
+    {zona: "Residencial Quinta Isabel", cluster_name: "RESIDENCIAL_ESTE"},
+    {zona: "Residencial Villa Elena", cluster_name: "PREMIUM_NORTE"},
+    {zona: "San Ignacio", cluster_name: "PREMIUM_NORTE"}
+  ];
+
+const AZ_SURL = typeof SECRETS !== ‘undefined’ ? SECRETS.SURL : ‘’;
+const AZ_SKEY = typeof SECRETS !== ‘undefined’ ? SECRETS.SKEY : ‘’;
+const AZ_HEADERS = {‘apikey’: AZ_SKEY,‘Authorization’: ’Bearer ’ + AZ_SKEY,‘Content-Type’: ‘application/json’,‘Accept-Profile’: ‘core’};
 
 let azZonas = [];
 let azSubzonas = [];
 let azProyectos = [];
 let lastAnalysisData = null;
 
-async function azLoadZonas() {return await azFetch(’/rest/v1/v_zones_with_cluster?select=zone_id,zona,cluster_name&order=zona’);}
-async function azLoadSubzonas() {return await azFetch(’/rest/v1/dim_subzona?select=subzona_id,subzona,zone_id&order=subzona’);}
-async function azLoadProyectos() {return await azFetch(’/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id&order=proyecto’);}
-async function azLoadBenchmark(clusterName, tipo) {const e = encodeURIComponent;const rows = await azFetch(`/rest/v1/v_cluster_benchmarks?cluster_name=eq.${e(clusterName)}&tipo_inmueble=eq.${e(tipo)}&limit=1`);return rows[0] || null;}
-async function azLoadComparables(zona, tipo) {const e = encodeURIComponent;return await azFetch(`/rest/v1/v_deals_full?zona=eq.${e(zona)}&tipo_inmueble=eq.${e(tipo)}&select=precio_m2,area_construccion&order=precio_m2`);}
+function azIsAuth() { return !!localStorage.getItem(‘valorius_token’); }
+
+async function azFetch(endpoint) {
+try {
+const res = await fetch(AZ_SURL + endpoint, { headers: AZ_HEADERS });
+if (!res.ok) return null;
+const data = await res.json();
+return Array.isArray(data) ? data : null;
+} catch(e) {
+console.warn(‘azFetch error:’, e);
+return null;
+}
+}
+
+async function azLoadZonas() {
+const data = await azFetch(’/rest/v1/v_zones_with_cluster?select=zone_id,zona,cluster_name&order=zona’);
+return data || ZONAS_FALLBACK;
+}
+
+async function azLoadSubzonas() {
+const data = await azFetch(’/rest/v1/dim_subzona?select=subzona_id,subzona,zone_id&order=subzona’);
+return data || [];
+}
+
+async function azLoadProyectos() {
+const data = await azFetch(’/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id&order=proyecto’);
+return data || [];
+}
+
+async function azLoadBenchmark(clusterName, tipo) {
+const e = encodeURIComponent;
+const data = await azFetch(`/rest/v1/v_cluster_benchmarks?cluster_name=eq.${e(clusterName)}&tipo_inmueble=eq.${e(tipo)}&limit=1`);
+return (data && data[0]) || null;
+}
+
+async function azLoadComparables(zona, tipo) {
+const e = encodeURIComponent;
+const data = await azFetch(`/rest/v1/v_deals_full?zona=eq.${e(zona)}&tipo_inmueble=eq.${e(tipo)}&select=precio_m2,area_construccion&order=precio_m2`);
+return data || [];
+}
 
 window.filtrarSubzonasYProyectos = function() {
 const zona = document.getElementById(‘selZona’).value;
@@ -208,7 +262,11 @@ if (!zona) {
 }
 
 const zonaObj = azZonas.find(z => z.zona === zona);
-if (!zonaObj) return;
+if (!zonaObj || !zonaObj.zone_id) {
+  selSubzona.innerHTML = '<option value="">Todas</option>';
+  selProyecto.innerHTML = '<option value="">Todos</option>';
+  return;
+}
 
 const subzonasFiltradas = azSubzonas.filter(s => s.zone_id === zonaObj.zone_id);
 const proyectosFiltrados = azProyectos.filter(p => p.zone_id === zonaObj.zone_id);
@@ -375,11 +433,9 @@ try {
   const margin = 20;
   let y = margin;
   
-  // FONDO DARK
   pdf.setFillColor(6, 15, 32);
   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // HEADER
   pdf.setFillColor(226, 176, 92);
   pdf.circle(25, 22, 6, 'F');
   pdf.setTextColor(226, 176, 92);
@@ -392,8 +448,7 @@ try {
   
   y = 45;
   
-  // DATOS DE LA PROPIEDAD
-  pdf.setFillColor(20, 35, 65, 0.35);
+  pdf.setFillColor(20, 35, 65);
   pdf.roundedRect(margin, y, pageWidth - 2*margin, 30, 3, 3, 'F');
   pdf.setTextColor(148, 163, 184);
   pdf.setFontSize(8);
@@ -410,7 +465,6 @@ try {
   
   y += 40;
   
-  // GAUGE (captura del DOM)
   const gaugeContainer = document.querySelector('.gauge-container');
   const canvas = await html2canvas(gaugeContainer, {backgroundColor: null});
   const gaugeImg = canvas.toDataURL('image/png');
@@ -426,8 +480,7 @@ try {
   
   y += 70;
   
-  // MÉTRICAS
-  pdf.setFillColor(20, 35, 65, 0.35);
+  pdf.setFillColor(20, 35, 65);
   pdf.roundedRect(margin, y, pageWidth - 2*margin, 50, 3, 3, 'F');
   pdf.setTextColor(148, 163, 184);
   pdf.setFontSize(8);
@@ -455,7 +508,6 @@ try {
   
   y += 60;
   
-  // GRÁFICA (captura del DOM)
   const chartArea = document.querySelector('.line-chart-area');
   const chartCanvas = await html2canvas(chartArea, {backgroundColor: null});
   const chartImg = chartCanvas.toDataURL('image/png');
@@ -463,8 +515,7 @@ try {
   
   y += 50;
   
-  // METODOLOGÍA
-  pdf.setFillColor(20, 35, 65, 0.35);
+  pdf.setFillColor(20, 35, 65);
   pdf.roundedRect(margin, y, pageWidth - 2*margin, 25, 3, 3, 'F');
   pdf.setTextColor(148, 163, 184);
   pdf.setFontSize(8);
@@ -477,12 +528,11 @@ try {
   
   y += 35;
   
-  // FOOTER
   pdf.setTextColor(100, 116, 139);
   pdf.setFontSize(7);
   const fecha = new Date().toLocaleDateString('es-HN', {year: 'numeric', month: 'long', day: 'numeric'});
   pdf.text(`Generado: ${fecha}`, margin, pageHeight - 10);
-  pdf.text('valorius.com · Market Intelligence', pageWidth - margin, pageHeight - 10, {align: 'right'});
+  pdf.text('valorius.com', pageWidth - margin, pageHeight - 10, {align: 'right'});
   
   pdf.save(`Valorius_Analisis_${d.zona.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
   
@@ -498,7 +548,6 @@ try {
 };
 
 window.onload = async function() {
-if (!azIsAuth()) {window.location.href = ‘index.html’;return;}
 const [zonas, subzonas, proyectos] = await Promise.all([azLoadZonas(),azLoadSubzonas(),azLoadProyectos()]);
 azZonas = zonas;
 azSubzonas = subzonas;
