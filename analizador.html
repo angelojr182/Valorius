@@ -19,12 +19,8 @@
 
   <link
     rel="stylesheet"
-    href="analizador.css?v=2.1"
+    href="analizador.css?v=3.0"
   />
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
 
@@ -105,6 +101,8 @@
 
         <div class="formulario-grid">
 
+          <!-- TIPO -->
+
           <div class="form-group-horizontal">
 
             <label class="form-label">
@@ -115,6 +113,10 @@
               id="selTipo"
               class="form-input"
             >
+
+              <option value="">
+                Seleccioná tipo
+              </option>
 
               <option value="APARTAMENTO">
                 Apartamento
@@ -128,6 +130,8 @@
 
           </div>
 
+          <!-- ZONA -->
+
           <div class="form-group-horizontal">
 
             <label class="form-label">
@@ -138,6 +142,30 @@
               id="selZona"
               class="form-input"
               onchange="filtrarSubzonasYProyectos()"
+              disabled
+            >
+
+              <option value="">
+                Primero seleccioná tipo
+              </option>
+
+            </select>
+
+          </div>
+
+          <!-- SUBZONA -->
+
+          <div class="form-group-horizontal">
+
+            <label class="form-label">
+              Subzona / Colonia
+            </label>
+
+            <select
+              id="selSubzona"
+              class="form-input"
+              onchange="filtrarProyectos()"
+              disabled
             >
 
               <option value="">
@@ -148,24 +176,7 @@
 
           </div>
 
-          <div class="form-group-horizontal">
-
-            <label class="form-label">
-              Subzona
-            </label>
-
-            <select
-              id="selSubzona"
-              class="form-input"
-            >
-
-              <option value="">
-                Todas
-              </option>
-
-            </select>
-
-          </div>
+          <!-- PROYECTO -->
 
           <div class="form-group-horizontal">
 
@@ -176,15 +187,18 @@
             <select
               id="selProyecto"
               class="form-input"
+              disabled
             >
 
               <option value="">
-                Todos
+                Seleccioná una subzona
               </option>
 
             </select>
 
           </div>
+
+          <!-- AREA -->
 
           <div class="form-group-horizontal">
 
@@ -201,6 +215,8 @@
             />
 
           </div>
+
+          <!-- PRECIO -->
 
           <div class="form-group-horizontal">
 
@@ -240,35 +256,6 @@
   <script src="secrets.js?v=1.2"></script>
 
   <script>
-
-    const ZONAS_FALLBACK = [
-
-      {
-        zona: "Miraflores",
-        cluster_name: "PREMIUM_NORTE"
-      },
-
-      {
-        zona: "San Ignacio",
-        cluster_name: "PREMIUM_NORTE"
-      },
-
-      {
-        zona: "El Trapiche",
-        cluster_name: "PREMIUM_NORTE"
-      },
-
-      {
-        zona: "Bulevar Morazán",
-        cluster_name: "COMERCIAL_CENTRO"
-      },
-
-      {
-        zona: "Lomas del Guijarro",
-        cluster_name: "PREMIUM_NORTE"
-      }
-
-    ];
 
     const AZ_SURL =
       typeof SECRETS !== "undefined"
@@ -339,21 +326,93 @@
         "/rest/v1/v_zones_with_cluster?select=zona,cluster_name&order=zona"
       );
 
-      if (!data || !Array.isArray(data)) {
+      return data || [];
+    }
 
-        return ZONAS_FALLBACK;
+    async function azLoadSubzonas() {
+
+      const data = await azFetch(
+        "/rest/v1/dim_subzona?select=subzona,zona,tipo_inmueble&order=subzona"
+      );
+
+      return data || [];
+    }
+
+    async function azLoadProyectos() {
+
+      const data = await azFetch(
+        "/rest/v1/dim_proyecto?select=proyecto,zona,subzona,tipo_inmueble&order=proyecto"
+      );
+
+      return data || [];
+    }
+
+    async function cargarZonasPorTipo() {
+
+      const tipo =
+        document.getElementById(
+          "selTipo"
+        ).value;
+
+      const selZona =
+        document.getElementById(
+          "selZona"
+        );
+
+      const selSubzona =
+        document.getElementById(
+          "selSubzona"
+        );
+
+      const selProyecto =
+        document.getElementById(
+          "selProyecto"
+        );
+
+      selSubzona.disabled = true;
+      selProyecto.disabled = true;
+
+      selSubzona.innerHTML =
+        '<option value="">Seleccioná una zona</option>';
+
+      selProyecto.innerHTML =
+        '<option value="">Seleccioná una subzona</option>';
+
+      if (!tipo) {
+
+        selZona.disabled = true;
+
+        selZona.innerHTML =
+          '<option value="">Primero seleccioná tipo</option>';
+
+        return;
       }
+
+      const zonasFiltradas =
+
+        azZonas.filter(z => {
+
+          const match =
+
+            azSubzonas.some(s =>
+
+              s.zona &&
+              s.tipo_inmueble === tipo &&
+              s.zona.trim().toLowerCase() ===
+              z.zona.trim().toLowerCase()
+
+            );
+
+          return match;
+
+        });
 
       const seen = new Set();
 
-      return data.filter(z => {
-
-        if (!z.zona) {
-          return false;
-        }
+      const zonasUnicas = zonasFiltradas.filter(z => {
 
         const nombre =
-          z.zona.trim();
+          z.zona.trim().toLowerCase();
 
         if (seen.has(nombre)) {
           return false;
@@ -364,62 +423,28 @@
         return true;
 
       });
-    }
 
-    async function azLoadSubzonas() {
-
-      const data = await azFetch(
-        "/rest/v1/dim_subzona?select=subzona,zona&order=subzona"
-      );
-
-      return data || [];
-    }
-
-    async function azLoadProyectos() {
-
-      const data = await azFetch(
-        "/rest/v1/dim_proyecto?select=proyecto,zona&order=proyecto"
-      );
-
-      return data || [];
-    }
-
-    async function cargarZonas() {
-
-      azZonas =
-        await azLoadZonas();
-
-      const selZona =
-        document.getElementById(
-          "selZona"
-        );
+      selZona.disabled = false;
 
       selZona.innerHTML =
 
         '<option value="">Seleccioná una zona</option>' +
 
-        azZonas.map(z =>
+        zonasUnicas.map(z =>
 
           `<option value="${z.zona}">
             ${z.zona}
           </option>`
 
         ).join("");
-
-      document.getElementById(
-        "selSubzona"
-      ).innerHTML =
-
-        '<option value="">Todas</option>';
-
-      document.getElementById(
-        "selProyecto"
-      ).innerHTML =
-
-        '<option value="">Todos</option>';
     }
 
     function filtrarSubzonasYProyectos() {
+
+      const tipo =
+        document.getElementById(
+          "selTipo"
+        ).value;
 
       const zona =
         document.getElementById(
@@ -436,13 +461,17 @@
           "selProyecto"
         );
 
+      selProyecto.disabled = true;
+
+      selProyecto.innerHTML =
+        '<option value="">Seleccioná una subzona</option>';
+
       if (!zona) {
 
-        selSubzona.innerHTML =
-          '<option value="">Todas</option>';
+        selSubzona.disabled = true;
 
-        selProyecto.innerHTML =
-          '<option value="">Todos</option>';
+        selSubzona.innerHTML =
+          '<option value="">Seleccioná una zona</option>';
 
         return;
       }
@@ -452,18 +481,13 @@
         azSubzonas.filter(s =>
 
           s.zona &&
-          s.zona.trim() === zona.trim()
+          s.tipo_inmueble === tipo &&
+          s.zona.trim().toLowerCase() ===
+          zona.trim().toLowerCase()
 
         );
 
-      const proyectosFiltrados =
-
-        azProyectos.filter(p =>
-
-          p.zona &&
-          p.zona.trim() === zona.trim()
-
-        );
+      selSubzona.disabled = false;
 
       selSubzona.innerHTML =
 
@@ -476,6 +500,69 @@
           </option>`
 
         ).join("");
+    }
+
+    function filtrarProyectos() {
+
+      const tipo =
+        document.getElementById(
+          "selTipo"
+        ).value;
+
+      const zona =
+        document.getElementById(
+          "selZona"
+        ).value;
+
+      const subzona =
+        document.getElementById(
+          "selSubzona"
+        ).value;
+
+      const selProyecto =
+        document.getElementById(
+          "selProyecto"
+        );
+
+      if (!zona || !subzona) {
+
+        selProyecto.disabled = true;
+
+        selProyecto.innerHTML =
+          '<option value="">Seleccioná una subzona</option>';
+
+        return;
+      }
+
+      const proyectosFiltrados =
+
+        azProyectos.filter(p => {
+
+          const tipoMatch =
+
+            p.tipo_inmueble === tipo;
+
+          const zonaMatch =
+
+            p.zona &&
+            p.zona.trim().toLowerCase() ===
+            zona.trim().toLowerCase();
+
+          const subzonaMatch =
+
+            p.subzona &&
+            p.subzona.trim().toLowerCase() ===
+            subzona.trim().toLowerCase();
+
+          return (
+            tipoMatch &&
+            zonaMatch &&
+            subzonaMatch
+          );
+
+        });
+
+      selProyecto.disabled = false;
 
       selProyecto.innerHTML =
 
@@ -492,14 +579,24 @@
 
     async function actualizarAnalisis() {
 
+      const tipo =
+        document.getElementById(
+          "selTipo"
+        ).value;
+
       const zona =
         document.getElementById(
           "selZona"
         ).value;
 
-      const tipo =
+      const subzona =
         document.getElementById(
-          "selTipo"
+          "selSubzona"
+        ).value;
+
+      const proyecto =
+        document.getElementById(
+          "selProyecto"
         ).value;
 
       const area =
@@ -522,38 +619,15 @@
             )
         ) || 0;
 
-      if (!zona) {
-
-        alert(
-          "Seleccioná una zona."
-        );
-
-        return;
-      }
-
-      if (area <= 0) {
-
-        alert(
-          "Ingresá un área válida."
-        );
-
-        return;
-      }
-
-      if (precio < 1000) {
-
-        alert(
-          "Verificá el precio."
-        );
-
-        return;
-      }
-
       console.log({
-        zona,
+
         tipo,
+        zona,
+        subzona,
+        proyecto,
         area,
         precio
+
       });
 
       alert(
@@ -567,13 +641,14 @@
 
       async () => {
 
+        azZonas =
+          await azLoadZonas();
+
         azSubzonas =
           await azLoadSubzonas();
 
         azProyectos =
           await azLoadProyectos();
-
-        await cargarZonas();
 
         document
           .getElementById(
@@ -581,7 +656,7 @@
           )
           .addEventListener(
             "change",
-            cargarZonas
+            cargarZonasPorTipo
           );
 
       }
