@@ -36,16 +36,56 @@
       transform:translateX(-50%);
       border:5px solid transparent; border-top-color:#0a1428;
     }
-    /* Alerta contextual */
+    /* Alerta sanity check */
+    .alerta-sanity {
+      display:none; margin-top:10px; padding:12px 16px;
+      border-radius:8px;
+      border:1px solid rgba(245,158,11,0.35);
+      background:rgba(245,158,11,0.06);
+      font-size:11px; color:#f59e0b; line-height:1.6;
+    }
+    .alerta-sanity strong { display:block; font-size:12px; margin-bottom:4px; color:#fbbf24; }
+
+    /* Alerta contextual con severidad */
     .alerta-contextual {
       display:none; margin-top:10px; padding:14px 16px;
-      border-radius:8px; border:1px solid rgba(239,68,68,0.3);
-      background:rgba(239,68,68,0.06);
+      border-radius:8px;
+      border:1px solid var(--alerta-border, rgba(239,68,68,0.3));
+      background:var(--alerta-bg, rgba(239,68,68,0.06));
     }
-    .alerta-titulo { font-size:12px; font-weight:700; color:#f87171; margin-bottom:6px; }
+    /* Severidades */
+    .alerta-contextual.sev-leve    { --alerta-border:rgba(245,158,11,0.4); --alerta-bg:rgba(245,158,11,0.07); --alerta-color:#f59e0b; }
+    .alerta-contextual.sev-moderado{ --alerta-border:rgba(249,115,22,0.4); --alerta-bg:rgba(249,115,22,0.07); --alerta-color:#fb923c; }
+    .alerta-contextual.sev-extremo { --alerta-border:rgba(239,68,68,0.4);  --alerta-bg:rgba(239,68,68,0.07);  --alerta-color:#f87171; }
+
+    .alerta-severidad-badge {
+      display:inline-block; padding:2px 10px; border-radius:20px;
+      font-size:9px; font-weight:700; letter-spacing:0.1em;
+      background:var(--alerta-color, #f87171);
+      color:#030712; margin-bottom:8px;
+    }
+    .alerta-diff-principal {
+      font-size:22px; font-weight:800;
+      color:var(--alerta-color, #f87171);
+      letter-spacing:-0.5px; line-height:1;
+      margin-bottom:2px;
+    }
+    .alerta-diff-sub {
+      font-size:10px; color:#64748b; margin-bottom:10px;
+    }
+    .alerta-nums {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:6px; margin-bottom:10px;
+      padding:8px 10px; border-radius:6px;
+      background:rgba(0,0,0,0.2);
+    }
+    .alerta-num-item { display:flex; flex-direction:column; gap:1px; }
+    .alerta-num-label { font-size:8px; color:#475569; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; }
+    .alerta-num-value { font-size:13px; font-weight:700; color:#cbd5e1; }
+    .alerta-titulo { font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:6px; }
     .alerta-lista  { font-size:11px; color:#94a3b8; line-height:1.8; margin-bottom:10px; }
     .alerta-lista li { list-style:none; padding-left:12px; }
-    .alerta-lista li::before { content:'·  '; color:#f87171; }
+    .alerta-lista li::before { content:'·  '; color:var(--alerta-color, #f87171); }
     .alerta-btns { display:flex; gap:8px; }
     .alerta-btn-continuar {
       background:transparent; border:1px solid #e2b05c; color:#e2b05c;
@@ -141,15 +181,34 @@
         <!-- Badge cobertura -->
         <div class="coverage-badge" id="coverageBadge"></div>
 
-        <!-- Alerta contextual precio atipico -->
+        <!-- Alerta sanity check (input) -->
+        <div class="alerta-sanity" id="alertaSanity">
+          <strong>Los datos ingresados se encuentran fuera de los rangos observables habituales para este tipo de propiedad.</strong>
+          Verifica el area de construccion y el precio antes de continuar.
+        </div>
+
+        <!-- Alerta contextual (mercado) con severidad -->
         <div class="alerta-contextual" id="alertaAtipica">
-          <div class="alerta-titulo">El precio ingresado se encuentra considerablemente fuera del rango observable actual para esta zona.</div>
-          <div class="alerta-lista">
-            <li>Verifica el area ingresada</li>
-            <li>Confirma que el precio esta en dolares (USD)</li>
-            <li>Revisa el tipo de propiedad seleccionado</li>
-            <li>Considera que podria ser una propiedad atipica (penthouse, remodelacion, etc.)</li>
+          <div class="alerta-severidad-badge" id="alertaSevBadge">LEVE</div>
+          <div class="alerta-diff-principal" id="alertaDiffPct">+0%</div>
+          <div class="alerta-diff-sub">vs mediana observable de la zona</div>
+          <div class="alerta-nums">
+            <div class="alerta-num-item">
+              <span class="alerta-num-label">Tu precio / m²</span>
+              <span class="alerta-num-value" id="alertaTuPrecio">--</span>
+            </div>
+            <div class="alerta-num-item">
+              <span class="alerta-num-label">Mediana observable</span>
+              <span class="alerta-num-value" id="alertaMediana">--</span>
+            </div>
           </div>
+          <div class="alerta-titulo">Esta propiedad se encuentra significativamente fuera del rango observable para esta zona. Posibles causas a revisar:</div>
+          <ul class="alerta-lista">
+            <li>Area de construccion ingresada</li>
+            <li>Precio solicitado</li>
+            <li>Tipo de inmueble seleccionado</li>
+            <li>Condiciones atipicas de la propiedad (penthouse, remodelacion, etc.)</li>
+          </ul>
           <div class="alerta-btns">
             <button type="button" class="alerta-btn-continuar" onclick="window.confirmarAnalisisAtipico()">Entendido, continuar analisis</button>
             <button type="button" class="alerta-btn-cancelar" onclick="window.cerrarAlerta()">Revisar datos</button>
@@ -458,6 +517,22 @@
   }
 
   // ─── VALIDACION Y FLUJO ───────────────────────────────────
+  // Rangos de sanity check por tipo
+  var RANGOS_AREA = {
+    'CASA':        {min:45,  max:1200},
+    'APARTAMENTO': {min:25,  max:600}
+  };
+  var PRECIO_MIN  = 10000;
+  var PRECIO_MAX  = 5000000;
+
+  // Severidad segun desviacion porcentual absoluta
+  function getSeveridad(pct) {
+    var abs = Math.abs(pct);
+    if (abs >= 100) return {label:'EXTREMO', clase:'sev-extremo'};
+    if (abs >= 60)  return {label:'MODERADO', clase:'sev-moderado'};
+    return              {label:'LEVE',    clase:'sev-leve'};
+  }
+
   window.intentarAnalisis = function() {
     var zona   = document.getElementById('selZona').value;
     var tipo   = document.getElementById('selTipo').value;
@@ -465,29 +540,59 @@
     var raw    = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
     var precio = parseFloat(raw) || 0;
 
-    // Validaciones minimas obligatorias
-    if (!tipo)         return alert('Selecciona el tipo de inmueble.');
-    if (!zona)         return alert('Selecciona una zona.');
-    if (area < 10)     return alert('El area parece incorrecta. Ingresa los metros cuadrados de construccion (minimo 10 m2).');
-    if (area > 5000)   return alert('El area ingresada parece demasiado grande. Verifica el valor.');
-    if (precio < 5000) return alert('El precio parece incorrecto. Ingresalo en dolares sin puntos ni comas.\nEjemplo: 180000');
+    // Cerrar alertas previas
+    document.getElementById('alertaSanity').style.display  = 'none';
+    document.getElementById('alertaAtipica').style.display = 'none';
 
-    var cob    = todosLosComparables.find(function(c) { return c.zona === zona && c.tipo === tipo; });
-    var n      = cob ? cob.n : 0;
+    // Validaciones minimas obligatorias
+    if (!tipo)  return alert('Selecciona el tipo de inmueble.');
+    if (!zona)  return alert('Selecciona una zona.');
+    if (!area)  return alert('Ingresa el area de construccion en m2.');
+    if (!precio)return alert('Ingresa el precio solicitado en dolares.');
+
+    // ── VALIDACION 1: Sanity check de inputs ──────────────
+    var rangosArea = RANGOS_AREA[tipo] || {min:25, max:1200};
+    var sanityFail = false;
+    if (area < rangosArea.min || area > rangosArea.max) sanityFail = true;
+    if (precio < PRECIO_MIN || precio > PRECIO_MAX)     sanityFail = true;
+
+    if (sanityFail) {
+      var s = document.getElementById('alertaSanity');
+      s.style.display = 'block';
+      s.scrollIntoView({behavior:'smooth', block:'center'});
+      // No bloquear — el usuario puede corregir y volver a intentar
+      // pero no avanzamos al analisis todavia
+      return;
+    }
+
+    // ── VALIDACION 2: Alerta contextual de mercado ────────
+    var cob = todosLosComparables.find(function(c){ return c.zona===zona && c.tipo===tipo; });
+    var n   = cob ? cob.n : 0;
 
     if (n === 0) {
       return alert('Sin informacion suficiente para analizar ' + zona + ' · ' + tipo + ' en los ultimos ' + DIAS_COMPARABLES + ' dias.');
     }
 
-    // Validacion contextual: precio atipico
     if (!pendienteAtipico && cob && cob.mediana > 0) {
-      var tuPM2  = precio / area;
-      var ratioVsMediana = tuPM2 / cob.mediana;
-      if (ratioVsMediana > UMBRAL_ATIPICO || ratioVsMediana < (1 / UMBRAL_ATIPICO)) {
-        document.getElementById('alertaAtipica').style.display = 'block';
+      var tuPM2 = precio / area;
+      var ratio = tuPM2 / cob.mediana;
+      if (ratio > UMBRAL_ATIPICO || ratio < (1 / UMBRAL_ATIPICO)) {
+        var desv   = ((tuPM2 - cob.mediana) / cob.mediana) * 100;
+        var signo  = desv >= 0 ? '+' : '';
+        var sev    = getSeveridad(desv);
+
+        // Poblar alerta con datos concretos
+        var alertaEl = document.getElementById('alertaAtipica');
+        alertaEl.className = 'alerta-contextual ' + sev.clase;
+        document.getElementById('alertaSevBadge').textContent  = sev.label;
+        document.getElementById('alertaSevBadge').style.background = '';
+        document.getElementById('alertaDiffPct').textContent   = signo + Math.round(desv) + '% vs mediana observable';
+        document.getElementById('alertaTuPrecio').textContent  = '$' + Math.round(tuPM2).toLocaleString() + '/m2';
+        document.getElementById('alertaMediana').textContent   = '$' + cob.mediana.toLocaleString() + '/m2';
+
+        alertaEl.style.display = 'block';
         pendienteAtipico = true;
-        // scroll a la alerta
-        document.getElementById('alertaAtipica').scrollIntoView({behavior:'smooth', block:'center'});
+        alertaEl.scrollIntoView({behavior:'smooth', block:'center'});
         return;
       }
     }
@@ -498,19 +603,18 @@
   window.confirmarAnalisisAtipico = function() {
     document.getElementById('alertaAtipica').style.display = 'none';
     pendienteAtipico = false;
-    // Re-ejecutar con datos actuales
     var zona   = document.getElementById('selZona').value;
     var tipo   = document.getElementById('selTipo').value;
     var area   = parseFloat(document.getElementById('inpArea').value) || 0;
     var raw    = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
     var precio = parseFloat(raw) || 0;
-    var cob    = todosLosComparables.find(function(c) { return c.zona === zona && c.tipo === tipo; });
-    var n      = cob ? cob.n : 0;
-    ejecutarAnalisis(zona, tipo, area, precio, cob, n);
+    var cob    = todosLosComparables.find(function(c){ return c.zona===zona && c.tipo===tipo; });
+    ejecutarAnalisis(zona, tipo, area, precio, cob, cob ? cob.n : 0);
   };
 
   window.cerrarAlerta = function() {
     document.getElementById('alertaAtipica').style.display = 'none';
+    document.getElementById('alertaSanity').style.display  = 'none';
     pendienteAtipico = false;
   };
 
