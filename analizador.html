@@ -2,41 +2,76 @@
 <html lang="es">
 
 <head>
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
   <title>Property Analyzer — Valorius</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
 
-  <link rel="stylesheet" href="analizador.css?v=2.0">
+  <link
+    rel="stylesheet"
+    href="analizador.css?v=2.1"
+  />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 
 <body>
 
   <div class="topnav-mobile">
-    <div class="tm-logo">V</div>
-    <div class="tm-title">Property Analyzer</div>
-    <a href="index.html" class="tm-btn">Dashboard →</a>
+
+    <div class="tm-logo">
+      V
+    </div>
+
+    <div class="tm-title">
+      Property Analyzer
+    </div>
+
+    <a
+      href="index.html"
+      class="tm-btn"
+    >
+      Dashboard →
+    </a>
+
   </div>
 
   <aside class="sidebar">
 
     <div class="sb-brand">
-      <div class="sb-logo-v">V</div>
+
+      <div class="sb-logo-v">
+        V
+      </div>
+
     </div>
 
     <nav class="sb-nav">
 
-      <a href="index.html" class="sb-link">
+      <a
+        href="index.html"
+        class="sb-link"
+      >
         Dashboard
       </a>
 
-      <a href="analizador.html" class="sb-link active">
+      <a
+        href="analizador.html"
+        class="sb-link active"
+      >
         Analizar
       </a>
 
@@ -47,8 +82,15 @@
   <main class="main-content">
 
     <div class="page-hdr">
-      <h1 class="page-title">Property Analyzer</h1>
-      <p class="page-sub">Valorius Market Intelligence</p>
+
+      <h1 class="page-title">
+        Property Analyzer
+      </h1>
+
+      <p class="page-sub">
+        Valorius Market Intelligence
+      </p>
+
     </div>
 
     <section class="panel">
@@ -73,6 +115,7 @@
               id="selTipo"
               class="form-input"
             >
+
               <option value="APARTAMENTO">
                 Apartamento
               </option>
@@ -80,6 +123,7 @@
               <option value="CASA">
                 Casa
               </option>
+
             </select>
 
           </div>
@@ -95,9 +139,11 @@
               class="form-input"
               onchange="filtrarSubzonasYProyectos()"
             >
+
               <option value="">
                 Seleccioná una zona
               </option>
+
             </select>
 
           </div>
@@ -112,9 +158,11 @@
               id="selSubzona"
               class="form-input"
             >
+
               <option value="">
                 Todas
               </option>
+
             </select>
 
           </div>
@@ -129,9 +177,11 @@
               id="selProyecto"
               class="form-input"
             >
+
               <option value="">
                 Todos
               </option>
+
             </select>
 
           </div>
@@ -192,11 +242,32 @@
   <script>
 
     const ZONAS_FALLBACK = [
-      { zona: "Miraflores", cluster_name: "PREMIUM_NORTE" },
-      { zona: "San Ignacio", cluster_name: "PREMIUM_NORTE" },
-      { zona: "El Trapiche", cluster_name: "PREMIUM_NORTE" },
-      { zona: "Bulevar Morazán", cluster_name: "COMERCIAL_CENTRO" },
-      { zona: "Lomas del Guijarro", cluster_name: "PREMIUM_NORTE" }
+
+      {
+        zona: "Miraflores",
+        cluster_name: "PREMIUM_NORTE"
+      },
+
+      {
+        zona: "San Ignacio",
+        cluster_name: "PREMIUM_NORTE"
+      },
+
+      {
+        zona: "El Trapiche",
+        cluster_name: "PREMIUM_NORTE"
+      },
+
+      {
+        zona: "Bulevar Morazán",
+        cluster_name: "COMERCIAL_CENTRO"
+      },
+
+      {
+        zona: "Lomas del Guijarro",
+        cluster_name: "PREMIUM_NORTE"
+      }
+
     ];
 
     const AZ_SURL =
@@ -210,10 +281,18 @@
         : "";
 
     const AZ_HEADERS = {
+
       apikey: AZ_SKEY,
-      Authorization: "Bearer " + AZ_SKEY,
-      "Content-Type": "application/json",
-      "Accept-Profile": "core"
+
+      Authorization:
+        "Bearer " + AZ_SKEY,
+
+      "Content-Type":
+        "application/json",
+
+      "Accept-Profile":
+        "core"
+
     };
 
     let azZonas = [];
@@ -256,32 +335,31 @@
 
     async function azLoadZonas() {
 
-      const tipo =
-        document.getElementById("selTipo").value;
-
       const data = await azFetch(
-        "/rest/v1/v_zones_with_cluster?select=zone_id,zona,cluster_name,tipo_inmueble"
+        "/rest/v1/v_zones_with_cluster?select=zona,cluster_name&order=zona"
       );
 
       if (!data || !Array.isArray(data)) {
+
         return ZONAS_FALLBACK;
       }
 
-      const filtradas =
-        data.filter(z =>
-          !z.tipo_inmueble ||
-          z.tipo_inmueble === tipo
-        );
-
       const seen = new Set();
 
-      return filtradas.filter(z => {
+      return data.filter(z => {
 
-        if (seen.has(z.zona)) {
+        if (!z.zona) {
           return false;
         }
 
-        seen.add(z.zona);
+        const nombre =
+          z.zona.trim();
+
+        if (seen.has(nombre)) {
+          return false;
+        }
+
+        seen.add(nombre);
 
         return true;
 
@@ -291,7 +369,7 @@
     async function azLoadSubzonas() {
 
       const data = await azFetch(
-        "/rest/v1/dim_subzona?select=subzona_id,subzona,zone_id&order=subzona"
+        "/rest/v1/dim_subzona?select=subzona,zona&order=subzona"
       );
 
       return data || [];
@@ -300,7 +378,7 @@
     async function azLoadProyectos() {
 
       const data = await azFetch(
-        "/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id&order=proyecto"
+        "/rest/v1/dim_proyecto?select=proyecto,zona&order=proyecto"
       );
 
       return data || [];
@@ -308,37 +386,55 @@
 
     async function cargarZonas() {
 
-      azZonas = await azLoadZonas();
+      azZonas =
+        await azLoadZonas();
 
       const selZona =
-        document.getElementById("selZona");
+        document.getElementById(
+          "selZona"
+        );
 
       selZona.innerHTML =
+
         '<option value="">Seleccioná una zona</option>' +
 
         azZonas.map(z =>
+
           `<option value="${z.zona}">
             ${z.zona}
           </option>`
+
         ).join("");
 
-      document.getElementById("selSubzona").innerHTML =
+      document.getElementById(
+        "selSubzona"
+      ).innerHTML =
+
         '<option value="">Todas</option>';
 
-      document.getElementById("selProyecto").innerHTML =
+      document.getElementById(
+        "selProyecto"
+      ).innerHTML =
+
         '<option value="">Todos</option>';
     }
 
     function filtrarSubzonasYProyectos() {
 
       const zona =
-        document.getElementById("selZona").value;
+        document.getElementById(
+          "selZona"
+        ).value;
 
       const selSubzona =
-        document.getElementById("selSubzona");
+        document.getElementById(
+          "selSubzona"
+        );
 
       const selProyecto =
-        document.getElementById("selProyecto");
+        document.getElementById(
+          "selProyecto"
+        );
 
       if (!zona) {
 
@@ -351,78 +447,105 @@
         return;
       }
 
-      const zonaObj =
-        azZonas.find(
-          z => z.zona === zona
-        );
-
-      if (!zonaObj) return;
-
       const subzonasFiltradas =
-        azSubzonas.filter(
-          s =>
-            String(s.zone_id) ===
-            String(zonaObj.zone_id)
+
+        azSubzonas.filter(s =>
+
+          s.zona &&
+          s.zona.trim() === zona.trim()
+
         );
 
       const proyectosFiltrados =
-        azProyectos.filter(
-          p =>
-            String(p.zone_id) ===
-            String(zonaObj.zone_id)
+
+        azProyectos.filter(p =>
+
+          p.zona &&
+          p.zona.trim() === zona.trim()
+
         );
 
       selSubzona.innerHTML =
+
         '<option value="">Todas</option>' +
 
         subzonasFiltradas.map(s =>
+
           `<option value="${s.subzona}">
             ${s.subzona}
           </option>`
+
         ).join("");
 
       selProyecto.innerHTML =
+
         '<option value="">Todos</option>' +
 
         proyectosFiltrados.map(p =>
+
           `<option value="${p.proyecto}">
             ${p.proyecto}
           </option>`
+
         ).join("");
     }
 
     async function actualizarAnalisis() {
 
       const zona =
-        document.getElementById("selZona").value;
+        document.getElementById(
+          "selZona"
+        ).value;
 
       const tipo =
-        document.getElementById("selTipo").value;
+        document.getElementById(
+          "selTipo"
+        ).value;
 
       const area =
         parseFloat(
-          document.getElementById("inpArea").value
+          document.getElementById(
+            "inpArea"
+          ).value
         ) || 0;
 
       const precio =
         parseFloat(
-          document.getElementById("inpPrecio")
+          document
+            .getElementById(
+              "inpPrecio"
+            )
             .value
-            .replace(/[^0-9.]/g, "")
+            .replace(
+              /[^0-9.]/g,
+              ""
+            )
         ) || 0;
 
       if (!zona) {
-        alert("Seleccioná una zona.");
+
+        alert(
+          "Seleccioná una zona."
+        );
+
         return;
       }
 
       if (area <= 0) {
-        alert("Ingresá un área válida.");
+
+        alert(
+          "Ingresá un área válida."
+        );
+
         return;
       }
 
       if (precio < 1000) {
-        alert("Verificá el precio.");
+
+        alert(
+          "Verificá el precio."
+        );
+
         return;
       }
 
@@ -439,7 +562,9 @@
     }
 
     document.addEventListener(
+
       "DOMContentLoaded",
+
       async () => {
 
         azSubzonas =
@@ -451,13 +576,16 @@
         await cargarZonas();
 
         document
-          .getElementById("selTipo")
+          .getElementById(
+            "selTipo"
+          )
           .addEventListener(
             "change",
             cargarZonas
           );
 
       }
+
     );
 
   </script>
