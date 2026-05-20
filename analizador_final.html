@@ -9,23 +9,21 @@
   <link rel="stylesheet" href="analizador.css?v=1.7">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    /* Tooltip ⓘ */
+    /* ── Tooltips ⓘ ─────────────────────────────────────── */
     .info-wrap { position:relative; display:inline-flex; align-items:center; gap:4px; }
     .info-icon {
       display:inline-flex; align-items:center; justify-content:center;
       width:14px; height:14px; border-radius:50%;
-      border:1px solid rgba(148,163,184,0.4);
-      color:#64748b; font-size:9px; font-weight:700;
-      cursor:help; flex-shrink:0; transition:all 0.2s;
-      font-style:normal; line-height:1;
+      border:1px solid rgba(148,163,184,0.4); color:#64748b;
+      font-size:9px; font-weight:700; cursor:help; flex-shrink:0;
+      transition:all 0.2s; font-style:normal; line-height:1;
     }
     .info-icon:hover { border-color:#e2b05c; color:#e2b05c; }
     .info-tooltip {
       position:absolute; bottom:calc(100% + 8px); left:50%;
       transform:translateX(-50%);
       background:#0a1428; border:1px solid rgba(226,176,92,0.25);
-      border-radius:8px; padding:10px 12px;
-      width:220px; z-index:9999;
+      border-radius:8px; padding:10px 12px; width:220px; z-index:9999;
       box-shadow:0 8px 24px rgba(0,0,0,0.5);
       pointer-events:none; opacity:0; transition:opacity 0.15s;
     }
@@ -37,99 +35,130 @@
       transform:translateX(-50%);
       border:5px solid transparent; border-top-color:#0a1428;
     }
-    /* Alerta sanity check — correccion de datos */
-    .alerta-sanity {
-      display:none; margin-top:10px; padding:14px 16px;
-      border-radius:8px;
-      border:1px solid rgba(148,163,184,0.25);
-      background:rgba(148,163,184,0.04);
-      font-size:11px; color:#94a3b8; line-height:1.6;
-    }
-    .alerta-sanity-header {
-      display:flex; align-items:center; gap:8px;
-      margin-bottom:6px;
-    }
-    .alerta-sanity-icon {
-      width:20px; height:20px; border-radius:50%;
-      background:rgba(148,163,184,0.12);
-      display:flex; align-items:center; justify-content:center;
-      font-size:11px; color:#94a3b8; flex-shrink:0;
-    }
-    .alerta-sanity-title {
-      font-size:12px; font-weight:600; color:#cbd5e1;
-    }
-    .alerta-sanity-body { padding-left:28px; }
 
-/* Alerta contextual — observacion de mercado */
-.alerta-contextual {
-  display:none; margin-top:10px; padding:14px 16px;
-  border-radius:8px;
-  border:1px solid var(--alerta-border, rgba(14,165,233,0.3));
-  background:var(--alerta-bg, rgba(14,165,233,0.04));
+/* ── Alerta sanity (datos de entrada) ───────────────── */
+.alerta-sanity {
+  display:none; margin-top:10px; padding:14px 16px; border-radius:8px;
+  border:1px solid rgba(148,163,184,0.25); background:rgba(148,163,184,0.04);
+  font-size:11px; color:#94a3b8; line-height:1.6;
 }
-.alerta-contextual-header {
-  display:flex; align-items:center; gap:8px;
-  margin-bottom:8px;
-}
-.alerta-contextual-icon {
-  width:20px; height:20px; border-radius:50%;
-  background:rgba(14,165,233,0.12);
+.alerta-sanity-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.alerta-sanity-icon {
+  width:20px; height:20px; border-radius:50%; background:rgba(148,163,184,0.12);
   display:flex; align-items:center; justify-content:center;
-  font-size:11px; flex-shrink:0;
+  font-size:11px; color:#94a3b8; flex-shrink:0;
 }
-/* Severidades */
+.alerta-sanity-title { font-size:12px; font-weight:600; color:#cbd5e1; }
+.alerta-sanity-body  { padding-left:28px; }
+
+/* ── Alerta contextual (mercado) con severidad ───────── */
+.alerta-contextual {
+  display:none; margin-top:10px; padding:14px 16px; border-radius:8px;
+  border:1px solid var(--alerta-border, rgba(245,158,11,0.3));
+  background:var(--alerta-bg, rgba(245,158,11,0.05));
+}
 .alerta-contextual.sev-leve    { --alerta-border:rgba(245,158,11,0.35); --alerta-bg:rgba(245,158,11,0.05); --alerta-color:#f59e0b; }
 .alerta-contextual.sev-moderado{ --alerta-border:rgba(249,115,22,0.35); --alerta-bg:rgba(249,115,22,0.05); --alerta-color:#fb923c; }
 .alerta-contextual.sev-extremo { --alerta-border:rgba(239,68,68,0.35);  --alerta-bg:rgba(239,68,68,0.05);  --alerta-color:#f87171; }
+.alerta-contextual-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.alerta-contextual-icon {
+  width:20px; height:20px; border-radius:50%; display:flex;
+  align-items:center; justify-content:center; font-size:11px; flex-shrink:0;
+}
 .alerta-contextual.sev-leve .alerta-contextual-icon    { background:rgba(245,158,11,0.12); color:#f59e0b; }
 .alerta-contextual.sev-moderado .alerta-contextual-icon { background:rgba(249,115,22,0.12); color:#fb923c; }
-.alerta-contextual.sev-extremo .alerta-contextual-icon  { background:rgba(239,68,68,0.12); color:#f87171; }
-
+.alerta-contextual.sev-extremo .alerta-contextual-icon  { background:rgba(239,68,68,0.12);  color:#f87171; }
 .alerta-severidad-badge {
   display:inline-block; padding:2px 10px; border-radius:20px;
   font-size:9px; font-weight:700; letter-spacing:0.1em;
-  background:var(--alerta-color, #f59e0b);
-  color:#030712; margin-bottom:8px;
+  background:var(--alerta-color,#f59e0b); color:#030712;
 }
-.alerta-diff-principal {
-  font-size:22px; font-weight:800;
-  color:var(--alerta-color, #f59e0b);
-  letter-spacing:-0.5px; line-height:1;
-  margin-bottom:2px;
-}
-.alerta-diff-sub {
-  font-size:10px; color:#64748b; margin-bottom:10px;
-}
-.alerta-nums {
-  display:grid; grid-template-columns:1fr 1fr;
-  gap:6px; margin-bottom:10px;
-  padding:8px 10px; border-radius:6px;
-  background:rgba(0,0,0,0.2);
-}
+.alerta-diff-principal { font-size:22px; font-weight:800; color:var(--alerta-color,#f59e0b); letter-spacing:-0.5px; line-height:1; margin-bottom:2px; }
+.alerta-diff-sub { font-size:10px; color:#64748b; margin-bottom:10px; }
+.alerta-nums { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; padding:8px 10px; border-radius:6px; background:rgba(0,0,0,0.2); }
 .alerta-num-item { display:flex; flex-direction:column; gap:1px; }
 .alerta-num-label { font-size:8px; color:#475569; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; }
 .alerta-num-value { font-size:13px; font-weight:700; color:#cbd5e1; }
 .alerta-titulo { font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:6px; }
 .alerta-lista  { font-size:11px; color:#94a3b8; line-height:1.8; margin-bottom:10px; }
 .alerta-lista li { list-style:none; padding-left:12px; }
-.alerta-lista li::before { content:'·  '; color:var(--alerta-color, #94a3b8); }
+.alerta-lista li::before { content:'·  '; color:var(--alerta-color,#94a3b8); }
 .alerta-btns { display:flex; gap:8px; }
 .alerta-btn-continuar {
   background:transparent; border:1px solid #e2b05c; color:#e2b05c;
-  padding:6px 16px; border-radius:6px; font-size:11px; font-weight:600;
-  cursor:pointer; transition:all 0.2s;
+  padding:6px 16px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; transition:all 0.2s;
 }
 .alerta-btn-continuar:hover { background:#e2b05c; color:#030712; }
 .alerta-btn-cancelar {
   background:transparent; border:1px solid rgba(100,116,139,0.3); color:#64748b;
   padding:6px 16px; border-radius:6px; font-size:11px; cursor:pointer;
 }
-/* Badge cobertura */
+
+/* ── Badge cobertura ────────────────────────────────── */
 .coverage-badge {
-  display:none; margin-top:10px; padding:10px 14px;
-  border-radius:8px; border:1px solid rgba(245,158,11,0.3);
-  background:rgba(245,158,11,0.06);
+  display:none; margin-top:10px; padding:10px 14px; border-radius:8px;
+  border:1px solid rgba(245,158,11,0.3); background:rgba(245,158,11,0.06);
   font-size:11px; color:#f59e0b;
+}
+
+/* ── VEREDICTO PRINCIPAL ────────────────────────────── */
+.veredicto-principal {
+  display:none; margin-bottom:0;
+  padding:20px 20px 18px; border-radius:12px;
+  border-left:4px solid var(--vrd-color, #e2b05c);
+  background:var(--vrd-bg, rgba(226,176,92,0.06));
+}
+.veredicto-principal.vrd-bajo    { --vrd-color:#10b981; --vrd-bg:rgba(16,185,129,0.06); --vrd-text:#10b981; }
+.veredicto-principal.vrd-rango   { --vrd-color:#e2b05c; --vrd-bg:rgba(226,176,92,0.06); --vrd-text:#e2b05c; }
+.veredicto-principal.vrd-sobre   { --vrd-color:#f87171; --vrd-bg:rgba(239,68,68,0.06);  --vrd-text:#f87171; }
+.veredicto-principal.vrd-ref     { --vrd-color:#64748b; --vrd-bg:rgba(100,116,139,0.06); --vrd-text:#94a3b8; }
+.vrd-etiqueta {
+  font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--vrd-text,#e2b05c); margin-bottom:6px;
+}
+.vrd-titulo {
+  font-size:20px; font-weight:800; color:var(--vrd-text,#e2b05c);
+  line-height:1.1; margin-bottom:8px;
+}
+.vrd-descripcion { font-size:13px; color:#94a3b8; line-height:1.6; }
+.vrd-ipr-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  margin-top:10px; padding:5px 12px; border-radius:20px;
+  background:rgba(0,0,0,0.2); font-size:10px; color:#64748b;
+}
+.vrd-ipr-valor { font-weight:700; color:var(--vrd-text,#e2b05c); }
+
+/* ── IAO card ───────────────────────────────────────── */
+.iao-card {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border-radius:8px;
+  background:rgba(14,165,233,0.05); border:1px solid rgba(14,165,233,0.15);
+  margin-bottom:4px;
+}
+.iao-icono { font-size:18px; flex-shrink:0; }
+.iao-contenido { flex:1; }
+.iao-titulo { font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#64748b; margin-bottom:2px; }
+.iao-valor { font-size:14px; font-weight:700; color:#cbd5e1; }
+.iao-sub { font-size:10px; color:#64748b; margin-top:1px; }
+.iao-card.iao-baja   { background:rgba(100,116,139,0.05); border-color:rgba(100,116,139,0.2); }
+.iao-card.iao-media  { background:rgba(14,165,233,0.05);  border-color:rgba(14,165,233,0.2); }
+.iao-card.iao-alta   { background:rgba(16,185,129,0.05);  border-color:rgba(16,185,129,0.2); }
+
+/* ── Resumen rapido ─────────────────────────────────── */
+.resumen-rapido {
+  display:none; padding:14px 16px; border-radius:8px;
+  background:rgba(10,20,42,0.6); border:1px solid rgba(30,48,80,0.8);
+  margin-bottom:4px;
+}
+.resumen-rapido-label {
+  font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  color:#475569; margin-bottom:6px;
+}
+.resumen-rapido-texto { font-size:12px; color:#cbd5e1; line-height:1.6; }
+
+/* ── Guia de grafico ────────────────────────────────── */
+.chart-guia {
+  font-size:10px; color:#475569; margin-bottom:6px; font-style:italic;
 }
 
   </style>
@@ -153,13 +182,12 @@
       <h1 class="page-title">Property Analyzer</h1>
       <p class="page-sub">Valorius Market Intelligence</p>
     </div>
-    
+
+<!-- FORMULARIO -->
 <section class="panel">
   <div class="panel-title">Datos de la propiedad</div>
   <form id="formAnalisis" onsubmit="event.preventDefault(); window.intentarAnalisis();">
     <div class="formulario-grid">
-
-      <!-- 1. TIPO DE INMUEBLE -->
       <div class="form-group-horizontal">
         <label class="form-label">Tipo de Inmueble</label>
         <select id="selTipo" class="form-input" onchange="window.onTipoChange()">
@@ -167,78 +195,60 @@
           <option value="CASA">Casa</option>
         </select>
       </div>
-
-      <!-- 2. ZONA -->
       <div class="form-group-horizontal">
         <label class="form-label">Zona</label>
         <select id="selZona" class="form-input" onchange="window.onZonaChange()">
           <option value="">Selecciona una zona</option>
         </select>
       </div>
-
-      <!-- 3. SUBZONA -->
       <div class="form-group-horizontal">
         <label class="form-label">Subzona <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-        <select id="selSubzona" class="form-input">
-          <option value="">Todas</option>
-        </select>
+        <select id="selSubzona" class="form-input"><option value="">Todas</option></select>
       </div>
-
-      <!-- 4. PROYECTO -->
       <div class="form-group-horizontal">
         <label class="form-label">Proyecto <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-        <select id="selProyecto" class="form-input">
-          <option value="">Todos</option>
-        </select>
+        <select id="selProyecto" class="form-input"><option value="">Todos</option></select>
       </div>
-
-      <!-- 5. AREA -->
       <div class="form-group-horizontal">
         <label class="form-label">Area de construccion (M2)</label>
-        <input type="number" id="inpArea" class="form-input" placeholder="Ej: 85" style="text-align:center;" min="10" max="5000" required />
+        <input type="number" id="inpArea" class="form-input" placeholder="ingrede un valor" style="text-align:center;" required />
       </div>
-
-      <!-- 6. PRECIO -->
       <div class="form-group-horizontal">
         <label class="form-label">Precio solicitado (USD)</label>
-        <input type="text" id="inpPrecio" class="form-input" placeholder="Ej: 180000" style="text-align:center;" required />
+        <input type="text" id="inpPrecio" class="form-input" placeholder="ingrese un precio" style="text-align:center;" required />
       </div>
-
     </div>
 
-    <!-- Badge cobertura -->
     <div class="coverage-badge" id="coverageBadge"></div>
 
-    <!-- Alerta sanity check (datos de entrada) -->
+    <!-- Alerta sanity -->
     <div class="alerta-sanity" id="alertaSanity">
       <div class="alerta-sanity-header">
         <div class="alerta-sanity-icon">✎</div>
         <div class="alerta-sanity-title">Datos fuera de rangos habituales</div>
       </div>
-      <div class="alerta-sanity-body">
-        Los valores ingresados se encuentran fuera de los rangos observables habituales para este tipo de propiedad. Revisa el area de construccion y el precio solicitado antes de continuar.
-      </div>
+      <div class="alerta-sanity-body">Los valores ingresados se encuentran fuera de los rangos observables habituales para este tipo de propiedad. Revisa el area de construccion y el precio antes de continuar.</div>
     </div>
 
-    <!-- Alerta contextual (observacion de mercado) con severidad -->
+    <!-- Alerta contextual -->
     <div class="alerta-contextual" id="alertaAtipica">
       <div class="alerta-contextual-header">
         <div class="alerta-contextual-icon">◉</div>
         <div class="alerta-severidad-badge" id="alertaSevBadge">LEVE</div>
       </div>
       <div class="alerta-diff-principal" id="alertaDiffPct">+0%</div>
-      <div class="alerta-diff-sub">vs mediana observable de la zona</div>
+      <div class="alerta-diff-sub">vs precio de referencia de la zona</div>
       <div class="alerta-nums">
         <div class="alerta-num-item">
           <span class="alerta-num-label">Tu precio / m2</span>
           <span class="alerta-num-value" id="alertaTuPrecio">--</span>
         </div>
         <div class="alerta-num-item">
-          <span class="alerta-num-label">Mediana observable</span>
+          <span class="alerta-num-label">Precio de referencia</span>
           <span class="alerta-num-value" id="alertaMediana">--</span>
         </div>
       </div>
-      <div class="alerta-titulo">Se observa una desviacion significativa respecto al rango observable de esta zona. Posibles causas a revisar:</div>
+      <div class="alerta-titulo">Se observa una desviacion significativa respecto a propiedades similares en esta zona. Posibles causas a revisar:</div>
       <ul class="alerta-lista">
         <li>Area de construccion ingresada</li>
         <li>Precio solicitado</li>
@@ -257,17 +267,28 @@
   </form>
 </section>
 
+<!-- VEREDICTO PRINCIPAL -->
+<div class="veredicto-principal" id="veredictoPanel">
+  <div class="vrd-etiqueta" id="vrdEtiqueta">Resultado del analisis</div>
+  <div class="vrd-titulo" id="vrdTitulo">--</div>
+  <div class="vrd-descripcion" id="vrdDescripcion">--</div>
+  <div class="vrd-ipr-badge">
+    IPR <span class="vrd-ipr-valor" id="vrdIPR">--</span>
+    &nbsp;·&nbsp; basado en <span id="vrdComparables" style="color:#94a3b8">--</span> propiedades similares
+  </div>
+</div>
+
 <!-- RESULTADOS -->
 <div class="cards-resultados">
 
-  <!-- POSICION -->
+  <!-- POSICION EN EL MERCADO -->
   <section class="panel card-resultado">
     <div class="panel-title info-wrap">
       Posicion en el mercado
       <span class="info-icon" data-tip="posicion">ⓘ</span>
       <div class="info-tooltip" id="tip-posicion">
         <div class="info-tooltip-title">Posicion en el mercado</div>
-        <div class="info-tooltip-body">Indica que tan alejado esta el precio de la propiedad respecto a la mediana de precios observados en la zona. Un resultado positivo significa que el precio esta sobre la mediana; negativo, por debajo. No determina si una propiedad es buena o mala inversion.</div>
+        <div class="info-tooltip-body">Muestra que tan alejado esta el precio de esta propiedad respecto al precio de referencia de propiedades similares en la zona. El gauge y los colores usan el mismo criterio que el veredicto principal.</div>
       </div>
     </div>
     <div class="gauge-container">
@@ -286,26 +307,27 @@
       </svg>
       <div class="gauge-content">
         <span class="gauge-number" id="lblGaugeVal">--</span>
-        <span class="gauge-label">vs mediana</span>
+        <span class="gauge-label" id="lblGaugeLabel">vs referencia</span>
       </div>
     </div>
     <p class="pos-text-desc" id="lblExplanation">Ingresa los datos y presiona Analizar para ver resultados.</p>
     <div class="slider-pill-wrap">
       <div class="slider-pill-bar"><div id="sliderThumb" class="slider-pill-thumb"></div></div>
-      <div class="slider-pill-labels"><span>Bajo</span><span>En rango</span><span>Sobre</span></div>
+      <div class="slider-pill-labels"><span>Bajo mercado</span><span>En rango</span><span>Sobre mercado</span></div>
     </div>
   </section>
 
-  <!-- CONTEXTO -->
+  <!-- COMPARACION CON PROPIEDADES SIMILARES -->
   <section class="panel card-resultado">
     <div class="panel-title info-wrap">
-      Contexto del mercado observable
+      Comparacion con propiedades similares
       <span class="info-icon" data-tip="contexto">ⓘ</span>
       <div class="info-tooltip" id="tip-contexto">
-        <div class="info-tooltip-title">Contexto del mercado observable</div>
-        <div class="info-tooltip-body">Muestra la distribucion de precios por m2 de propiedades activas comparables en la misma zona y tipo. El rango visible representa los valores observados en los ultimos 100 dias. No incluye transacciones cerradas, solo precios de oferta publicados.</div>
+        <div class="info-tooltip-title">Comparacion con propiedades similares</div>
+        <div class="info-tooltip-body">Muestra el rango de precios por m2 de propiedades activas del mismo tipo en la misma zona. Los puntos representan propiedades detectadas en los ultimos 100 dias. Son precios de oferta publicados, no precios de cierre.</div>
       </div>
     </div>
+    <p class="chart-guia" id="chartGuia">Cada punto representa una propiedad similar activa en esta zona.</p>
     <div class="spectrum-scale-container">
       <div id="specTooltip" class="spectrum-tooltip-bubble">--</div>
       <div class="spectrum-colored-line"></div>
@@ -322,14 +344,38 @@
       </svg>
     </div>
     <div class="explain-box-wrapper">
-      <div class="explain-box-label">Criterio del mercado observable</div>
-      <div class="explain-box" id="lblWarning">Complete el analisis para ver la interpretacion.</div>
+      <div class="explain-box-label">Lo que esto significa</div>
+      <div class="explain-box" id="lblWarning">Completa el analisis para ver la interpretacion.</div>
     </div>
   </section>
 
   <!-- METRICAS -->
   <section class="panel card-resultado card-metricas">
-    <div class="panel-title">Metricas</div>
+    <div class="panel-title">Metricas de referencia</div>
+
+    <!-- Resumen rapido -->
+    <div class="resumen-rapido" id="resumenRapido">
+      <div class="resumen-rapido-label">Resumen del analisis</div>
+      <div class="resumen-rapido-texto" id="resumenTexto">--</div>
+    </div>
+
+    <!-- IAO -->
+    <div class="iao-card" id="iaoCard">
+      <div class="iao-icono" id="iaoIcono">◎</div>
+      <div class="iao-contenido">
+        <div class="iao-titulo info-wrap">
+          Actividad en la zona
+          <span class="info-icon" data-tip="iao">ⓘ</span>
+          <div class="info-tooltip" id="tip-iao">
+            <div class="info-tooltip-title">Actividad observable en la zona</div>
+            <div class="info-tooltip-body">Indica que tan activo esta el mercado para este tipo de propiedad en esta zona. Se calcula con base en la cantidad de propiedades similares detectadas en los ultimos 100 dias. Alta actividad significa mas opciones disponibles y mayor contexto de referencia.</div>
+          </div>
+        </div>
+        <div class="iao-valor" id="iaoValor">--</div>
+        <div class="iao-sub" id="iaoSub">--</div>
+      </div>
+    </div>
+
     <div class="metricas-lista">
 
       <div class="metrica">
@@ -338,24 +384,24 @@
             <span class="info-icon" data-tip="pm2">ⓘ</span>
             <div class="info-tooltip" id="tip-pm2">
               <div class="info-tooltip-title">Tu precio por m2</div>
-              <div class="info-tooltip-body">Se calcula dividiendo el precio solicitado entre el area de construccion ingresada. Es la unidad de comparacion estandar del mercado inmobiliario. Permite comparar propiedades de distintos tamanios en igualdad de condiciones.</div>
+              <div class="info-tooltip-body">Precio total dividido entre los metros cuadrados de construccion. Permite comparar propiedades de distintos tamanios en igualdad de condiciones, independientemente de si una es mas grande o mas pequena.</div>
             </div>
           </span>
-          <span class="metrica-descripcion">Precio por metro cuadrado implicito en la oferta evaluada.</span>
+          <span class="metrica-descripcion">Precio implicito por metro cuadrado de la propiedad evaluada.</span>
         </div>
         <span id="lblTuPrecio" class="metrica-valor precio">--</span>
       </div>
 
       <div class="metrica">
         <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">MEDIANA DE ZONA
+          <span class="metrica-label info-wrap">PRECIO DE REFERENCIA
             <span class="info-icon" data-tip="mediana">ⓘ</span>
             <div class="info-tooltip" id="tip-mediana">
-              <div class="info-tooltip-title">Mediana de zona</div>
-              <div class="info-tooltip-body">Precio por m2 que divide exactamente en dos mitades iguales el conjunto de comparables activos. Se usa mediana en lugar de promedio porque es mas resistente a propiedades atipicas que podrian distorsionar el resultado. Limitacion: a menor cantidad de comparables, menor robustez estadistica.</div>
+              <div class="info-tooltip-title">Precio de referencia de la zona</div>
+              <div class="info-tooltip-body">El precio por m2 que representa el punto medio de propiedades similares activas en esta zona. Se calcula como mediana, no promedio, para evitar que propiedades muy caras o muy baratas distorsionen la referencia. A menor cantidad de propiedades detectadas, mas orientativa es esta cifra.</div>
             </div>
           </span>
-          <span class="metrica-descripcion">Precio de referencia del mercado observable en esta zona.</span>
+          <span class="metrica-descripcion">Punto de referencia de propiedades similares en la zona.</span>
         </div>
         <span id="lblMediana" class="metrica-valor mediana">--</span>
       </div>
@@ -365,41 +411,27 @@
           <span class="metrica-label info-wrap">DIFERENCIA
             <span class="info-icon" data-tip="diferencia">ⓘ</span>
             <div class="info-tooltip" id="tip-diferencia">
-              <div class="info-tooltip-title">Diferencia vs mediana</div>
-              <div class="info-tooltip-body">Porcentaje de desviacion entre tu precio por m2 y la mediana de la zona. Un valor positivo indica que el precio esta sobre la mediana observable; negativo indica que esta por debajo. No implica sobrevaloacion ni subvaluacion definitiva: existen factores cualitativos que este analisis no captura.</div>
+              <div class="info-tooltip-title">Diferencia vs referencia</div>
+              <div class="info-tooltip-body">Porcentaje de diferencia entre tu precio por m2 y el precio de referencia de la zona. Positivo significa que estas por encima; negativo, por debajo. Este dato no determina si la propiedad es buena o mala inversion: hay factores cualitativos que el analisis no captura.</div>
             </div>
           </span>
-          <span class="metrica-descripcion">Distancia del precio respecto a la mediana de la zona.</span>
+          <span class="metrica-descripcion">Distancia entre tu precio y el de referencia de la zona.</span>
         </div>
         <span id="lblDiff" class="metrica-valor positivo">--</span>
       </div>
 
       <div class="metrica">
         <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">RANGO OBSERVABLE
+          <span class="metrica-label info-wrap">RANGO DE PRECIOS
             <span class="info-icon" data-tip="rango">ⓘ</span>
             <div class="info-tooltip" id="tip-rango">
-              <div class="info-tooltip-title">Rango observable</div>
-              <div class="info-tooltip-body">Precio minimo y maximo por m2 observado entre los comparables activos de la zona en los ultimos 100 dias. Representa la amplitud real del mercado observable. No es un rango garantizado de transaccion: son precios de oferta, no de cierre.</div>
+              <div class="info-tooltip-title">Rango de precios observados</div>
+              <div class="info-tooltip-body">El precio minimo y maximo por m2 detectado entre propiedades similares activas en la zona en los ultimos 100 dias. Muestra la amplitud del mercado observable. Son precios de oferta publicados, no precios de transaccion cerrada.</div>
             </div>
           </span>
-          <span class="metrica-descripcion">Extremos de precio/m2 en comparables activos de esta zona.</span>
+          <span class="metrica-descripcion">Amplitud de precios observados en propiedades similares.</span>
         </div>
         <span id="lblRango" class="metrica-valor rango">--</span>
-      </div>
-
-      <div class="metrica">
-        <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">COBERTURA OBSERVABLE
-            <span class="info-icon" data-tip="cobertura">ⓘ</span>
-            <div class="info-tooltip" id="tip-cobertura">
-              <div class="info-tooltip-title">Cobertura observable</div>
-              <div class="info-tooltip-body">Cantidad de propiedades activas comparables utilizadas como referencia para este analisis durante los ultimos 100 dias. A mayor cobertura, mayor robustez estadistica. Con menos de 3 comparables el analisis es referencial y no debe usarse como benchmark definitivo.</div>
-            </div>
-          </span>
-          <span class="metrica-descripcion">Propiedades similares activas usadas como referencia.</span>
-        </div>
-        <span id="lblComparables" class="metrica-valor numero">--</span>
       </div>
 
     </div>
@@ -407,7 +439,7 @@
 </div>
 
 <footer class="footer-row">
-  <p class="footer-desc-text" id="lblMetodologia">Complete el analisis para ver la metodologia aplicada.</p>
+  <p class="footer-desc-text" id="lblMetodologia">Completa el analisis para ver la informacion de referencia.</p>
   <button class="btn-export-pdf" id="btnExportPDF" onclick="window.generarPDF()" disabled style="opacity:0.4;cursor:not-allowed;">Exportar Reporte PDF</button>
 </footer>
 
@@ -418,7 +450,7 @@
   <script>
   // ─── CONFIGURACION ────────────────────────────────────────
   const DIAS_COMPARABLES = 100;
-  const UMBRAL_ATIPICO   = 1.8; // >80% sobre mediana = advertencia
+  const UMBRAL_ATIPICO   = 1.8;
 
   const AZ_SURL = typeof SECRETS !== 'undefined' ? SECRETS.SURL : '';
   const AZ_SKEY = typeof SECRETS !== 'undefined' ? SECRETS.SKEY  : '';
@@ -432,6 +464,40 @@
   let lastData = null;
   let pendienteAtipico = false;
 
+  // ─── INDICES ──────────────────────────────────────────────
+  // IPR = precio_m2 / mediana_zona
+  function calcIPR(tuPM2, mediana) {
+    if (!mediana) return null;
+    return tuPM2 / mediana;
+  }
+
+  function interpretarIPR(ipr) {
+    if (!ipr) return {cat:'ref', clase:'vrd-ref', label:'Referencia limitada', color:[100,116,139]};
+    if (ipr < 0.85)  return {cat:'bajo',  clase:'vrd-bajo',  label:'Por debajo del mercado observable', color:[16,185,129]};
+    if (ipr <= 1.15) return {cat:'rango', clase:'vrd-rango', label:'Dentro del rango observable',       color:[226,176,92]};
+    return               {cat:'sobre', clase:'vrd-sobre', label:'Por encima del mercado observable', color:[239,68,68]};
+  }
+
+  // IAO = comparables / (DIAS_COMPARABLES / 10)
+  function calcIAO(n) {
+    return n / (DIAS_COMPARABLES / 10);
+  }
+
+  function interpretarIAO(iao, n) {
+    if (iao < 0.3)  return {clase:'iao-baja',  icono:'○', label:'Actividad baja',     sub: n + ' propiedades similares detectadas en ' + DIAS_COMPARABLES + ' dias. Pocas opciones de comparacion.'};
+    if (iao <= 0.8) return {clase:'iao-media', icono:'◎', label:'Actividad moderada', sub: n + ' propiedades similares detectadas en ' + DIAS_COMPARABLES + ' dias. Contexto de referencia razonable.'};
+    return               {clase:'iao-alta',  icono:'●', label:'Actividad alta',     sub: n + ' propiedades similares detectadas en ' + DIAS_COMPARABLES + ' dias. Buena base de comparacion.'};
+  }
+
+  // Severidad: f(desviacion, cobertura)
+  function getSeveridad(pctDesviacion, n) {
+    var abs = Math.abs(pctDesviacion);
+    var cobAlta  = n >= 10, cobMedia = n >= 5;
+    if (abs >= 100) return cobAlta||cobMedia ? {label:'EXTREMO',clase:'sev-extremo'} : {label:'MODERADO',clase:'sev-moderado'};
+    if (abs >= 60)  return cobAlta ? {label:'MODERADO',clase:'sev-moderado'} : {label:'LEVE',clase:'sev-leve'};
+    return {label:'LEVE', clase:'sev-leve'};
+  }
+
   // ─── TOOLTIPS ────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.info-icon').forEach(function(icon) {
@@ -440,152 +506,103 @@
       if (!tip) return;
       icon.addEventListener('mouseenter', function() { tip.classList.add('visible'); });
       icon.addEventListener('mouseleave', function() { tip.classList.remove('visible'); });
-      // touch para mobile
       icon.addEventListener('touchstart', function(e) {
         e.preventDefault();
-        var visible = tip.classList.contains('visible');
+        var vis = tip.classList.contains('visible');
         document.querySelectorAll('.info-tooltip').forEach(function(t) { t.classList.remove('visible'); });
-        if (!visible) tip.classList.add('visible');
+        if (!vis) tip.classList.add('visible');
       });
     });
-    // cerrar tooltips al tocar fuera
     document.addEventListener('touchstart', function(e) {
-      if (!e.target.classList.contains('info-icon')) {
+      if (!e.target.classList.contains('info-icon'))
         document.querySelectorAll('.info-tooltip').forEach(function(t) { t.classList.remove('visible'); });
-      }
     });
   });
 
   // ─── FETCH ────────────────────────────────────────────────
   async function azFetch(ep) {
     try {
-      const r = await fetch(AZ_SURL + ep, {headers: AZ_HDRS});
+      var r = await fetch(AZ_SURL + ep, {headers: AZ_HDRS});
       if (!r.ok) return null;
-      const d = await r.json();
+      var d = await r.json();
       return Array.isArray(d) ? d : null;
     } catch(e) { return null; }
   }
 
-  // ─── DROPDOWN ZONAS ───────────────────────────────────────
+  // ─── DROPDOWNS ────────────────────────────────────────────
   function poblarDropdownZonas() {
-    const tipo = document.getElementById('selTipo').value;
-    const sel  = document.getElementById('selZona');
-    const prev = sel.value;
-
-    const zonasTipo = {};
+    var tipo = document.getElementById('selTipo').value;
+    var sel  = document.getElementById('selZona');
+    var prev = sel.value;
+    var zonasTipo = {};
     todosLosComparables.forEach(function(c) {
       if (c.tipo !== tipo) return;
       if (!zonasTipo[c.zona] || zonasTipo[c.zona].n < c.n) zonasTipo[c.zona] = c;
     });
-
-    const zonas = Object.values(zonasTipo).sort(function(a,b) {
+    var zonas = Object.values(zonasTipo).sort(function(a,b) {
       if (a.n >= 3 && b.n < 3) return -1;
       if (a.n < 3 && b.n >= 3) return 1;
       return a.zona.localeCompare(b.zona);
     });
-
     sel.innerHTML = '<option value="">Selecciona una zona</option>';
     zonas.forEach(function(z) {
       var opt = document.createElement('option');
       opt.value = z.zona;
-      if (z.n >= 3) {
-        opt.textContent = z.zona + ' (' + z.n + ' comparables)';
-      } else {
-        opt.textContent = z.zona + ' — Cobertura limitada (' + z.n + ')';
-        opt.style.color = '#f59e0b';
-      }
+      opt.textContent = z.n >= 3
+        ? z.zona + ' (' + z.n + ' propiedades similares)'
+        : z.zona + ' — Pocas propiedades similares (' + z.n + ')';
+      if (z.n < 3) opt.style.color = '#f59e0b';
       sel.appendChild(opt);
     });
-
     if (prev) sel.value = prev;
     actualizarBadge();
   }
 
-  // ─── BADGE COBERTURA ──────────────────────────────────────
   function actualizarBadge() {
-    var zona = document.getElementById('selZona').value;
-    var tipo = document.getElementById('selTipo').value;
+    var zona  = document.getElementById('selZona').value;
+    var tipo  = document.getElementById('selTipo').value;
     var badge = document.getElementById('coverageBadge');
     if (!zona) { badge.style.display = 'none'; return; }
-    var cob = todosLosComparables.find(function(c) { return c.zona === zona && c.tipo === tipo; });
+    var cob = todosLosComparables.find(function(c) { return c.zona===zona && c.tipo===tipo; });
     var n = cob ? cob.n : 0;
     if (n >= 3) {
       badge.style.display = 'none';
     } else if (n >= 1) {
       badge.style.display = 'block';
-      badge.style.borderColor = 'rgba(245,158,11,0.3)';
-      badge.style.background  = 'rgba(245,158,11,0.06)';
-      badge.style.color = '#f59e0b';
-      badge.textContent = 'Cobertura observable todavia limitada para emitir referencia robusta en ' + zona + ' · ' + tipo + ' (' + n + ' comparable' + (n>1?'s':'') + ' detectado' + (n>1?'s':'') + '). El analisis se mostrara sin veredicto.';
+      badge.textContent = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' activa' + (n>1?'s':'') + ' en ' + zona + '. El analisis se mostrara como orientativo.';
     } else {
       badge.style.display = 'block';
       badge.style.borderColor = 'rgba(100,116,139,0.3)';
       badge.style.background  = 'rgba(100,116,139,0.06)';
       badge.style.color = '#64748b';
-      badge.textContent = 'Sin informacion registrada para ' + zona + ' · ' + tipo + ' en los ultimos ' + DIAS_COMPARABLES + ' dias. Alimentar esta zona para activar el analisis.';
+      badge.textContent = 'Sin propiedades similares registradas en ' + zona + ' en los ultimos ' + DIAS_COMPARABLES + ' dias.';
     }
   }
 
-  // ─── EVENTOS ──────────────────────────────────────────────
   window.onZonaChange = function() {
-    actualizarBadge();
-    filtrarSubzonasYProyectos();
-    document.getElementById('alertaAtipica').style.display = 'none';
+    actualizarBadge(); filtrarSubzonasYProyectos();
+    document.getElementById('alertaSanity').style.display   = 'none';
+    document.getElementById('alertaAtipica').style.display  = 'none';
     pendienteAtipico = false;
   };
-
-  window.onTipoChange = function() {
-    poblarDropdownZonas();
-    actualizarBadge();
-  };
+  window.onTipoChange = function() { poblarDropdownZonas(); actualizarBadge(); };
 
   function filtrarSubzonasYProyectos() {
     var zona = document.getElementById('selZona').value;
-    var selSub  = document.getElementById('selSubzona');
-    var selProy = document.getElementById('selProyecto');
-    if (!zona) {
-      selSub.innerHTML  = '<option value="">Todas</option>';
-      selProy.innerHTML = '<option value="">Todos</option>';
-      return;
-    }
-    var subs  = azSubzonas.filter(function(s) { return s.zona === zona; });
-    var proys = azProyectos.filter(function(p) { return p.zona === zona; });
-    selSub.innerHTML  = '<option value="">Todas</option>'  + subs.map(function(s) { return '<option>' + s.subzona + '</option>'; }).join('');
-    selProy.innerHTML = '<option value="">Todos</option>' + proys.map(function(p) { return '<option>' + p.proyecto + '</option>'; }).join('');
+    var ss = document.getElementById('selSubzona');
+    var sp = document.getElementById('selProyecto');
+    if (!zona) { ss.innerHTML='<option value="">Todas</option>'; sp.innerHTML='<option value="">Todos</option>'; return; }
+    var subs  = azSubzonas.filter(function(s) { return s.zona===zona; });
+    var proys = azProyectos.filter(function(p) { return p.zona===zona; });
+    ss.innerHTML = '<option value="">Todas</option>'  + subs.map(function(s) { return '<option>'+s.subzona+'</option>'; }).join('');
+    sp.innerHTML = '<option value="">Todos</option>' + proys.map(function(p) { return '<option>'+p.proyecto+'</option>'; }).join('');
   }
+
+  // ─── RANGOS SANITY ────────────────────────────────────────
+  var RANGOS_AREA = { 'CASA':{min:45,max:1200}, 'APARTAMENTO':{min:25,max:600} };
+  var PRECIO_MIN = 10000, PRECIO_MAX = 5000000;
 
   // ─── VALIDACION Y FLUJO ───────────────────────────────────
-  // Rangos de sanity check por tipo
-  var RANGOS_AREA = {
-    'CASA':        {min:45,  max:1200},
-    'APARTAMENTO': {min:25,  max:600}
-  };
-  var PRECIO_MIN  = 10000;
-  var PRECIO_MAX  = 5000000;
-
-  // Severidad = f(desviacion, cobertura)
-  // Con baja cobertura, la severidad se degrada un nivel
-  function getSeveridad(pctDesviacion, numComparables) {
-    var abs = Math.abs(pctDesviacion);
-    var cobAlta  = numComparables >= 10;
-    var cobMedia = numComparables >= 5;
-    // cobBaja = < 5
-
-    if (abs >= 100) {
-      if (cobAlta || cobMedia) return {label:'EXTREMO', clase:'sev-extremo'};
-      return {label:'MODERADO', clase:'sev-moderado'}; // con poca data, no alarmar
-    }
-    if (abs >= 60) {
-      if (cobAlta)  return {label:'MODERADO', clase:'sev-moderado'};
-      if (cobMedia) return {label:'MODERADO', clase:'sev-moderado'};
-      return {label:'LEVE', clase:'sev-leve'};
-    }
-    if (abs >= 35) {
-      return {label:'LEVE', clase:'sev-leve'};
-    }
-    return {label:'LEVE', clase:'sev-leve'};
-  }
-
   window.intentarAnalisis = function() {
     var zona   = document.getElementById('selZona').value;
     var tipo   = document.getElementById('selTipo').value;
@@ -593,63 +610,47 @@
     var raw    = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
     var precio = parseFloat(raw) || 0;
 
-    // Cerrar alertas previas
-    document.getElementById('alertaSanity').style.display  = 'none';
-    document.getElementById('alertaAtipica').style.display = 'none';
+    document.getElementById('alertaSanity').style.display   = 'none';
+    document.getElementById('alertaAtipica').style.display  = 'none';
 
-    // Validaciones minimas obligatorias
-    if (!tipo)  return alert('Selecciona el tipo de inmueble.');
-    if (!zona)  return alert('Selecciona una zona.');
-    if (!area)  return alert('Ingresa el area de construccion en m2.');
-    if (!precio)return alert('Ingresa el precio solicitado en dolares.');
+    if (!tipo)   return alert('Selecciona el tipo de inmueble.');
+    if (!zona)   return alert('Selecciona una zona.');
+    if (!area)   return alert('Ingresa el area de construccion en m2.');
+    if (!precio) return alert('Ingresa el precio solicitado en dolares.');
 
-    // ── VALIDACION 1: Sanity check de inputs ──────────────
-    var rangosArea = RANGOS_AREA[tipo] || {min:25, max:1200};
-    var sanityFail = false;
-    if (area < rangosArea.min || area > rangosArea.max) sanityFail = true;
-    if (precio < PRECIO_MIN || precio > PRECIO_MAX)     sanityFail = true;
-
-    if (sanityFail) {
+    // Sanity check
+    var rangos = RANGOS_AREA[tipo] || {min:25,max:1200};
+    if (area<rangos.min || area>rangos.max || precio<PRECIO_MIN || precio>PRECIO_MAX) {
       var s = document.getElementById('alertaSanity');
       s.style.display = 'block';
-      s.scrollIntoView({behavior:'smooth', block:'center'});
-      // No bloquear — el usuario puede corregir y volver a intentar
-      // pero no avanzamos al analisis todavia
+      s.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
 
-    // ── VALIDACION 2: Alerta contextual de mercado ────────
-    var cob = todosLosComparables.find(function(c){ return c.zona===zona && c.tipo===tipo; });
+    var cob = todosLosComparables.find(function(c) { return c.zona===zona && c.tipo===tipo; });
     var n   = cob ? cob.n : 0;
+    if (n === 0) return alert('Sin propiedades similares registradas para analizar ' + zona + ' · ' + tipo + ' en los ultimos ' + DIAS_COMPARABLES + ' dias.');
 
-    if (n === 0) {
-      return alert('Sin informacion suficiente para analizar ' + zona + ' · ' + tipo + ' en los ultimos ' + DIAS_COMPARABLES + ' dias.');
-    }
-
+    // Alerta contextual
     if (!pendienteAtipico && cob && cob.mediana > 0) {
       var tuPM2 = precio / area;
       var ratio = tuPM2 / cob.mediana;
-      if (ratio > UMBRAL_ATIPICO || ratio < (1 / UMBRAL_ATIPICO)) {
-        var desv   = ((tuPM2 - cob.mediana) / cob.mediana) * 100;
-        var signo  = desv >= 0 ? '+' : '';
-        var sev    = getSeveridad(desv, n);
-
-        // Poblar alerta con datos concretos
+      if (ratio > UMBRAL_ATIPICO || ratio < (1/UMBRAL_ATIPICO)) {
+        var desv  = ((tuPM2 - cob.mediana) / cob.mediana) * 100;
+        var signo = desv >= 0 ? '+' : '';
+        var sev   = getSeveridad(desv, n);
         var alertaEl = document.getElementById('alertaAtipica');
         alertaEl.className = 'alerta-contextual ' + sev.clase;
-        document.getElementById('alertaSevBadge').textContent  = sev.label;
-        document.getElementById('alertaSevBadge').style.background = '';
-        document.getElementById('alertaDiffPct').textContent   = signo + Math.round(desv) + '% vs mediana observable';
-        document.getElementById('alertaTuPrecio').textContent  = '$' + Math.round(tuPM2).toLocaleString() + '/m2';
-        document.getElementById('alertaMediana').textContent   = '$' + cob.mediana.toLocaleString() + '/m2';
-
+        document.getElementById('alertaSevBadge').textContent = sev.label;
+        document.getElementById('alertaDiffPct').textContent  = signo + Math.round(desv) + '% vs precio de referencia';
+        document.getElementById('alertaTuPrecio').textContent = '$' + Math.round(tuPM2).toLocaleString() + '/m2';
+        document.getElementById('alertaMediana').textContent  = '$' + cob.mediana.toLocaleString() + '/m2';
         alertaEl.style.display = 'block';
         pendienteAtipico = true;
-        alertaEl.scrollIntoView({behavior:'smooth', block:'center'});
+        alertaEl.scrollIntoView({behavior:'smooth',block:'center'});
         return;
       }
     }
-
     ejecutarAnalisis(zona, tipo, area, precio, cob, n);
   };
 
@@ -661,125 +662,183 @@
     var area   = parseFloat(document.getElementById('inpArea').value) || 0;
     var raw    = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
     var precio = parseFloat(raw) || 0;
-    var cob    = todosLosComparables.find(function(c){ return c.zona===zona && c.tipo===tipo; });
+    var cob    = todosLosComparables.find(function(c) { return c.zona===zona && c.tipo===tipo; });
     ejecutarAnalisis(zona, tipo, area, precio, cob, cob ? cob.n : 0);
   };
 
   window.cerrarAlerta = function() {
-    document.getElementById('alertaAtipica').style.display = 'none';
-    document.getElementById('alertaSanity').style.display  = 'none';
+    document.getElementById('alertaAtipica').style.display  = 'none';
+    document.getElementById('alertaSanity').style.display   = 'none';
     pendienteAtipico = false;
   };
 
+  // ─── RENDER ───────────────────────────────────────────────
   function ejecutarAnalisis(zona, tipo, area, precio, cob, n) {
     var btn = document.getElementById('btnAnalizar');
     btn.disabled = true; btn.textContent = 'Analizando...';
-    try {
-      renderAnalisis(zona, tipo, area, precio, cob, n);
-    } catch(e) {
-      console.error(e);
-      alert('No fue posible completar el analisis en este momento. Intenta de nuevo.');
-    } finally {
-      btn.disabled = false; btn.textContent = 'Analizar propiedad';
-    }
+    try { renderAnalisis(zona, tipo, area, precio, cob, n); }
+    catch(e) { console.error(e); alert('No fue posible completar el analisis. Intenta de nuevo.'); }
+    finally  { btn.disabled = false; btn.textContent = 'Analizar propiedad'; }
   }
 
-  // ─── RENDER ───────────────────────────────────────────────
   function renderAnalisis(zona, tipo, area, precio, cob, n) {
     var modoLimitado = n < 3;
     var mediana = cob.mediana, p25 = cob.p25, p75 = cob.p75;
     var iqr = p75 - p25;
-    var min = Math.max(0, cob.min || p25 - 1.5*iqr);
+    var min = cob.min || Math.max(0, p25 - 1.5*iqr);
     var max = cob.max || p75 + 1.5*iqr;
     var tuPM2 = Math.round(precio / area);
     var desv  = ((tuPM2 - mediana) / mediana) * 100;
     var signo = desv >= 0 ? '+' : '';
     var precioMercado   = Math.round(mediana * area);
     var diferenciaPesos = Math.round(precio - precioMercado);
-    var confLabel = n >= 10 ? 'Alta' : n >= 5 ? 'Media' : n >= 3 ? 'En proceso' : 'Limitada';
+
+    // IPR + IAO
+    var ipr    = calcIPR(tuPM2, mediana);
+    var iprInt = modoLimitado ? interpretarIPR(null) : interpretarIPR(ipr);
+    var iao    = calcIAO(n);
+    var iaoInt = interpretarIAO(iao, n);
 
     lastData = {zona,tipo,area,precio,mediana,p25,p75,n,min,max,tuPM2,desv,signo,
-                precioMercado,diferenciaPesos,confLabel,modoLimitado,iqr};
+                precioMercado,diferenciaPesos,modoLimitado,iqr,ipr,iprInt,iao,iaoInt};
 
     document.getElementById('inpPrecio').value = '$' + Math.round(precio).toLocaleString();
-    document.getElementById('lblTuPrecio').innerText = '$' + tuPM2.toLocaleString();
-    document.getElementById('lblComparables').innerText = n + (modoLimitado ? ' (referencial)' : '');
-    document.getElementById('lblRango').innerText = '$' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2';
+
+    // ── VEREDICTO PRINCIPAL ──────────────────────────────────
+    var vPanel = document.getElementById('veredictoPanel');
+    vPanel.className = 'veredicto-principal ' + iprInt.clase;
+    vPanel.style.display = 'block';
+    document.getElementById('vrdEtiqueta').textContent = modoLimitado ? 'Analisis orientativo' : 'Resultado del analisis';
+    document.getElementById('vrdIPR').textContent = ipr ? ipr.toFixed(2) : 'N/D';
+    document.getElementById('vrdComparables').textContent = n;
 
     if (modoLimitado) {
-      document.getElementById('lblMediana').innerText = '$' + mediana.toLocaleString() + '*';
-      document.getElementById('lblDiff').innerText = 'Referencia insuficiente';
-      document.getElementById('lblDiff').className = 'metrica-valor rango';
-      document.getElementById('lblGaugeVal').innerText = '~' + signo + Math.round(desv) + '%';
+      document.getElementById('vrdTitulo').textContent = 'Referencia basada en pocas propiedades similares';
+      document.getElementById('vrdDescripcion').textContent =
+        'Se detectaron ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' activa' + (n>1?'s':'') + ' en ' + zona + ' en los ultimos ' + DIAS_COMPARABLES + ' dias. El analisis es orientativo y no debe usarse como referencia definitiva.';
+    } else {
+      document.getElementById('vrdTitulo').textContent = iprInt.label;
+      var absDesv = Math.abs(Math.round(desv));
+      var descMap = {
+        bajo:  absDesv + '% por debajo del precio de referencia de propiedades similares en ' + zona + '. Puede representar una oportunidad, pero conviene validar las condiciones de la propiedad.',
+        rango: 'El precio se encuentra dentro del rango habitual de propiedades similares en ' + zona + '. Condiciones alineadas al mercado observable.',
+        sobre: absDesv + '% por encima del precio de referencia de propiedades similares en ' + zona + '. Existe margen para negociar o explorar alternativas en la misma zona.'
+      };
+      document.getElementById('vrdDescripcion').textContent = descMap[iprInt.cat] || '';
+    }
+
+    // ── IAO ───────────────────────────────────────────────────
+    var iaoCard = document.getElementById('iaoCard');
+    iaoCard.className = 'iao-card ' + iaoInt.clase;
+    document.getElementById('iaoIcono').textContent = iaoInt.icono;
+    document.getElementById('iaoValor').textContent = iaoInt.label;
+    document.getElementById('iaoSub').textContent   = iaoInt.sub;
+
+    // ── RESUMEN RAPIDO ────────────────────────────────────────
+    var resumen = document.getElementById('resumenRapido');
+    resumen.style.display = 'block';
+    var resTexto = modoLimitado
+      ? 'Esta zona cuenta con pocas propiedades similares registradas. Los valores mostrados son orientativos. Se recomienda complementar con inspeccion directa del mercado.'
+      : iprInt.cat === 'bajo'
+        ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por debajo del precio de referencia de la zona. Si las condiciones de la propiedad son buenas, puede ser un punto de entrada favorable.'
+        : iprInt.cat === 'sobre'
+          ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por encima del precio de referencia de la zona. Hay margen para negociar: propiedades similares se ofrecen a $' + Math.round(mediana).toLocaleString() + '/m2.'
+          : 'El precio esta alineado con propiedades similares en ' + zona + '. Rango habitual: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
+    document.getElementById('resumenTexto').textContent = resTexto;
+
+    // ── GAUGE (colores alineados con IPR) ────────────────────
+    var gaugeColor = iprInt.cat==='bajo' ? '#10b981' : iprInt.cat==='sobre' ? '#f87171' : '#e2b05c';
+    document.getElementById('lblGaugeVal').textContent  = modoLimitado ? '~'+signo+Math.round(desv)+'%' : signo+Math.round(desv)+'%';
+    document.getElementById('lblGaugeVal').style.color  = gaugeColor;
+    document.getElementById('lblGaugeLabel').textContent = 'vs referencia zona';
+
+    if (modoLimitado) {
       document.getElementById('gaugeFill').style.strokeDashoffset = 200;
       document.getElementById('gaugeFill').style.stroke = '#334155';
-      document.getElementById('lblExplanation').innerHTML =
-        'Cobertura observable limitada para emitir referencia robusta en ' + zona + ' · ' + tipo +
-        '. Se detectaron ' + n + ' comparable' + (n>1?'s':'') + '. Datos mostrados son referenciales.';
-      document.getElementById('lblWarning').innerText =
-        'Con ' + n + ' comparable' + (n>1?'s':'') + ' no es posible emitir veredicto estadistico. Alimentar esta zona para activar el analisis completo.';
-      var btnPDF = document.getElementById('btnExportPDF');
-      btnPDF.disabled=false; btnPDF.style.opacity='0.7'; btnPDF.style.cursor='pointer';
     } else {
-      document.getElementById('lblMediana').innerText = '$' + Math.round(mediana).toLocaleString();
-      document.getElementById('lblDiff').innerText = signo + desv.toFixed(1) + '%';
-      document.getElementById('lblDiff').className = desv >= 0 ? 'metrica-valor positivo' : 'metrica-valor negativo';
-      document.getElementById('lblGaugeVal').innerText = signo + Math.round(desv) + '%';
       document.getElementById('gaugeFill').style.stroke = '';
       var pct = Math.min(Math.max((desv+50)/100, 0.05), 0.95);
       document.getElementById('gaugeFill').style.strokeDashoffset = 283 - (213*pct);
       var ang = (135 + pct*320) * Math.PI/180;
       document.getElementById('gaugeBulb').setAttribute('cx', (50+45*Math.cos(ang)).toFixed(2));
       document.getElementById('gaugeBulb').setAttribute('cy', (50+45*Math.sin(ang)).toFixed(2));
-      var thumb = document.getElementById('sliderThumb');
-      var tPos  = 50;
-      var isAlto = tuPM2 > max, isBajo = tuPM2 < min;
-      if (isAlto) {
-        tPos=85; thumb.style.background='var(--red-bar)';
-        document.getElementById('lblExplanation').innerHTML = 'La propiedad se posiciona por encima del rango observable para ' + tipo.toLowerCase() + 's en ' + zona + '. Confianza: ' + confLabel + ' · ' + n + ' comparables.';
-        document.getElementById('lblWarning').innerText = 'Precio sobre el rango observable. Existe margen de negociacion o explorar alternativas en la misma zona.';
-      } else if (isBajo) {
-        tPos=15; thumb.style.background='var(--green-bar)';
-        document.getElementById('lblExplanation').innerHTML = 'La propiedad se posiciona por debajo del rango observable para ' + tipo.toLowerCase() + 's en ' + zona + '. Confianza: ' + confLabel + ' · ' + n + ' comparables.';
-        document.getElementById('lblWarning').innerText = 'Precio bajo el rango observable. Validar condiciones fisicas y contexto de venta antes de proceder.';
-      } else {
-        tPos=50; thumb.style.background='var(--amber-bar)';
-        document.getElementById('lblExplanation').innerHTML = 'La propiedad se posiciona dentro del rango observable para ' + tipo.toLowerCase() + 's en ' + zona + '. Confianza: ' + confLabel + ' · ' + n + ' comparables.';
-        document.getElementById('lblWarning').innerText = 'Precio alineado al mercado. Posicionamiento consistente con el benchmark de la zona.';
-      }
-      thumb.style.left = tPos + '%';
-      var btnPDF = document.getElementById('btnExportPDF');
-      btnPDF.disabled=false; btnPDF.style.opacity='1'; btnPDF.style.cursor='pointer';
     }
 
-    document.getElementById('lblMinVal').innerText = '$' + Math.round(min).toLocaleString();
-    document.getElementById('lblMedVal').innerText = '$' + Math.round(mediana).toLocaleString();
-    document.getElementById('lblMaxVal').innerText = '$' + Math.round(max).toLocaleString();
+    // ── SLIDER (alineado con IPR) ─────────────────────────────
+    var thumb = document.getElementById('sliderThumb');
+    var tPos  = 50;
+    if (!modoLimitado) {
+      if      (iprInt.cat==='bajo')  { tPos=15; thumb.style.background='#10b981'; }
+      else if (iprInt.cat==='sobre') { tPos=85; thumb.style.background='#f87171'; }
+      else                           { tPos=50; thumb.style.background='#e2b05c'; }
+    }
+    thumb.style.left = tPos + '%';
+
+    // ── TEXTO POSICION ────────────────────────────────────────
+    var expMap = {
+      bajo:  'El precio esta por debajo del rango habitual para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      rango: 'El precio esta dentro del rango habitual para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      sobre: 'El precio esta por encima del rango habitual para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      ref:   'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.'
+    };
+    document.getElementById('lblExplanation').textContent = expMap[iprInt.cat];
+
+    // ── METRICAS ───────────────────────────────────────────────
+    document.getElementById('lblTuPrecio').textContent = '$' + tuPM2.toLocaleString();
+    document.getElementById('lblMediana').textContent  = '$' + Math.round(mediana).toLocaleString() + (modoLimitado?'*':'');
+    document.getElementById('lblRango').textContent    = '$' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2';
+
+    if (modoLimitado) {
+      document.getElementById('lblDiff').textContent = 'Referencia orientativa';
+      document.getElementById('lblDiff').className   = 'metrica-valor rango';
+    } else {
+      document.getElementById('lblDiff').textContent = signo + desv.toFixed(1) + '%';
+      document.getElementById('lblDiff').className   = desv>=0 ? 'metrica-valor positivo' : 'metrica-valor negativo';
+    }
+
+    // ── CONTEXTO / GRAFICO ────────────────────────────────────
+    document.getElementById('lblMinVal').textContent = '$' + Math.round(min).toLocaleString();
+    document.getElementById('lblMedVal').textContent = '$' + Math.round(mediana).toLocaleString();
+    document.getElementById('lblMaxVal').textContent = '$' + Math.round(max).toLocaleString();
     var tt = document.getElementById('specTooltip');
-    tt.innerText = '$' + tuPM2.toLocaleString() + '/m2';
+    tt.textContent = '$' + tuPM2.toLocaleString() + '/m2';
     var tp = ((tuPM2-min)/(max-min+1))*100;
     tt.style.left = Math.min(Math.max(tp,5),92) + '%';
-    document.getElementById('lblMetodologia').innerText = modoLimitado
-      ? 'Datos observados: ' + n + ' comparable'+(n>1?'s':'')+' en '+zona+' · '+tipo+'. Cobertura insuficiente para benchmark estadistico. No constituye valuacion formal.'
-      : 'Referencia construida con '+n+' comparables activos en '+zona+' · '+tipo+' · ultimos '+DIAS_COMPARABLES+' dias. No constituye valuacion formal ni avaluo profesional.';
+
+    var warningMap = {
+      bajo:  'El precio esta por debajo del rango de propiedades similares en ' + zona + '. Valida las condiciones fisicas antes de proceder.',
+      rango: 'El precio esta alineado con propiedades similares en ' + zona + '.',
+      sobre: 'El precio esta por encima del rango de propiedades similares. Hay margen para negociar en ' + zona + '.',
+      ref:   'Con ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' no es posible emitir un veredicto definitivo. Datos orientativos.'
+    };
+    document.getElementById('lblWarning').textContent = warningMap[iprInt.cat];
+    document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zona + ' · ' + tipo + '.';
+
+    // ── FOOTER ────────────────────────────────────────────────
+    document.getElementById('lblMetodologia').textContent = modoLimitado
+      ? 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' en ' + zona + ' · ' + tipo + '. Datos orientativos. No constituye valuacion formal.'
+      : 'Referencia construida con ' + n + ' propiedades similares activas en ' + zona + ' · ' + tipo + ' · ultimos ' + DIAS_COMPARABLES + ' dias. No constituye valuacion formal ni avaluo profesional.';
 
     renderChart(min, mediana, max, tuPM2, n);
+
+    // PDF habilitado
+    var btnPDF = document.getElementById('btnExportPDF');
+    btnPDF.disabled=false; btnPDF.style.opacity='1'; btnPDF.style.cursor='pointer';
   }
 
   function renderChart(min, mediana, max, tuPrecio, count) {
     var g = document.getElementById('curveNodes');
     g.innerHTML = '';
     var n = Math.max(count, 2);
-    var pts = [], step = (max-min)/Math.max(n-1,1);
+    var step = (max-min)/Math.max(n-1,1), pts = [];
     for (var i=0; i<n; i++) {
-      var osc = i%2===0 ? 0.82 : 1.18;
+      var osc = i%2===0?0.82:1.18;
       pts.push(Math.round(Math.max(min*0.95, Math.min(max*1.05, min+step*i*osc))));
     }
     var ti = pts.findIndex(function(p){return p>tuPrecio;});
-    if (ti===-1) { pts.push(tuPrecio); ti=pts.length-1; }
-    else pts.splice(ti,0,tuPrecio);
-    var H=150, W=270, xs=W/Math.max(pts.length-1,1), d='';
-    pts.forEach(function(v,i) {
+    if (ti===-1){pts.push(tuPrecio);ti=pts.length-1;} else pts.splice(ti,0,tuPrecio);
+    var H=150,W=270,xs=W/Math.max(pts.length-1,1),d='';
+    pts.forEach(function(v,i){
       var x=15+i*xs;
       var y=H-((v-min)/(max-min+1))*H*0.8;
       if(i>0&&i<pts.length-1) y+=i%2===0?-18:18;
@@ -815,9 +874,7 @@
       var dark=[6,15,32],panel=[14,26,54],gold=[226,176,92];
       var slate=[100,116,139],white=[248,250,252],muted=[148,163,184];
       var green=[16,185,129],red=[239,68,68],amber=[245,158,11];
-      var isAlto=d.tuPM2>d.max, isBajo=d.tuPM2<d.min;
-      var accentColor = d.modoLimitado ? amber : (isAlto ? red : isBajo ? green : amber);
-      var estatus = d.modoLimitado ? 'COBERTURA LIMITADA' : (isAlto ? 'SOBRE MERCADO' : isBajo ? 'BAJO MERCADO' : 'EN RANGO');
+      var iprColor = d.iprInt.cat==='bajo' ? green : d.iprInt.cat==='sobre' ? red : gold;
 
       function bg() { pdf.setFillColor(...dark); pdf.rect(0,0,W,H,'F'); }
       function card(x,y,w,h,col) { pdf.setFillColor(...(col||panel)); pdf.roundedRect(x,y,w,h,2,2,'F'); }
@@ -826,314 +883,262 @@
       function bod(t,x,y,col,sz,mw) { pdf.setFontSize(sz||9);pdf.setTextColor(...(col||muted));pdf.setFont('helvetica','normal');if(mw){var l=pdf.splitTextToSize(t,mw);pdf.text(l,x,y);return l.length;}pdf.text(t,x,y);return 1; }
       function hline(x,y,w,col) { pdf.setFillColor(...(col||[20,35,65]));pdf.rect(x,y,w,0.5,'F'); }
 
-      // ── P1 ──────────────────────────────────────────────────
+      // ── P1 ───────────────────────────────────────────────────
       bg();
       pdf.setFillColor(...gold); pdf.rect(0,0,W,1.2,'F');
       pdf.setFillColor(10,20,42); pdf.rect(0,1.2,W,28,'F');
-      // Logo
       pdf.setFillColor(...gold); pdf.circle(M+5,15,5,'F');
       pdf.setFontSize(7);pdf.setTextColor(...dark);pdf.setFont('helvetica','bold');pdf.text('V',M+3.2,17.5);
       pdf.setFontSize(20);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');pdf.text('VALORIUS',M+14,14);
-      pdf.setFontSize(8);pdf.setTextColor(...muted);pdf.setFont('helvetica','normal');pdf.text('PROPERTY ANALYSIS REPORT',M+14,20);
+      pdf.setFontSize(8);pdf.setTextColor(...muted);pdf.setFont('helvetica','normal');pdf.text('REPORTE DE ANALISIS DE PROPIEDAD',M+14,20);
       pdf.setFontSize(7);pdf.setTextColor(...slate);pdf.text(fecha,W-M,20,{align:'right'});
-      pdf.setFontSize(8);pdf.setTextColor(...slate);pdf.text(d.zona+' · '+d.tipo+' · '+DIAS_COMPARABLES+' dias',M+14,26);
+      pdf.setFontSize(8);pdf.setTextColor(...slate);pdf.text(d.zona+' · '+d.tipo,M+14,26);
 
       var y=38;
 
-      // Veredicto
-      card(M,y,W-2*M,30);
-      lbl('VEREDICTO DE MERCADO',M+5,y+6);
-      pdf.setFillColor(...accentColor);pdf.roundedRect(M+5,y+9,52,7,1,1,'F');
-      pdf.setFontSize(8);pdf.setTextColor(...dark);pdf.setFont('helvetica','bold');pdf.text(estatus,M+7,y+14.5);
-      pdf.setFontSize(26);pdf.setTextColor(...accentColor);pdf.setFont('helvetica','bold');
+      // Conclusion humana — dominante
+      card(M,y,W-2*M,38,[10,20,42]);
+      pdf.setFillColor(...iprColor); pdf.rect(M,y,4,38,'F');
+      lbl('Conclusion del analisis',M+8,y+7);
+      pdf.setFontSize(18);pdf.setTextColor(...iprColor);pdf.setFont('helvetica','bold');
+      pdf.text(d.iprInt.label,M+8,y+18);
+      var concl = d.modoLimitado
+        ? 'Referencia basada en ' + d.n + ' propiedad' + (d.n>1?'es':'') + ' similar' + (d.n>1?'es':'') + '. Los datos son orientativos.'
+        : d.iprInt.cat==='bajo'
+          ? Math.abs(Math.round(d.desv)) + '% por debajo del precio de referencia. Puede representar una oportunidad favorable.'
+          : d.iprInt.cat==='sobre'
+            ? Math.abs(Math.round(d.desv)) + '% por encima del precio de referencia. Existe margen para negociar en ' + d.zona + '.'
+            : 'El precio esta alineado con propiedades similares en ' + d.zona + '. Condiciones consistentes con el mercado observable.';
+      bod(concl,M+8,y+26,white,9,W-2*M-16);
+      pdf.setFontSize(11);pdf.setTextColor(...iprColor);pdf.setFont('helvetica','bold');
       pdf.text((d.modoLimitado?'~':'')+d.signo+Math.round(d.desv)+'%',W-M-5,y+24,{align:'right'});
-      pdf.setFontSize(7);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');pdf.text('vs mediana de zona',W-M-5,y+29,{align:'right'});
-      var reco = d.modoLimitado
-        ? 'Cobertura limitada ('+d.n+' comparable'+(d.n>1?'s':'')+' detectado'+(d.n>1?'s':'')+' en '+DIAS_COMPARABLES+' dias). Datos referenciales sin veredicto estadistico.'
-        : isAlto ? 'Precio superior al rango observable. Negociar descuento minimo del '+Math.abs(Math.round(d.desv))+'% o explorar alternativas en '+d.zona+'.'
-        : isBajo ? 'Precio bajo el rango observable. Validar estado fisico y contexto de venta. Posible punto de entrada.'
-        : 'Precio alineado al mercado de '+d.zona+'. Condiciones favorables para transaccion.';
-      bod(reco,M+5,y+20,muted,8,(W-2*M)*0.58);
+      pdf.setFontSize(7);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');pdf.text('vs referencia zona',W-M-5,y+30,{align:'right'});
 
-      y+=38;
+      y+=46;
 
-      // Datos + cobertura
-      card(M,y,(W-2*M)*0.48,32);
-      lbl('DATOS DE LA PROPIEDAD',M+5,y+6);
-      val(d.zona,M+5,y+13,white,8); bod('Zona analizada',M+5,y+17,slate,7);
-      val(d.tipo,M+5+(W-2*M)*0.24,y+13,muted,8); bod('Tipo',M+5+(W-2*M)*0.24,y+17,slate,7);
-      val(d.area+' m2',M+5,y+25,white,11); bod('Area construccion',M+5,y+29,slate,7);
-      val('$'+Math.round(d.precio).toLocaleString(),M+5+(W-2*M)*0.24,y+25,gold,11); bod('Precio solicitado',M+5+(W-2*M)*0.24,y+29,slate,7);
+      // IPR + IAO en cards lado a lado
+      var hw=(W-2*M-6)/2;
+      card(M,y,hw,26);
+      lbl('Posicionamiento (IPR)',M+5,y+7);
+      pdf.setFillColor(...iprColor);pdf.roundedRect(M+5,y+10,hw-10,7,1,1,'F');
+      pdf.setFontSize(8);pdf.setTextColor(...dark);pdf.setFont('helvetica','bold');
+      pdf.text(d.iprInt.label.substring(0,22),M+7,y+15.5);
+      bod('IPR: '+(d.ipr?d.ipr.toFixed(2):'N/D'),M+5,y+23,slate,7);
 
-      var cx2=M+(W-2*M)*0.52;
-      card(cx2,y,(W-2*M)*0.48,32);
-      lbl('COBERTURA OBSERVABLE',cx2+5,y+6);
-      var confColor = d.n>=8?green:d.n>=5?amber:d.n>=3?amber:red;
-      val(d.confLabel,cx2+5,y+14,confColor,14);
-      bod(d.n+' comparable'+(d.n>1?'s':'')+' activo'+(d.n>1?'s':'')+' · '+DIAS_COMPARABLES+' dias',cx2+5,y+21,muted,8);
-      bod(d.n<3?'Zona en proceso de densificacion.':d.n<5?'Creciendo hacia benchmark robusto.':'Cobertura adecuada.',cx2+5,y+26,slate,7,(W-2*M)*0.48-10);
-      var bw=(W-2*M)*0.48-10;
-      pdf.setFillColor(20,35,65);pdf.roundedRect(cx2+5,y+29,bw,2.5,1,1,'F');
-      pdf.setFillColor(...confColor);pdf.roundedRect(cx2+5,y+29,bw*Math.min(d.n/15,1),2.5,1,1,'F');
+      card(M+hw+6,y,hw,26);
+      lbl('Actividad observable (IAO)',M+hw+11,y+7);
+      var iaoCol = d.iaoInt.clase==='iao-alta'?green:d.iaoInt.clase==='iao-media'?[14,165,233]:slate;
+      pdf.setFontSize(11);pdf.setTextColor(...iaoCol);pdf.setFont('helvetica','bold');
+      pdf.text(d.iaoInt.label,M+hw+11,y+17);
+      bod(d.n+' propiedades similares · '+DIAS_COMPARABLES+' dias',M+hw+11,y+23,slate,7);
+
+      y+=34;
+
+      // 4 metricas clave
+      card(M,y,W-2*M,32);
+      lbl('Metricas de referencia',M+5,y+7);
+      var mets=[
+        {l:'Tu precio/m2',    v:'$'+d.tuPM2.toLocaleString(),                                          c:iprColor},
+        {l:'Precio referencia',v:'$'+Math.round(d.mediana).toLocaleString()+(d.modoLimitado?'*':''),   c:d.modoLimitado?slate:white},
+        {l:'Diferencia',       v:d.modoLimitado?'Orientativo':d.signo+d.desv.toFixed(1)+'%',           c:d.modoLimitado?slate:iprColor},
+        {l:'Rango observado',  v:'$'+Math.round(d.min).toLocaleString()+' - $'+Math.round(d.max).toLocaleString(), c:muted},
+      ];
+      var cw4=(W-2*M-10)/4;
+      mets.forEach(function(m,i){
+        var mx=M+5+i*cw4, my=y+13;
+        lbl(m.l,mx,my); val(m.v,mx,my+8,m.c,10);
+      });
 
       y+=40;
 
-      // Metricas
-      card(M,y,W-2*M,34);
-      lbl('METRICAS CLAVE',M+5,y+6);
-      var mets=[
-        {l:'Tu precio/m2',            v:'$'+d.tuPM2.toLocaleString(),                                                              c:accentColor},
-        {l:'Mediana de zona',         v:'$'+Math.round(d.mediana).toLocaleString()+(d.modoLimitado?'*':''),                        c:d.modoLimitado?slate:white},
-        {l:'Diferencia vs mediana',   v:d.modoLimitado?'N/D':d.signo+d.desv.toFixed(1)+'%',                                       c:d.modoLimitado?slate:accentColor},
-        {l:'Precio equivalente mdo.', v:d.modoLimitado?'N/D':'$'+d.precioMercado.toLocaleString(),                                 c:muted},
-        {l:'Diferencia absoluta',     v:d.modoLimitado?'N/D':(d.diferenciaPesos>=0?'+':'')+' $'+Math.abs(d.diferenciaPesos).toLocaleString(), c:d.diferenciaPesos>0?red:green},
-        {l:'Rango observado/m2',      v:'$'+Math.round(d.min).toLocaleString()+' - $'+Math.round(d.max).toLocaleString(),          c:muted}
-      ];
-      var cw=(W-2*M-10)/3;
-      mets.forEach(function(m,i){
-        var mx=M+5+(i%3)*cw, my=y+12+Math.floor(i/3)*14;
-        lbl(m.l,mx,my); val(m.v,mx,my+7,m.c,10);
-      });
-
-      y+=42;
-
-      // Gauge SVG nativo (sin html2canvas)
-      card(M,y,(W-2*M)*0.38,48);
-      lbl('POSICION VS MEDIANA',M+5,y+6);
-      // dibujar gauge SVG con jsPDF graphics
-      var cx=M+5+((W-2*M)*0.38)/2-4, cy=y+30, r=16;
-      // arco fondo
-      pdf.setDrawColor(20,35,65); pdf.setLineWidth(3);
-      pdf.circle(cx,cy,r,'S');
-      // arco coloreado segun posicion
-      pdf.setDrawColor(...accentColor); pdf.setLineWidth(3);
-      pdf.circle(cx,cy,r,'S');
-      // numero central
-      pdf.setFontSize(14);pdf.setTextColor(...accentColor);pdf.setFont('helvetica','bold');
-      pdf.text((d.modoLimitado?'~':'')+d.signo+Math.round(d.desv)+'%',cx,cy+2,{align:'center'});
-      pdf.setFontSize(7);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');
-      pdf.text('vs mediana',cx,cy+7,{align:'center'});
-      // estatus badge
-      pdf.setFillColor(...accentColor);pdf.roundedRect(M+5,y+40,38,6,1,1,'F');
-      pdf.setFontSize(7);pdf.setTextColor(...dark);pdf.setFont('helvetica','bold');
-      pdf.text(estatus,M+6,y+44.5);
-
-      // Grafica de comparables (SVG nativo)
-      var cx3=M+(W-2*M)*0.42;
-      card(cx3,y,(W-2*M)*0.58,48);
-      lbl('DISTRIBUCION DE COMPARABLES · '+d.zona.toUpperCase().substring(0,20),cx3+5,y+6);
-      // Barra espectral
-      var bw2=(W-2*M)*0.58-10;
-      pdf.setFillColor(...green);  pdf.roundedRect(cx3+5,y+12,bw2*0.33,3,1,1,'F');
-      pdf.setFillColor(...amber);  pdf.rect(cx3+5+bw2*0.33,y+12,bw2*0.33,3,'F');
-      pdf.setFillColor(...red);    pdf.roundedRect(cx3+5+bw2*0.66,y+12,bw2*0.34,3,1,1,'F');
-      // indicador posicion
-      var indX=cx3+5+Math.min(Math.max(((d.tuPM2-d.min)/(d.max-d.min+1))*bw2,2),bw2-2);
-      if(!d.modoLimitado){pdf.setFillColor(...white);pdf.circle(indX,y+13.5,2,'F');}
-      pdf.setFontSize(7);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');
-      pdf.text('$'+Math.round(d.min).toLocaleString(),cx3+5,y+20);
-      pdf.text('$'+Math.round(d.max).toLocaleString(),cx3+5+bw2,y+20,{align:'right'});
-      // puntos comparables simulados
-      var pts2=[];
-      var step2=(d.max-d.min)/Math.max(d.n-1,1);
-      for(var i=0;i<d.n;i++){
-        var osc2=i%2===0?0.85:1.15;
-        pts2.push(Math.min(Math.max(d.min+step2*i*osc2,d.min),d.max));
-      }
-      var chartH=22, chartY=y+22, chartW=bw2;
-      pts2.forEach(function(v,i){
-        var px2=cx3+5+(v-d.min)/(d.max-d.min+1)*chartW;
-        var py2=chartY+chartH-(i/(d.n-1||1))*chartH*0.7;
-        var isMe=Math.abs(v-d.tuPM2)<50;
-        pdf.setFillColor(...(isMe?[226,176,92]:[14,165,233]));
-        pdf.circle(px2,py2,isMe?2:1.5,'F');
-      });
-      bod('Cada punto: comparable activo en '+d.zona+' · '+d.tipo,cx3+5,y+47,slate,6.5,bw2);
-
-      y+=56;
-
-      // Barra posicion en rango
-      card(M,y,W-2*M,20);
-      lbl('POSICION EN EL RANGO OBSERVABLE',M+5,y+6);
+      // Barra de posicion
+      card(M,y,W-2*M,18);
+      lbl('Posicion en el rango observable',M+5,y+6);
       var rw=W-2*M-10;
-      pdf.setFillColor(20,35,65);pdf.roundedRect(M+5,y+9,rw,4,2,2,'F');
-      pdf.setFillColor(...green);  pdf.roundedRect(M+5,y+9,rw*0.33,4,2,2,'F');
-      pdf.setFillColor(...amber);  pdf.rect(M+5+rw*0.33,y+9,rw*0.33,4,'F');
-      pdf.setFillColor(...red);    pdf.roundedRect(M+5+rw*0.66,y+9,rw*0.34,4,2,2,'F');
-      if(!d.modoLimitado){
+      pdf.setFillColor(...green); pdf.roundedRect(M+5,y+9,rw*0.33,3.5,1,1,'F');
+      pdf.setFillColor(...amber); pdf.rect(M+5+rw*0.33,y+9,rw*0.33,3.5,'F');
+      pdf.setFillColor(...red);   pdf.roundedRect(M+5+rw*0.66,y+9,rw*0.34,3.5,1,1,'F');
+      if (!d.modoLimitado) {
         var px3=M+5+Math.min(Math.max(((d.tuPM2-d.min)/(d.max-d.min+1))*rw,2),rw-2);
-        pdf.setFillColor(...white);pdf.circle(px3,y+11,2.5,'F');
+        pdf.setFillColor(...white); pdf.circle(px3,y+10.75,2,'F');
       }
-      bod('$'+Math.round(d.min).toLocaleString(),M+5,y+18,slate,7);
-      bod('Mediana: $'+Math.round(d.mediana).toLocaleString(),M+5+rw/2,y+18,muted,7,40);
-      bod('$'+Math.round(d.max).toLocaleString(),M+5+rw,y+18,slate,7);
+      bod('Bajo',M+5,y+17,slate,6.5);
+      bod('En rango',M+5+rw/2,y+17,muted,6.5,30);
+      bod('Sobre',M+5+rw,y+17,slate,6.5);
 
-      y+=28;
+      y+=26;
 
-      // Nota analista
-      card(M,y,W-2*M,22,[10,20,42]);
-      pdf.setFillColor(...accentColor);pdf.rect(M,y,3,22,'F');
-      lbl('NOTA DEL ANALISTA',M+7,y+6);
-      var nota=d.modoLimitado
-        ? 'Zona en proceso de densificacion. Con '+d.n+' comparable'+(d.n>1?'s':'')+' no es posible emitir veredicto estadistico. Se recomienda complementar con inspeccion directa del mercado.'
-        : isAlto ? 'Precio superior al mercado en '+Math.abs(Math.round(d.desv))+'%. Negociar descuento o evaluar alternativas en '+d.zona+'.'
-        : isBajo ? 'Precio bajo el mercado en '+Math.abs(Math.round(d.desv))+'%. Investigar contexto antes de proceder. Posible oportunidad o riesgo oculto.'
-        : 'Precio competitivo y alineado al mercado de '+d.zona+'. Margen de negociacion estimado: '+Math.round(Math.abs(d.desv))+'%.';
-      bod(nota,M+7,y+12,white,8,W-2*M-14);
+      // Resumen en lenguaje humano
+      card(M,y,W-2*M,24,[10,20,42]);
+      lbl('Lo que esto significa para esta propiedad',M+5,y+6);
+      var resumenPDF = d.modoLimitado
+        ? 'Esta zona cuenta con pocas propiedades similares registradas. Los valores son orientativos. Se recomienda complementar con inspeccion directa del mercado.'
+        : d.iprInt.cat==='bajo'
+          ? 'El precio solicitado esta '+Math.abs(Math.round(d.desv))+'% por debajo de propiedades similares en '+d.zona+'. Si las condiciones fisicas son buenas, puede representar un punto de entrada favorable.'
+          : d.iprInt.cat==='sobre'
+            ? 'El precio solicitado esta '+Math.abs(Math.round(d.desv))+'% por encima de propiedades similares en '+d.zona+'. Propiedades comparables se ofrecen a $'+Math.round(d.mediana).toLocaleString()+'/m2. Existe margen de negociacion.'
+            : 'El precio esta alineado con propiedades similares en '+d.zona+'. Rango habitual: $'+Math.round(d.min).toLocaleString()+' - $'+Math.round(d.max).toLocaleString()+'/m2.';
+      bod(resumenPDF,M+5,y+14,white,8.5,W-2*M-10);
+
+      y+=32;
+
+      // Actividad observable
+      card(M,y,W-2*M,20);
+      var iaoCol2=d.iaoInt.clase==='iao-alta'?green:d.iaoInt.clase==='iao-media'?[14,165,233]:slate;
+      lbl('Actividad observable en la zona',M+5,y+6);
+      val(d.iaoInt.label,M+5,y+14,iaoCol2,10);
+      bod(d.iaoInt.sub,M+60,y+14,muted,8,W-2*M-70);
 
       // Footer p1
-      pdf.setFillColor(10,20,42);pdf.rect(0,H-14,W,14,'F');
-      pdf.setFillColor(...gold);pdf.rect(0,H-14,W,0.8,'F');
-      bod('Valorius Market Intelligence · Tegucigalpa, Honduras',M,H-7,slate,7);
-      bod('Pagina 1 de 3',W-M,H-7,slate,7);
+      pdf.setFillColor(10,20,42);pdf.rect(0,H-12,W,12,'F');
+      pdf.setFillColor(...gold);pdf.rect(0,H-12,W,0.6,'F');
+      bod('Valorius Market Intelligence · Tegucigalpa, Honduras',M,H-5,slate,6.5);
+      bod('1 / 3',W-M,H-5,slate,6.5);
 
-      // ── P2 ──────────────────────────────────────────────────
+      // ── P2 ───────────────────────────────────────────────────
       pdf.addPage(); bg();
       pdf.setFillColor(...gold);pdf.rect(0,0,W,1.2,'F');
-      pdf.setFillColor(10,20,42);pdf.rect(0,1.2,W,14,'F');
-      pdf.setFontSize(8);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');pdf.text('VALORIUS',M,10);
+      pdf.setFillColor(10,20,42);pdf.rect(0,1.2,W,12,'F');
+      pdf.setFontSize(8);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');pdf.text('VALORIUS',M,9);
       pdf.setFontSize(7);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');
-      pdf.text(d.zona+' · '+d.tipo,M+25,10); pdf.text(fecha,W-M,10,{align:'right'});
+      pdf.text(d.zona+' · '+d.tipo,M+25,9);pdf.text(fecha,W-M,9,{align:'right'});
 
-      y=24;
+      y=22;
 
-      // Tabla comparativa
+      // Comparacion de zona (tabla)
       if (!d.modoLimitado) {
-        card(M,y,W-2*M,40);
-        lbl('ANALISIS COMPARATIVO DE ZONA',M+5,y+6);
+        card(M,y,W-2*M,42);
+        lbl('Comparacion con propiedades similares en '+d.zona.substring(0,25),M+5,y+7);
         var tRows=[
-          ['Tu precio/m2',   '$'+d.tuPM2.toLocaleString(),           'Propiedad evaluada', d.signo+d.desv.toFixed(1)+'% vs mediana'],
-          ['Mediana de zona','$'+Math.round(d.mediana).toLocaleString(),'Benchmark zonal',  d.n+' comparables activos'],
-          ['P25 (cuartil)',  '$'+Math.round(d.p25).toLocaleString(),  'Rango mercado',      '25% de props por debajo'],
-          ['P75 (cuartil)',  '$'+Math.round(d.p75).toLocaleString(),  'Rango mercado',      '75% de props por debajo'],
-          ['Precio equivalente','$'+d.precioMercado.toLocaleString(), 'Al precio de mediana','Para '+d.area+' m2'],
+          ['Tu precio/m2',      '$'+d.tuPM2.toLocaleString(),      d.signo+d.desv.toFixed(1)+'% vs referencia'],
+          ['Precio referencia', '$'+Math.round(d.mediana).toLocaleString(), d.n+' propiedades similares'],
+          ['Precio mas bajo',   '$'+Math.round(d.min).toLocaleString(), 'Limite inferior observado'],
+          ['Precio mas alto',   '$'+Math.round(d.max).toLocaleString(), 'Limite superior observado'],
+          ['Precio equiv. mdo.','$'+d.precioMercado.toLocaleString(),'Para '+d.area+' m2 al precio de referencia'],
         ];
-        var sx=[M+5,M+52,M+92,M+132];
-        ['CONCEPTO','VALOR','REFERENCIA','DETALLE'].forEach(function(h,i){
-          pdf.setFontSize(6.5);pdf.setTextColor(...slate);pdf.setFont('helvetica','bold');pdf.text(h,sx[i],y+12);
+        var sx2=[M+5,M+60,M+110];
+        ['Concepto','Valor','Referencia'].forEach(function(h,i){
+          pdf.setFontSize(6.5);pdf.setTextColor(...slate);pdf.setFont('helvetica','bold');pdf.text(h,sx2[i],y+13);
         });
-        hline(M+5,y+13,W-2*M-10);
+        hline(M+5,y+14,W-2*M-10);
         tRows.forEach(function(row,ri){
-          var ry=y+19+ri*6;
+          var ry=y+20+ri*6;
           if(ri%2===0){pdf.setFillColor(10,20,42);pdf.rect(M+5,ry-3.5,W-2*M-10,5.5,'F');}
           row.forEach(function(cell,ci){
             pdf.setFontSize(8);
-            pdf.setTextColor(...(ci===1?gold:ci===0?white:muted));
+            pdf.setTextColor(...(ci===1?iprColor:ci===0?white:muted));
             pdf.setFont('helvetica',ci===1?'bold':'normal');
-            pdf.text(cell,sx[ci],ry);
+            pdf.text(cell,sx2[ci],ry);
           });
         });
-        y+=48;
+        y+=50;
       }
 
-      // Contexto mercado
+      // Contexto de mercado
       card(M,y,W-2*M,52);
-      lbl('CONTEXTO DE MERCADO · '+d.zona.toUpperCase().substring(0,25),M+5,y+6);
-      var ctxW=(W-2*M-10)/3;
+      lbl('Contexto del mercado en '+d.zona.substring(0,25),M+5,y+7);
+      var ctxW2=(W-2*M-10)/3;
       var ctx=[
-        {t:'Estado de Cobertura', v:d.n>=10?'Robusto':d.n>=5?'En crecimiento':d.n>=3?'Preliminar':'Limitado',
-         c:d.n>=10?green:d.n>=5?amber:d.n>=3?amber:red,
-         d:'La zona cuenta con '+d.n+' comparable'+(d.n>1?'s':'')+' activo'+(d.n>1?'s':'')+' en los ultimos '+DIAS_COMPARABLES+' dias. '+(d.n<3?'Prioridad de densificacion.':d.n<5?'Creciendo hacia benchmark.':'Cobertura adecuada para analisis.')},
-        {t:'Variabilidad', v:d.modoLimitado?'N/D':(d.iqr>800?'Alta':d.iqr>400?'Media':'Baja'),
+        {t:'Estado de la zona',  v:d.n>=10?'Bien documentada':d.n>=5?'En crecimiento':d.n>=3?'Documentacion inicial':'Pocas referencias',
+         c:d.n>=10?green:d.n>=5?amber:d.n>=3?amber:slate,
+         d:'Se detectaron '+d.n+' propiedad'+(d.n>1?'es':'')+' similar'+(d.n>1?'es':'')+' activa'+(d.n>1?'s':'')+' en los ultimos '+DIAS_COMPARABLES+' dias en esta zona.'},
+        {t:'Variabilidad',      v:d.modoLimitado?'Sin dato':(d.iqr>800?'Alta':d.iqr>400?'Moderada':'Baja'),
          c:d.modoLimitado?slate:(d.iqr>800?red:d.iqr>400?amber:green),
-         d:d.modoLimitado?'Sin datos suficientes.':'Rango intercuartil: $'+Math.round(d.p25)+' - $'+Math.round(d.p75)+'/m2. '+(d.iqr>800?'Mercado heterogeneo, mayor dispersion.':d.iqr>400?'Dispersion moderada y razonable.':'Mercado consistente y predecible.')},
-        {t:'Precio de Entrada', v:d.modoLimitado?'N/D':'$'+Math.round(d.mediana*0.95*d.area).toLocaleString(),
-         c:d.modoLimitado?slate:gold,
-         d:d.modoLimitado?'No disponible con cobertura limitada.':'Precio competitivo estimado: mediana -5% para '+d.area+' m2 en '+d.zona+'. Referencia de negociacion inicial.'}
+         d:d.modoLimitado?'Sin datos suficientes.':'Rango entre propiedades similares: $'+Math.round(d.min)+' - $'+Math.round(d.max)+'/m2.'},
+        {t:'Actividad (IAO)',   v:d.iaoInt.label,
+         c:d.iaoInt.clase==='iao-alta'?green:d.iaoInt.clase==='iao-media'?[14,165,233]:slate,
+         d:d.iaoInt.sub}
       ];
       ctx.forEach(function(c,i){
-        var cx4=M+5+i*ctxW;
+        var cx4=M+5+i*ctxW2;
         if(i>0){pdf.setFillColor(20,35,65);pdf.rect(cx4-2,y+8,0.5,40,'F');}
-        lbl(c.t,cx4+2,y+12); val(c.v,cx4+2,y+22,c.c,10);
-        bod(c.d,cx4+2,y+28,slate,7,ctxW-4);
+        lbl(c.t,cx4+2,y+13); val(c.v,cx4+2,y+22,c.c,9);
+        bod(c.d,cx4+2,y+28,slate,7,ctxW2-4);
       });
 
       y+=60;
 
       // Footer p2
-      pdf.setFillColor(10,20,42);pdf.rect(0,H-14,W,14,'F');
-      pdf.setFillColor(...gold);pdf.rect(0,H-14,W,0.8,'F');
-      bod('Valorius Market Intelligence · Datos de oferta publica · Tegucigalpa',M,H-7,slate,7);
-      bod('Pagina 2 de 3',W-M,H-7,slate,7);
+      pdf.setFillColor(10,20,42);pdf.rect(0,H-12,W,12,'F');
+      pdf.setFillColor(...gold);pdf.rect(0,H-12,W,0.6,'F');
+      bod('Valorius Market Intelligence · Datos de oferta activa · Tegucigalpa',M,H-5,slate,6.5);
+      bod('2 / 3',W-M,H-5,slate,6.5);
 
-      // ── P3: GLOSARIO ──────────────────────────────────────
+      // ── P3: GLOSARIO ─────────────────────────────────────────
       pdf.addPage(); bg();
       pdf.setFillColor(...gold);pdf.rect(0,0,W,1.2,'F');
-      pdf.setFillColor(10,20,42);pdf.rect(0,1.2,W,14,'F');
-      pdf.setFontSize(8);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');pdf.text('VALORIUS',M,10);
+      pdf.setFillColor(10,20,42);pdf.rect(0,1.2,W,12,'F');
+      pdf.setFontSize(8);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');pdf.text('VALORIUS',M,9);
       pdf.setFontSize(7);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');
-      pdf.text('Glosario de terminos',M+25,10); pdf.text(fecha,W-M,10,{align:'right'});
+      pdf.text('Guia de terminos',M+25,9);pdf.text(fecha,W-M,9,{align:'right'});
 
-      y=24;
+      y=20;
       card(M,y,W-2*M,10);
-      pdf.setFontSize(13);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');
-      pdf.text('GLOSARIO DE TERMINOS',M+5,y+7);
-      pdf.setFontSize(8);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');
-      pdf.text('Guia de referencia para interpretar correctamente este reporte',W-M,y+7,{align:'right'});
-
+      pdf.setFontSize(12);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');pdf.text('GUIA DE TERMINOS',M+5,y+7);
+      pdf.setFontSize(7.5);pdf.setTextColor(...slate);pdf.setFont('helvetica','normal');
+      pdf.text('Para interpretar correctamente este reporte',W-M,y+7,{align:'right'});
       y+=18;
 
       var terminos=[
-        {t:'Comparable',        d:'Propiedad activa en el mercado con caracteristicas similares a la evaluada: misma zona, mismo tipo de inmueble y publicada dentro de la ventana temporal de analisis ('+DIAS_COMPARABLES+' dias). Son la base de referencia del analisis. A mayor cantidad de comparables, mayor confiabilidad del resultado.',
-         lim:'Los comparables son precios de oferta publicados, no precios de transaccion cerrada. El precio de cierre puede diferir del precio publicado.'},
-        {t:'Mediana',           d:'Valor que divide exactamente en dos mitades iguales el conjunto de comparables activos cuando se ordenan de menor a mayor. Se usa mediana en lugar de promedio porque no se distorsiona por valores extremos (propiedades muy caras o muy baratas que no son representativas del mercado).',
-         lim:'Con menos de 5 comparables, la mediana pierde robustez estadistica y debe interpretarse como referencia orientativa.'},
-        {t:'Rango observable',  d:'Precio minimo y maximo por metro cuadrado observado entre los comparables activos de la zona. Representa la amplitud real del mercado en ese segmento durante la ventana de analisis. No implica que cualquier propiedad en ese rango sea comparable a la evaluada.',
-         lim:'El rango puede verse afectado por propiedades atipicas en zonas con pocos comparables.'},
-        {t:'Cobertura',         d:'Cantidad de comparables activos disponibles para el analisis. Define el nivel de confianza estadistica del resultado: Alta (10+), Media (5-9), En proceso (3-4), Limitada (1-2). Una cobertura baja requiere mayor cautela en la interpretacion.',
-         lim:'La cobertura refleja la data disponible al momento del analisis. El mercado cambia continuamente. Una cobertura baja no descalifica el analisis, pero requiere mayor cautela en la interpretacion.'},
-        {t:'Precio por m2',     d:'Precio total dividido entre el area de construccion. Es la unidad de medida estandar para comparar propiedades de distintos tamanios en condiciones equitativas. Permite identificar si una propiedad grande o pequena esta alineada al mercado de su zona.',
-         lim:'El area de construccion no siempre equivale a area util. Factores como distribucion, acabados y antiguedad no estan capturados en esta metrica.'},
-        {t:'Precio equivalente de mercado', d:'Precio total estimado de la propiedad evaluada si su precio por m2 fuera exactamente igual a la mediana de la zona. Sirve como referencia de negociacion: indica el valor de "mercado observable" para esa combinacion de zona, tipo y area.',
-         lim:'Es una estimacion basada en precios de oferta activos, no en valuaciones formales ni transacciones cerradas.'},
-        {t:'Veredicto de mercado', d:'Clasificacion del posicionamiento de la propiedad respecto al rango observable de la zona: BAJO MERCADO (precio por debajo del rango), EN RANGO (dentro del rango observable), SOBRE MERCADO (precio por encima del rango). No es una recomendacion de compra o venta.',
-         lim:'El veredicto solo aplica cuando hay 3 o mas comparables activos. Con cobertura limitada se muestra el estado referencial sin veredicto.'},
+        {t:'Precio de referencia',
+         d:'El precio por m2 que representa el punto medio de propiedades similares activas en la zona. Se calcula como mediana (no promedio) para evitar que propiedades muy caras o baratas distorsionen el resultado.',
+         lim:'Es orientativo. A menor cantidad de propiedades detectadas, menor precision de esta cifra.'},
+        {t:'IPR — Indice de Posicionamiento Relativo',
+         d:'Divide tu precio/m2 entre el precio de referencia de la zona. Un IPR menor a 0.85 indica que el precio esta bajo el mercado observable. Entre 0.85 y 1.15 esta en rango. Mayor a 1.15 esta sobre el mercado observable.',
+         lim:'No determina si la propiedad es buena o mala inversion. Solo compara precios de oferta activos.'},
+        {t:'IAO — Actividad observable en la zona',
+         d:'Indica que tan activo esta el mercado para este tipo de propiedad en la zona, en base a cuantas propiedades similares se detectaron en los ultimos 100 dias. Alta actividad significa mas opciones y mejor contexto de referencia.',
+         lim:'Alta actividad no significa que las propiedades se esten vendiendo rapidamente. Son precios de oferta publicados.'},
+        {t:'Propiedades similares',
+         d:'Propiedades activas en el mismo tipo de inmueble y la misma zona, registradas en los ultimos 100 dias. Son la base de la comparacion. Son precios de oferta publicados, no precios de transaccion cerrada.',
+         lim:'El precio de cierre puede diferir del precio publicado.'},
+        {t:'Rango de precios observados',
+         d:'El precio minimo y maximo por m2 detectado entre propiedades similares activas en la zona. Muestra la amplitud del mercado observable en ese periodo.',
+         lim:'Con pocas propiedades detectadas, los extremos pueden no ser representativos del mercado real.'},
+        {t:'Analisis orientativo',
+         d:'Cuando hay menos de 3 propiedades similares registradas, el analisis se muestra como orientativo. Los datos son reales pero insuficientes para emitir un veredicto definitivo.',
+         lim:'En estos casos se recomienda complementar con inspeccion directa del mercado.'},
       ];
 
       terminos.forEach(function(term){
-        if(y > H-50){ // nueva pagina si no hay espacio
-          pdf.setFillColor(10,20,42);pdf.rect(0,H-14,W,14,'F');
-          pdf.setFillColor(...gold);pdf.rect(0,H-14,W,0.8,'F');
-          bod('Glosario de terminos · Valorius',M,H-7,slate,7);
+        if(y > H-50){
+          pdf.setFillColor(10,20,42);pdf.rect(0,H-12,W,12,'F');
+          pdf.setFillColor(...gold);pdf.rect(0,H-12,W,0.6,'F');
           pdf.addPage(); bg();
           pdf.setFillColor(...gold);pdf.rect(0,0,W,1.2,'F');
           y=18;
         }
-        // Titulo del termino
-        pdf.setFontSize(10);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');
-        pdf.text(term.t,M,y);
+        pdf.setFontSize(10);pdf.setTextColor(...gold);pdf.setFont('helvetica','bold');pdf.text(term.t,M,y);
         hline(M,y+1.5,W-2*M,[30,45,75]);
         y+=5;
-        // Definicion
         var defLines=pdf.splitTextToSize(term.d,W-2*M);
         pdf.setFontSize(8);pdf.setTextColor(...muted);pdf.setFont('helvetica','normal');
         pdf.text(defLines,M,y); y+=defLines.length*3.5+2;
-        // Limitacion
-        var limLines=pdf.splitTextToSize('Limitacion: '+term.lim,W-2*M-5);
-        pdf.setFontSize(7.5);pdf.setTextColor(...slate);pdf.setFont('helvetica','italic');
+        var limLines=pdf.splitTextToSize('Nota: '+term.lim,W-2*M-5);
         pdf.setFillColor(15,25,50);pdf.roundedRect(M,y-1,W-2*M,limLines.length*3.5+4,1,1,'F');
-        pdf.text(limLines,M+3,y+2); y+=limLines.length*3.5+8;
+        pdf.setFontSize(7.5);pdf.setTextColor(...slate);pdf.setFont('helvetica','italic');
+        pdf.text(limLines,M+3,y+2); y+=limLines.length*3.5+9;
       });
 
-      // Disclaimer final
-      y=Math.max(y,H-55);
-      card(M,y,W-2*M,32,[8,16,36]);
-      pdf.setFillColor(...slate);pdf.rect(M,y,3,32,'F');
-      lbl('NOTA LEGAL Y METODOLOGICA',M+7,y+6);
-      var disc='Este reporte fue generado por Valorius Market Intelligence con base en datos de oferta publica disponibles en el mercado inmobiliario de Honduras. La informacion es de caracter referencial y no constituye valuacion formal, avaluo profesional certificado ni asesoramiento legal o financiero. Los comparables corresponden a precios de oferta publicados en los ultimos '+DIAS_COMPARABLES+' dias y pueden no reflejar valores de transaccion final. Los terminos, metodologias y criterios utilizados se describen en el glosario adjunto. Valorius no se responsabiliza por decisiones de inversion tomadas con base exclusiva en este reporte.';
+      // Disclaimer
+      y=Math.max(y,H-48);
+      card(M,y,W-2*M,30,[8,16,36]);
+      pdf.setFillColor(...slate);pdf.rect(M,y,3,30,'F');
+      lbl('Nota legal y metodologica',M+7,y+6);
+      var disc='Este reporte fue generado por Valorius Market Intelligence con base en datos de oferta publica disponibles en el mercado inmobiliario de Honduras. La informacion es de caracter referencial y no constituye valuacion formal, avaluo profesional certificado ni asesoramiento legal o financiero. Los datos corresponden a precios de oferta publicados y pueden no reflejar valores de transaccion final. Valorius no se responsabiliza por decisiones de inversion tomadas con base exclusiva en este reporte.';
       bod(disc,M+7,y+12,slate,6.5,W-2*M-14);
 
       // Footer p3
-      pdf.setFillColor(10,20,42);pdf.rect(0,H-14,W,14,'F');
-      pdf.setFillColor(...gold);pdf.rect(0,H-14,W,0.8,'F');
-      bod('Valorius Market Intelligence · Datos de oferta publica · Tegucigalpa, Honduras',M,H-7,slate,7);
-      bod('Pagina 3 de 3',W-M,H-7,slate,7);
+      pdf.setFillColor(10,20,42);pdf.rect(0,H-12,W,12,'F');
+      pdf.setFillColor(...gold);pdf.rect(0,H-12,W,0.6,'F');
+      bod('Valorius Market Intelligence · Tegucigalpa, Honduras',M,H-5,slate,6.5);
+      bod('3 / 3',W-M,H-5,slate,6.5);
 
       pdf.save('Valorius_'+d.zona.replace(/\s+/g,'_')+'_'+d.tipo+'.pdf');
 
     } catch(err) {
       console.error(err);
-      alert('No fue posible generar el reporte en este momento. Intenta de nuevo.');
+      alert('No fue posible generar el reporte. Intenta de nuevo.');
     } finally {
       btn.disabled=false; btn.textContent='Exportar Reporte PDF'; btn.style.opacity='1';
     }
@@ -1141,28 +1146,20 @@
 
   // ─── INICIALIZACION ───────────────────────────────────────
   window.onload = async function() {
-    if (!localStorage.getItem('valorius_token')) {
-      window.location.href='index.html'; return;
-    }
+    if (!localStorage.getItem('valorius_token')) { window.location.href='index.html'; return; }
     var fecha=new Date(); fecha.setDate(fecha.getDate()-DIAS_COMPARABLES);
     var fechaISO=fecha.toISOString().split('T')[0];
-
     var results = await Promise.all([
       azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,fecha_registro,property(colonia,dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
       azFetch('/rest/v1/dim_subzona?select=subzona,zone_id,dim_zone(zona)&order=subzona'),
       azFetch('/rest/v1/dim_proyecto?select=proyecto,zone_id,dim_zone(zona)&order=proyecto')
     ]);
-
     var rows=results[0]||[], subs=results[1]||[], proys=results[2]||[];
-
-    azSubzonas  = subs.map(function(s){ return {subzona:s.subzona, zona:s.dim_zone?.zona||''}; });
+    azSubzonas  = subs.map(function(s){  return {subzona:s.subzona,  zona:s.dim_zone?.zona||''}; });
     azProyectos = proys.map(function(p){ return {proyecto:p.proyecto, zona:p.dim_zone?.zona||''}; });
-
-    // Procesar comparables en memoria
     var grupos={};
     rows.forEach(function(r){
-      var colonia=r.property?.colonia;
-      var tipo=r.property?.dim_property_type?.tipo_inmueble;
+      var colonia=r.property?.colonia, tipo=r.property?.dim_property_type?.tipo_inmueble;
       if(!colonia||!tipo) return;
       var key=colonia+'||'+tipo;
       if(!grupos[key]) grupos[key]={zona:colonia,tipo,precios:[]};
@@ -1170,10 +1167,8 @@
       var pm2=pUSD/r.area_construccion;
       if(pm2>50&&pm2<15000) grupos[key].precios.push(pm2);
     });
-
     todosLosComparables=Object.values(grupos).map(function(g){
-      var p=g.precios.slice().sort(function(a,b){return a-b;});
-      var n=p.length;
+      var p=g.precios.slice().sort(function(a,b){return a-b;}), n=p.length;
       var mediana=n>0?p[Math.floor(n/2)]:0;
       var p25=p[Math.floor(n*0.25)]||mediana*0.85;
       var p75=p[Math.floor(n*0.75)]||mediana*1.15;
@@ -1181,7 +1176,6 @@
               p25:Math.round(p25),p75:Math.round(p75),
               min:Math.round(p[0]||0),max:Math.round(p[n-1]||0)};
     });
-
     poblarDropdownZonas();
   };
   </script>
