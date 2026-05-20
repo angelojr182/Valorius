@@ -1217,11 +1217,19 @@
   var BETA_TOKEN_ID   = null;
 
   async function validarToken() {
-    // 1. Leer token de la URL
+    // ── MODO ADMIN: viene del dashboard con sesion existente ──
+    var esAdmin = !!localStorage.getItem('valorius_token');
+    if (esAdmin) {
+      // Admin tiene acceso completo — sin tracking de beta
+      BETA_SESSION_ID = 'ADMIN-' + Math.random().toString(36).substring(2,10).toUpperCase();
+      BETA_TOKEN_ID   = null; // no registra eventos en beta
+      return true;
+    }
+
+    // ── MODO BETA: acceso por token en URL o localStorage ─────
     var params = new URLSearchParams(window.location.search);
     var token  = params.get('token');
 
-    // 2. Limpiar token de la URL inmediatamente
     if (token) {
       history.replaceState({}, '', window.location.pathname);
       localStorage.setItem('valorius_beta_token', token);
@@ -1231,39 +1239,43 @@
 
     if (!token) { window.location.href='index.html'; return false; }
 
-    // 3. Validar contra Supabase
+    // Validar contra Supabase
     try {
-      var r = await fetch(AZ_SURL + '/rest/v1/access_tokens?token=eq.' + encodeURIComponent(token) + '&select=id,activo,expira_en,assigned_to', {
+      var r = await fetch(AZ_SURL + '/rest/v1/access_tokens?token=eq.' + encodeURIComponent(token) + '&select=id,activo,expira_en,assigned_to,first_access_at,total_accesos', {
         headers: Object.assign({}, AZ_HDRS, {'Accept-Profile': 'beta'})
       });
       var data = await r.json();
-      if (!data || !data[0] || !data[0].activo) { localStorage.removeItem('valorius_beta_token'); window.location.href='index.html'; return false; }
-      var expira = new Date(data[0].expira_en);
-      if (expira < new Date()) { localStorage.removeItem('valorius_beta_token'); window.location.href='index.html'; return false; }
 
-      // 4. Token valido — guardar ID y generar session
+      if (!data || !data[0] || !data[0].activo) {
+        localStorage.removeItem('valorius_beta_token');
+        window.location.href='index.html'; return false;
+      }
+      if (new Date(data[0].expira_en) < new Date()) {
+        localStorage.removeItem('valorius_beta_token');
+        window.location.href='index.html'; return false;
+      }
+
+      // Token valido
       BETA_TOKEN_ID   = data[0].id;
       BETA_SESSION_ID = 'SES-' + Math.random().toString(36).substring(2,10).toUpperCase();
 
-      // 5. Actualizar accesos en DB
-      var ua = navigator.userAgent.substring(0, 200);
+      // Actualizar accesos
       var isFirst = !data[0].first_access_at;
       await fetch(AZ_SURL + '/rest/v1/access_tokens?id=eq.' + BETA_TOKEN_ID, {
         method: 'PATCH',
         headers: Object.assign({}, AZ_HDRS, {'Accept-Profile': 'beta', 'Prefer': 'return=minimal'}),
         body: JSON.stringify({
-          last_access_at:   new Date().toISOString(),
-          first_access_at:  isFirst ? new Date().toISOString() : data[0].first_access_at,
-          total_accesos:    (data[0].total_accesos || 0) + 1,
-          user_agent:       ua
+          last_access_at:  new Date().toISOString(),
+          first_access_at: isFirst ? new Date().toISOString() : data[0].first_access_at,
+          total_accesos:   (data[0].total_accesos || 0) + 1,
+          user_agent:      navigator.userAgent.substring(0, 200)
         })
       });
 
       return true;
     } catch(e) {
       console.error('Error validando token:', e);
-      window.location.href='index.html';
-      return false;
+      window.location.href='index.html'; return false;
     }
   }
 
