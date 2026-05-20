@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -36,74 +37,103 @@
       transform:translateX(-50%);
       border:5px solid transparent; border-top-color:#0a1428;
     }
-    /* Alerta sanity check */
+    /* Alerta sanity check — correccion de datos */
     .alerta-sanity {
-      display:none; margin-top:10px; padding:12px 16px;
-      border-radius:8px;
-      border:1px solid rgba(245,158,11,0.35);
-      background:rgba(245,158,11,0.06);
-      font-size:11px; color:#f59e0b; line-height:1.6;
-    }
-    .alerta-sanity strong { display:block; font-size:12px; margin-bottom:4px; color:#fbbf24; }
-
-    /* Alerta contextual con severidad */
-    .alerta-contextual {
       display:none; margin-top:10px; padding:14px 16px;
       border-radius:8px;
-      border:1px solid var(--alerta-border, rgba(239,68,68,0.3));
-      background:var(--alerta-bg, rgba(239,68,68,0.06));
+      border:1px solid rgba(148,163,184,0.25);
+      background:rgba(148,163,184,0.04);
+      font-size:11px; color:#94a3b8; line-height:1.6;
     }
-    /* Severidades */
-    .alerta-contextual.sev-leve    { --alerta-border:rgba(245,158,11,0.4); --alerta-bg:rgba(245,158,11,0.07); --alerta-color:#f59e0b; }
-    .alerta-contextual.sev-moderado{ --alerta-border:rgba(249,115,22,0.4); --alerta-bg:rgba(249,115,22,0.07); --alerta-color:#fb923c; }
-    .alerta-contextual.sev-extremo { --alerta-border:rgba(239,68,68,0.4);  --alerta-bg:rgba(239,68,68,0.07);  --alerta-color:#f87171; }
+    .alerta-sanity-header {
+      display:flex; align-items:center; gap:8px;
+      margin-bottom:6px;
+    }
+    .alerta-sanity-icon {
+      width:20px; height:20px; border-radius:50%;
+      background:rgba(148,163,184,0.12);
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; color:#94a3b8; flex-shrink:0;
+    }
+    .alerta-sanity-title {
+      font-size:12px; font-weight:600; color:#cbd5e1;
+    }
+    .alerta-sanity-body { padding-left:28px; }
 
-    .alerta-severidad-badge {
-      display:inline-block; padding:2px 10px; border-radius:20px;
-      font-size:9px; font-weight:700; letter-spacing:0.1em;
-      background:var(--alerta-color, #f87171);
-      color:#030712; margin-bottom:8px;
-    }
-    .alerta-diff-principal {
-      font-size:22px; font-weight:800;
-      color:var(--alerta-color, #f87171);
-      letter-spacing:-0.5px; line-height:1;
-      margin-bottom:2px;
-    }
-    .alerta-diff-sub {
-      font-size:10px; color:#64748b; margin-bottom:10px;
-    }
-    .alerta-nums {
-      display:grid; grid-template-columns:1fr 1fr;
-      gap:6px; margin-bottom:10px;
-      padding:8px 10px; border-radius:6px;
-      background:rgba(0,0,0,0.2);
-    }
-    .alerta-num-item { display:flex; flex-direction:column; gap:1px; }
-    .alerta-num-label { font-size:8px; color:#475569; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; }
-    .alerta-num-value { font-size:13px; font-weight:700; color:#cbd5e1; }
-    .alerta-titulo { font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:6px; }
-    .alerta-lista  { font-size:11px; color:#94a3b8; line-height:1.8; margin-bottom:10px; }
-    .alerta-lista li { list-style:none; padding-left:12px; }
-    .alerta-lista li::before { content:'·  '; color:var(--alerta-color, #f87171); }
-    .alerta-btns { display:flex; gap:8px; }
-    .alerta-btn-continuar {
-      background:transparent; border:1px solid #e2b05c; color:#e2b05c;
-      padding:6px 16px; border-radius:6px; font-size:11px; font-weight:600;
-      cursor:pointer; transition:all 0.2s;
-    }
-    .alerta-btn-continuar:hover { background:#e2b05c; color:#030712; }
-    .alerta-btn-cancelar {
-      background:transparent; border:1px solid rgba(100,116,139,0.3); color:#64748b;
-      padding:6px 16px; border-radius:6px; font-size:11px; cursor:pointer;
-    }
-    /* Badge cobertura */
-    .coverage-badge {
-      display:none; margin-top:10px; padding:10px 14px;
-      border-radius:8px; border:1px solid rgba(245,158,11,0.3);
-      background:rgba(245,158,11,0.06);
-      font-size:11px; color:#f59e0b;
-    }
+```
+/* Alerta contextual — observacion de mercado */
+.alerta-contextual {
+  display:none; margin-top:10px; padding:14px 16px;
+  border-radius:8px;
+  border:1px solid var(--alerta-border, rgba(14,165,233,0.3));
+  background:var(--alerta-bg, rgba(14,165,233,0.04));
+}
+.alerta-contextual-header {
+  display:flex; align-items:center; gap:8px;
+  margin-bottom:8px;
+}
+.alerta-contextual-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(14,165,233,0.12);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; flex-shrink:0;
+}
+/* Severidades */
+.alerta-contextual.sev-leve    { --alerta-border:rgba(245,158,11,0.35); --alerta-bg:rgba(245,158,11,0.05); --alerta-color:#f59e0b; }
+.alerta-contextual.sev-moderado{ --alerta-border:rgba(249,115,22,0.35); --alerta-bg:rgba(249,115,22,0.05); --alerta-color:#fb923c; }
+.alerta-contextual.sev-extremo { --alerta-border:rgba(239,68,68,0.35);  --alerta-bg:rgba(239,68,68,0.05);  --alerta-color:#f87171; }
+.alerta-contextual.sev-leve .alerta-contextual-icon    { background:rgba(245,158,11,0.12); color:#f59e0b; }
+.alerta-contextual.sev-moderado .alerta-contextual-icon { background:rgba(249,115,22,0.12); color:#fb923c; }
+.alerta-contextual.sev-extremo .alerta-contextual-icon  { background:rgba(239,68,68,0.12); color:#f87171; }
+
+.alerta-severidad-badge {
+  display:inline-block; padding:2px 10px; border-radius:20px;
+  font-size:9px; font-weight:700; letter-spacing:0.1em;
+  background:var(--alerta-color, #f59e0b);
+  color:#030712; margin-bottom:8px;
+}
+.alerta-diff-principal {
+  font-size:22px; font-weight:800;
+  color:var(--alerta-color, #f59e0b);
+  letter-spacing:-0.5px; line-height:1;
+  margin-bottom:2px;
+}
+.alerta-diff-sub {
+  font-size:10px; color:#64748b; margin-bottom:10px;
+}
+.alerta-nums {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:6px; margin-bottom:10px;
+  padding:8px 10px; border-radius:6px;
+  background:rgba(0,0,0,0.2);
+}
+.alerta-num-item { display:flex; flex-direction:column; gap:1px; }
+.alerta-num-label { font-size:8px; color:#475569; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; }
+.alerta-num-value { font-size:13px; font-weight:700; color:#cbd5e1; }
+.alerta-titulo { font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:6px; }
+.alerta-lista  { font-size:11px; color:#94a3b8; line-height:1.8; margin-bottom:10px; }
+.alerta-lista li { list-style:none; padding-left:12px; }
+.alerta-lista li::before { content:'·  '; color:var(--alerta-color, #94a3b8); }
+.alerta-btns { display:flex; gap:8px; }
+.alerta-btn-continuar {
+  background:transparent; border:1px solid #e2b05c; color:#e2b05c;
+  padding:6px 16px; border-radius:6px; font-size:11px; font-weight:600;
+  cursor:pointer; transition:all 0.2s;
+}
+.alerta-btn-continuar:hover { background:#e2b05c; color:#030712; }
+.alerta-btn-cancelar {
+  background:transparent; border:1px solid rgba(100,116,139,0.3); color:#64748b;
+  padding:6px 16px; border-radius:6px; font-size:11px; cursor:pointer;
+}
+/* Badge cobertura */
+.coverage-badge {
+  display:none; margin-top:10px; padding:10px 14px;
+  border-radius:8px; border:1px solid rgba(245,158,11,0.3);
+  background:rgba(245,158,11,0.06);
+  font-size:11px; color:#f59e0b;
+}
+```
+
   </style>
 </head>
 <body>
@@ -126,257 +156,269 @@
       <p class="page-sub">Valorius Market Intelligence</p>
     </div>
 
-    <section class="panel">
-      <div class="panel-title">Datos de la propiedad</div>
-      <form id="formAnalisis" onsubmit="event.preventDefault(); window.intentarAnalisis();">
-        <div class="formulario-grid">
+```
+<section class="panel">
+  <div class="panel-title">Datos de la propiedad</div>
+  <form id="formAnalisis" onsubmit="event.preventDefault(); window.intentarAnalisis();">
+    <div class="formulario-grid">
 
-          <!-- 1. TIPO DE INMUEBLE -->
-          <div class="form-group-horizontal">
-            <label class="form-label">Tipo de Inmueble</label>
-            <select id="selTipo" class="form-input" onchange="window.onTipoChange()">
-              <option value="APARTAMENTO">Apartamento</option>
-              <option value="CASA">Casa</option>
-            </select>
-          </div>
+      <!-- 1. TIPO DE INMUEBLE -->
+      <div class="form-group-horizontal">
+        <label class="form-label">Tipo de Inmueble</label>
+        <select id="selTipo" class="form-input" onchange="window.onTipoChange()">
+          <option value="APARTAMENTO">Apartamento</option>
+          <option value="CASA">Casa</option>
+        </select>
+      </div>
 
-          <!-- 2. ZONA -->
-          <div class="form-group-horizontal">
-            <label class="form-label">Zona</label>
-            <select id="selZona" class="form-input" onchange="window.onZonaChange()">
-              <option value="">Selecciona una zona</option>
-            </select>
-          </div>
+      <!-- 2. ZONA -->
+      <div class="form-group-horizontal">
+        <label class="form-label">Zona</label>
+        <select id="selZona" class="form-input" onchange="window.onZonaChange()">
+          <option value="">Selecciona una zona</option>
+        </select>
+      </div>
 
-          <!-- 3. SUBZONA -->
-          <div class="form-group-horizontal">
-            <label class="form-label">Subzona <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-            <select id="selSubzona" class="form-input">
-              <option value="">Todas</option>
-            </select>
-          </div>
+      <!-- 3. SUBZONA -->
+      <div class="form-group-horizontal">
+        <label class="form-label">Subzona <span style="color:#475569;font-size:9px;">(opcional)</span></label>
+        <select id="selSubzona" class="form-input">
+          <option value="">Todas</option>
+        </select>
+      </div>
 
-          <!-- 4. PROYECTO -->
-          <div class="form-group-horizontal">
-            <label class="form-label">Proyecto <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-            <select id="selProyecto" class="form-input">
-              <option value="">Todos</option>
-            </select>
-          </div>
+      <!-- 4. PROYECTO -->
+      <div class="form-group-horizontal">
+        <label class="form-label">Proyecto <span style="color:#475569;font-size:9px;">(opcional)</span></label>
+        <select id="selProyecto" class="form-input">
+          <option value="">Todos</option>
+        </select>
+      </div>
 
-          <!-- 5. AREA -->
-          <div class="form-group-horizontal">
-            <label class="form-label">Area de construccion (M2)</label>
-            <input type="number" id="inpArea" class="form-input" placeholder="Ej: 85" style="text-align:center;" min="10" max="5000" required />
-          </div>
+      <!-- 5. AREA -->
+      <div class="form-group-horizontal">
+        <label class="form-label">Area de construccion (M2)</label>
+        <input type="number" id="inpArea" class="form-input" placeholder="Ej: 85" style="text-align:center;" min="10" max="5000" required />
+      </div>
 
-          <!-- 6. PRECIO -->
-          <div class="form-group-horizontal">
-            <label class="form-label">Precio solicitado (USD)</label>
-            <input type="text" id="inpPrecio" class="form-input" placeholder="Ej: 180000" style="text-align:center;" required />
-          </div>
+      <!-- 6. PRECIO -->
+      <div class="form-group-horizontal">
+        <label class="form-label">Precio solicitado (USD)</label>
+        <input type="text" id="inpPrecio" class="form-input" placeholder="Ej: 180000" style="text-align:center;" required />
+      </div>
 
-        </div>
-
-        <!-- Badge cobertura -->
-        <div class="coverage-badge" id="coverageBadge"></div>
-
-        <!-- Alerta sanity check (input) -->
-        <div class="alerta-sanity" id="alertaSanity">
-          <strong>Los datos ingresados se encuentran fuera de los rangos observables habituales para este tipo de propiedad.</strong>
-          Verifica el area de construccion y el precio antes de continuar.
-        </div>
-
-        <!-- Alerta contextual (mercado) con severidad -->
-        <div class="alerta-contextual" id="alertaAtipica">
-          <div class="alerta-severidad-badge" id="alertaSevBadge">LEVE</div>
-          <div class="alerta-diff-principal" id="alertaDiffPct">+0%</div>
-          <div class="alerta-diff-sub">vs mediana observable de la zona</div>
-          <div class="alerta-nums">
-            <div class="alerta-num-item">
-              <span class="alerta-num-label">Tu precio / m²</span>
-              <span class="alerta-num-value" id="alertaTuPrecio">--</span>
-            </div>
-            <div class="alerta-num-item">
-              <span class="alerta-num-label">Mediana observable</span>
-              <span class="alerta-num-value" id="alertaMediana">--</span>
-            </div>
-          </div>
-          <div class="alerta-titulo">Esta propiedad se encuentra significativamente fuera del rango observable para esta zona. Posibles causas a revisar:</div>
-          <ul class="alerta-lista">
-            <li>Area de construccion ingresada</li>
-            <li>Precio solicitado</li>
-            <li>Tipo de inmueble seleccionado</li>
-            <li>Condiciones atipicas de la propiedad (penthouse, remodelacion, etc.)</li>
-          </ul>
-          <div class="alerta-btns">
-            <button type="button" class="alerta-btn-continuar" onclick="window.confirmarAnalisisAtipico()">Entendido, continuar analisis</button>
-            <button type="button" class="alerta-btn-cancelar" onclick="window.cerrarAlerta()">Revisar datos</button>
-          </div>
-        </div>
-
-        <div style="margin-top:12px;">
-          <button type="submit" id="btnAnalizar" class="btn-gold" style="width:100%;">Analizar propiedad</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- RESULTADOS -->
-    <div class="cards-resultados">
-
-      <!-- POSICION -->
-      <section class="panel card-resultado">
-        <div class="panel-title info-wrap">
-          Posicion en el mercado
-          <span class="info-icon" data-tip="posicion">ⓘ</span>
-          <div class="info-tooltip" id="tip-posicion">
-            <div class="info-tooltip-title">Posicion en el mercado</div>
-            <div class="info-tooltip-body">Indica que tan alejado esta el precio de la propiedad respecto a la mediana de precios observados en la zona. Un resultado positivo significa que el precio esta sobre la mediana; negativo, por debajo. No determina si una propiedad es buena o mala inversion.</div>
-          </div>
-        </div>
-        <div class="gauge-container">
-          <svg class="gauge-svg" viewBox="0 0 100 100">
-            <defs>
-              <linearGradient id="fluorescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#0ea5e9"/>
-                <stop offset="60%" stop-color="#fbbf24"/>
-                <stop offset="100%" stop-color="#e2b05c"/>
-              </linearGradient>
-            </defs>
-            <circle class="gauge-circle-bg" cx="50" cy="50" r="45"/>
-            <circle id="gaugeFill" class="gauge-circle-fill" cx="50" cy="50" r="45"/>
-            <circle class="gauge-start-dot" cx="18.2" cy="81.8" r="3.5"/>
-            <circle id="gaugeBulb" class="gauge-glow-bulb" cx="50" cy="5" r="4.5"/>
-          </svg>
-          <div class="gauge-content">
-            <span class="gauge-number" id="lblGaugeVal">--</span>
-            <span class="gauge-label">vs mediana</span>
-          </div>
-        </div>
-        <p class="pos-text-desc" id="lblExplanation">Ingresa los datos y presiona Analizar para ver resultados.</p>
-        <div class="slider-pill-wrap">
-          <div class="slider-pill-bar"><div id="sliderThumb" class="slider-pill-thumb"></div></div>
-          <div class="slider-pill-labels"><span>Bajo</span><span>En rango</span><span>Sobre</span></div>
-        </div>
-      </section>
-
-      <!-- CONTEXTO -->
-      <section class="panel card-resultado">
-        <div class="panel-title info-wrap">
-          Contexto del mercado observable
-          <span class="info-icon" data-tip="contexto">ⓘ</span>
-          <div class="info-tooltip" id="tip-contexto">
-            <div class="info-tooltip-title">Contexto del mercado observable</div>
-            <div class="info-tooltip-body">Muestra la distribucion de precios por m2 de propiedades activas comparables en la misma zona y tipo. El rango visible representa los valores observados en los ultimos 100 dias. No incluye transacciones cerradas, solo precios de oferta publicados.</div>
-          </div>
-        </div>
-        <div class="spectrum-scale-container">
-          <div id="specTooltip" class="spectrum-tooltip-bubble">--</div>
-          <div class="spectrum-colored-line"></div>
-          <div class="spectrum-numbers">
-            <span id="lblMinVal">--</span>
-            <span id="lblMedVal">--</span>
-            <span id="lblMaxVal">--</span>
-          </div>
-        </div>
-        <div class="line-chart-area">
-          <svg class="chart-svg-curve" viewBox="0 0 300 150">
-            <path id="curvePath" class="chart-curve-path" d="M 15 75 L 285 75"/>
-            <g id="curveNodes"></g>
-          </svg>
-        </div>
-        <div class="explain-box-wrapper">
-          <div class="explain-box-label">Criterio del mercado observable</div>
-          <div class="explain-box" id="lblWarning">Complete el analisis para ver la interpretacion.</div>
-        </div>
-      </section>
-
-      <!-- METRICAS -->
-      <section class="panel card-resultado card-metricas">
-        <div class="panel-title">Metricas</div>
-        <div class="metricas-lista">
-
-          <div class="metrica">
-            <div class="metrica-izquierda">
-              <span class="metrica-label info-wrap">TU PRECIO / M2
-                <span class="info-icon" data-tip="pm2">ⓘ</span>
-                <div class="info-tooltip" id="tip-pm2">
-                  <div class="info-tooltip-title">Tu precio por m2</div>
-                  <div class="info-tooltip-body">Se calcula dividiendo el precio solicitado entre el area de construccion ingresada. Es la unidad de comparacion estandar del mercado inmobiliario. Permite comparar propiedades de distintos tamanios en igualdad de condiciones.</div>
-                </div>
-              </span>
-              <span class="metrica-descripcion">Precio por metro cuadrado implicito en la oferta evaluada.</span>
-            </div>
-            <span id="lblTuPrecio" class="metrica-valor precio">--</span>
-          </div>
-
-          <div class="metrica">
-            <div class="metrica-izquierda">
-              <span class="metrica-label info-wrap">MEDIANA DE ZONA
-                <span class="info-icon" data-tip="mediana">ⓘ</span>
-                <div class="info-tooltip" id="tip-mediana">
-                  <div class="info-tooltip-title">Mediana de zona</div>
-                  <div class="info-tooltip-body">Precio por m2 que divide exactamente en dos mitades iguales el conjunto de comparables activos. Se usa mediana en lugar de promedio porque es mas resistente a propiedades atipicas que podrian distorsionar el resultado. Limitacion: a menor cantidad de comparables, menor robustez estadistica.</div>
-                </div>
-              </span>
-              <span class="metrica-descripcion">Precio de referencia del mercado observable en esta zona.</span>
-            </div>
-            <span id="lblMediana" class="metrica-valor mediana">--</span>
-          </div>
-
-          <div class="metrica">
-            <div class="metrica-izquierda">
-              <span class="metrica-label info-wrap">DIFERENCIA
-                <span class="info-icon" data-tip="diferencia">ⓘ</span>
-                <div class="info-tooltip" id="tip-diferencia">
-                  <div class="info-tooltip-title">Diferencia vs mediana</div>
-                  <div class="info-tooltip-body">Porcentaje de desviacion entre tu precio por m2 y la mediana de la zona. Un valor positivo indica que el precio esta sobre la mediana observable; negativo indica que esta por debajo. No implica sobrevaloacion ni subvaluacion definitiva: existen factores cualitativos que este analisis no captura.</div>
-                </div>
-              </span>
-              <span class="metrica-descripcion">Distancia del precio respecto a la mediana de la zona.</span>
-            </div>
-            <span id="lblDiff" class="metrica-valor positivo">--</span>
-          </div>
-
-          <div class="metrica">
-            <div class="metrica-izquierda">
-              <span class="metrica-label info-wrap">RANGO OBSERVABLE
-                <span class="info-icon" data-tip="rango">ⓘ</span>
-                <div class="info-tooltip" id="tip-rango">
-                  <div class="info-tooltip-title">Rango observable</div>
-                  <div class="info-tooltip-body">Precio minimo y maximo por m2 observado entre los comparables activos de la zona en los ultimos 100 dias. Representa la amplitud real del mercado observable. No es un rango garantizado de transaccion: son precios de oferta, no de cierre.</div>
-                </div>
-              </span>
-              <span class="metrica-descripcion">Extremos de precio/m2 en comparables activos de esta zona.</span>
-            </div>
-            <span id="lblRango" class="metrica-valor rango">--</span>
-          </div>
-
-          <div class="metrica">
-            <div class="metrica-izquierda">
-              <span class="metrica-label info-wrap">COBERTURA OBSERVABLE
-                <span class="info-icon" data-tip="cobertura">ⓘ</span>
-                <div class="info-tooltip" id="tip-cobertura">
-                  <div class="info-tooltip-title">Cobertura observable</div>
-                  <div class="info-tooltip-body">Cantidad de propiedades activas comparables utilizadas como referencia para este analisis durante los ultimos 100 dias. A mayor cobertura, mayor robustez estadistica. Con menos de 3 comparables el analisis es referencial y no debe usarse como benchmark definitivo.</div>
-                </div>
-              </span>
-              <span class="metrica-descripcion">Propiedades similares activas usadas como referencia.</span>
-            </div>
-            <span id="lblComparables" class="metrica-valor numero">--</span>
-          </div>
-
-        </div>
-      </section>
     </div>
 
-    <footer class="footer-row">
-      <p class="footer-desc-text" id="lblMetodologia">Complete el analisis para ver la metodologia aplicada.</p>
-      <button class="btn-export-pdf" id="btnExportPDF" onclick="window.generarPDF()" disabled style="opacity:0.4;cursor:not-allowed;">Exportar Reporte PDF</button>
-    </footer>
+    <!-- Badge cobertura -->
+    <div class="coverage-badge" id="coverageBadge"></div>
+
+    <!-- Alerta sanity check (datos de entrada) -->
+    <div class="alerta-sanity" id="alertaSanity">
+      <div class="alerta-sanity-header">
+        <div class="alerta-sanity-icon">✎</div>
+        <div class="alerta-sanity-title">Datos fuera de rangos habituales</div>
+      </div>
+      <div class="alerta-sanity-body">
+        Los valores ingresados se encuentran fuera de los rangos observables habituales para este tipo de propiedad. Revisa el area de construccion y el precio solicitado antes de continuar.
+      </div>
+    </div>
+
+    <!-- Alerta contextual (observacion de mercado) con severidad -->
+    <div class="alerta-contextual" id="alertaAtipica">
+      <div class="alerta-contextual-header">
+        <div class="alerta-contextual-icon">◉</div>
+        <div class="alerta-severidad-badge" id="alertaSevBadge">LEVE</div>
+      </div>
+      <div class="alerta-diff-principal" id="alertaDiffPct">+0%</div>
+      <div class="alerta-diff-sub">vs mediana observable de la zona</div>
+      <div class="alerta-nums">
+        <div class="alerta-num-item">
+          <span class="alerta-num-label">Tu precio / m2</span>
+          <span class="alerta-num-value" id="alertaTuPrecio">--</span>
+        </div>
+        <div class="alerta-num-item">
+          <span class="alerta-num-label">Mediana observable</span>
+          <span class="alerta-num-value" id="alertaMediana">--</span>
+        </div>
+      </div>
+      <div class="alerta-titulo">Se observa una desviacion significativa respecto al rango observable de esta zona. Posibles causas a revisar:</div>
+      <ul class="alerta-lista">
+        <li>Area de construccion ingresada</li>
+        <li>Precio solicitado</li>
+        <li>Tipo de inmueble seleccionado</li>
+        <li>Condiciones atipicas de la propiedad</li>
+      </ul>
+      <div class="alerta-btns">
+        <button type="button" class="alerta-btn-continuar" onclick="window.confirmarAnalisisAtipico()">Entendido, continuar analisis</button>
+        <button type="button" class="alerta-btn-cancelar" onclick="window.cerrarAlerta()">Revisar datos</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <button type="submit" id="btnAnalizar" class="btn-gold" style="width:100%;">Analizar propiedad</button>
+    </div>
+  </form>
+</section>
+
+<!-- RESULTADOS -->
+<div class="cards-resultados">
+
+  <!-- POSICION -->
+  <section class="panel card-resultado">
+    <div class="panel-title info-wrap">
+      Posicion en el mercado
+      <span class="info-icon" data-tip="posicion">ⓘ</span>
+      <div class="info-tooltip" id="tip-posicion">
+        <div class="info-tooltip-title">Posicion en el mercado</div>
+        <div class="info-tooltip-body">Indica que tan alejado esta el precio de la propiedad respecto a la mediana de precios observados en la zona. Un resultado positivo significa que el precio esta sobre la mediana; negativo, por debajo. No determina si una propiedad es buena o mala inversion.</div>
+      </div>
+    </div>
+    <div class="gauge-container">
+      <svg class="gauge-svg" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="fluorescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0ea5e9"/>
+            <stop offset="60%" stop-color="#fbbf24"/>
+            <stop offset="100%" stop-color="#e2b05c"/>
+          </linearGradient>
+        </defs>
+        <circle class="gauge-circle-bg" cx="50" cy="50" r="45"/>
+        <circle id="gaugeFill" class="gauge-circle-fill" cx="50" cy="50" r="45"/>
+        <circle class="gauge-start-dot" cx="18.2" cy="81.8" r="3.5"/>
+        <circle id="gaugeBulb" class="gauge-glow-bulb" cx="50" cy="5" r="4.5"/>
+      </svg>
+      <div class="gauge-content">
+        <span class="gauge-number" id="lblGaugeVal">--</span>
+        <span class="gauge-label">vs mediana</span>
+      </div>
+    </div>
+    <p class="pos-text-desc" id="lblExplanation">Ingresa los datos y presiona Analizar para ver resultados.</p>
+    <div class="slider-pill-wrap">
+      <div class="slider-pill-bar"><div id="sliderThumb" class="slider-pill-thumb"></div></div>
+      <div class="slider-pill-labels"><span>Bajo</span><span>En rango</span><span>Sobre</span></div>
+    </div>
+  </section>
+
+  <!-- CONTEXTO -->
+  <section class="panel card-resultado">
+    <div class="panel-title info-wrap">
+      Contexto del mercado observable
+      <span class="info-icon" data-tip="contexto">ⓘ</span>
+      <div class="info-tooltip" id="tip-contexto">
+        <div class="info-tooltip-title">Contexto del mercado observable</div>
+        <div class="info-tooltip-body">Muestra la distribucion de precios por m2 de propiedades activas comparables en la misma zona y tipo. El rango visible representa los valores observados en los ultimos 100 dias. No incluye transacciones cerradas, solo precios de oferta publicados.</div>
+      </div>
+    </div>
+    <div class="spectrum-scale-container">
+      <div id="specTooltip" class="spectrum-tooltip-bubble">--</div>
+      <div class="spectrum-colored-line"></div>
+      <div class="spectrum-numbers">
+        <span id="lblMinVal">--</span>
+        <span id="lblMedVal">--</span>
+        <span id="lblMaxVal">--</span>
+      </div>
+    </div>
+    <div class="line-chart-area">
+      <svg class="chart-svg-curve" viewBox="0 0 300 150">
+        <path id="curvePath" class="chart-curve-path" d="M 15 75 L 285 75"/>
+        <g id="curveNodes"></g>
+      </svg>
+    </div>
+    <div class="explain-box-wrapper">
+      <div class="explain-box-label">Criterio del mercado observable</div>
+      <div class="explain-box" id="lblWarning">Complete el analisis para ver la interpretacion.</div>
+    </div>
+  </section>
+
+  <!-- METRICAS -->
+  <section class="panel card-resultado card-metricas">
+    <div class="panel-title">Metricas</div>
+    <div class="metricas-lista">
+
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label info-wrap">TU PRECIO / M2
+            <span class="info-icon" data-tip="pm2">ⓘ</span>
+            <div class="info-tooltip" id="tip-pm2">
+              <div class="info-tooltip-title">Tu precio por m2</div>
+              <div class="info-tooltip-body">Se calcula dividiendo el precio solicitado entre el area de construccion ingresada. Es la unidad de comparacion estandar del mercado inmobiliario. Permite comparar propiedades de distintos tamanios en igualdad de condiciones.</div>
+            </div>
+          </span>
+          <span class="metrica-descripcion">Precio por metro cuadrado implicito en la oferta evaluada.</span>
+        </div>
+        <span id="lblTuPrecio" class="metrica-valor precio">--</span>
+      </div>
+
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label info-wrap">MEDIANA DE ZONA
+            <span class="info-icon" data-tip="mediana">ⓘ</span>
+            <div class="info-tooltip" id="tip-mediana">
+              <div class="info-tooltip-title">Mediana de zona</div>
+              <div class="info-tooltip-body">Precio por m2 que divide exactamente en dos mitades iguales el conjunto de comparables activos. Se usa mediana en lugar de promedio porque es mas resistente a propiedades atipicas que podrian distorsionar el resultado. Limitacion: a menor cantidad de comparables, menor robustez estadistica.</div>
+            </div>
+          </span>
+          <span class="metrica-descripcion">Precio de referencia del mercado observable en esta zona.</span>
+        </div>
+        <span id="lblMediana" class="metrica-valor mediana">--</span>
+      </div>
+
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label info-wrap">DIFERENCIA
+            <span class="info-icon" data-tip="diferencia">ⓘ</span>
+            <div class="info-tooltip" id="tip-diferencia">
+              <div class="info-tooltip-title">Diferencia vs mediana</div>
+              <div class="info-tooltip-body">Porcentaje de desviacion entre tu precio por m2 y la mediana de la zona. Un valor positivo indica que el precio esta sobre la mediana observable; negativo indica que esta por debajo. No implica sobrevaloacion ni subvaluacion definitiva: existen factores cualitativos que este analisis no captura.</div>
+            </div>
+          </span>
+          <span class="metrica-descripcion">Distancia del precio respecto a la mediana de la zona.</span>
+        </div>
+        <span id="lblDiff" class="metrica-valor positivo">--</span>
+      </div>
+
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label info-wrap">RANGO OBSERVABLE
+            <span class="info-icon" data-tip="rango">ⓘ</span>
+            <div class="info-tooltip" id="tip-rango">
+              <div class="info-tooltip-title">Rango observable</div>
+              <div class="info-tooltip-body">Precio minimo y maximo por m2 observado entre los comparables activos de la zona en los ultimos 100 dias. Representa la amplitud real del mercado observable. No es un rango garantizado de transaccion: son precios de oferta, no de cierre.</div>
+            </div>
+          </span>
+          <span class="metrica-descripcion">Extremos de precio/m2 en comparables activos de esta zona.</span>
+        </div>
+        <span id="lblRango" class="metrica-valor rango">--</span>
+      </div>
+
+      <div class="metrica">
+        <div class="metrica-izquierda">
+          <span class="metrica-label info-wrap">COBERTURA OBSERVABLE
+            <span class="info-icon" data-tip="cobertura">ⓘ</span>
+            <div class="info-tooltip" id="tip-cobertura">
+              <div class="info-tooltip-title">Cobertura observable</div>
+              <div class="info-tooltip-body">Cantidad de propiedades activas comparables utilizadas como referencia para este analisis durante los ultimos 100 dias. A mayor cobertura, mayor robustez estadistica. Con menos de 3 comparables el analisis es referencial y no debe usarse como benchmark definitivo.</div>
+            </div>
+          </span>
+          <span class="metrica-descripcion">Propiedades similares activas usadas como referencia.</span>
+        </div>
+        <span id="lblComparables" class="metrica-valor numero">--</span>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<footer class="footer-row">
+  <p class="footer-desc-text" id="lblMetodologia">Complete el analisis para ver la metodologia aplicada.</p>
+  <button class="btn-export-pdf" id="btnExportPDF" onclick="window.generarPDF()" disabled style="opacity:0.4;cursor:not-allowed;">Exportar Reporte PDF</button>
+</footer>
+```
+
   </main>
 
   <script src="secrets.js?v=1.2"></script>
+
   <script>
   // ─── CONFIGURACION ────────────────────────────────────────
   const DIAS_COMPARABLES = 100;
@@ -525,12 +567,27 @@
   var PRECIO_MIN  = 10000;
   var PRECIO_MAX  = 5000000;
 
-  // Severidad segun desviacion porcentual absoluta
-  function getSeveridad(pct) {
-    var abs = Math.abs(pct);
-    if (abs >= 100) return {label:'EXTREMO', clase:'sev-extremo'};
-    if (abs >= 60)  return {label:'MODERADO', clase:'sev-moderado'};
-    return              {label:'LEVE',    clase:'sev-leve'};
+  // Severidad = f(desviacion, cobertura)
+  // Con baja cobertura, la severidad se degrada un nivel
+  function getSeveridad(pctDesviacion, numComparables) {
+    var abs = Math.abs(pctDesviacion);
+    var cobAlta  = numComparables >= 10;
+    var cobMedia = numComparables >= 5;
+    // cobBaja = < 5
+
+    if (abs >= 100) {
+      if (cobAlta || cobMedia) return {label:'EXTREMO', clase:'sev-extremo'};
+      return {label:'MODERADO', clase:'sev-moderado'}; // con poca data, no alarmar
+    }
+    if (abs >= 60) {
+      if (cobAlta)  return {label:'MODERADO', clase:'sev-moderado'};
+      if (cobMedia) return {label:'MODERADO', clase:'sev-moderado'};
+      return {label:'LEVE', clase:'sev-leve'};
+    }
+    if (abs >= 35) {
+      return {label:'LEVE', clase:'sev-leve'};
+    }
+    return {label:'LEVE', clase:'sev-leve'};
   }
 
   window.intentarAnalisis = function() {
@@ -579,7 +636,7 @@
       if (ratio > UMBRAL_ATIPICO || ratio < (1 / UMBRAL_ATIPICO)) {
         var desv   = ((tuPM2 - cob.mediana) / cob.mediana) * 100;
         var signo  = desv >= 0 ? '+' : '';
-        var sev    = getSeveridad(desv);
+        var sev    = getSeveridad(desv, n);
 
         // Poblar alerta con datos concretos
         var alertaEl = document.getElementById('alertaAtipica');
@@ -625,7 +682,7 @@
       renderAnalisis(zona, tipo, area, precio, cob, n);
     } catch(e) {
       console.error(e);
-      alert('Error al procesar el analisis. Intenta de nuevo.');
+      alert('No fue posible completar el analisis en este momento. Intenta de nuevo.');
     } finally {
       btn.disabled = false; btn.textContent = 'Analizar propiedad';
     }
@@ -1027,8 +1084,8 @@
          lim:'Con menos de 5 comparables, la mediana pierde robustez estadistica y debe interpretarse como referencia orientativa.'},
         {t:'Rango observable',  d:'Precio minimo y maximo por metro cuadrado observado entre los comparables activos de la zona. Representa la amplitud real del mercado en ese segmento durante la ventana de analisis. No implica que cualquier propiedad en ese rango sea comparable a la evaluada.',
          lim:'El rango puede verse afectado por propiedades atipicas en zonas con pocos comparables.'},
-        {t:'Cobertura',         d:'Cantidad de comparables activos disponibles para el analisis. Define el nivel de confianza estadistica del resultado: Alta (10+), Media (5-9), En proceso (3-4), Limitada (1-2). Una cobertura baja no invalida el analisis, pero requiere mayor cautela en la interpretacion.',
-         lim:'La cobertura refleja la data disponible al momento del analisis. El mercado cambia continuamente.'},
+        {t:'Cobertura',         d:'Cantidad de comparables activos disponibles para el analisis. Define el nivel de confianza estadistica del resultado: Alta (10+), Media (5-9), En proceso (3-4), Limitada (1-2). Una cobertura baja requiere mayor cautela en la interpretacion.',
+         lim:'La cobertura refleja la data disponible al momento del analisis. El mercado cambia continuamente. Una cobertura baja no descalifica el analisis, pero requiere mayor cautela en la interpretacion.'},
         {t:'Precio por m2',     d:'Precio total dividido entre el area de construccion. Es la unidad de medida estandar para comparar propiedades de distintos tamanios en condiciones equitativas. Permite identificar si una propiedad grande o pequena esta alineada al mercado de su zona.',
          lim:'El area de construccion no siempre equivale a area util. Factores como distribucion, acabados y antiguedad no estan capturados en esta metrica.'},
         {t:'Precio equivalente de mercado', d:'Precio total estimado de la propiedad evaluada si su precio por m2 fuera exactamente igual a la mediana de la zona. Sirve como referencia de negociacion: indica el valor de "mercado observable" para esa combinacion de zona, tipo y area.',
@@ -1080,7 +1137,7 @@
 
     } catch(err) {
       console.error(err);
-      alert('Error al generar el reporte. Intenta de nuevo.');
+      alert('No fue posible generar el reporte en este momento. Intenta de nuevo.');
     } finally {
       btn.disabled=false; btn.textContent='Exportar Reporte PDF'; btn.style.opacity='1';
     }
@@ -1132,5 +1189,6 @@
     poblarDropdownZonas();
   };
   </script>
+
 </body>
 </html>
