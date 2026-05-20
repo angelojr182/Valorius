@@ -820,6 +820,13 @@
 
     renderChart(min, mediana, max, tuPM2, n);
 
+    // Registrar evento de analisis completado
+    registrarEvento('analisis_completado', {
+      zona: zona, tipo_inmueble: tipo,
+      ipr_categoria: iprInt.cat, n_comparables: n,
+      evento_metadata: {precio: precio, area: area, desv: Math.round(desv), modoLimitado: modoLimitado}
+    });
+
     // PDF habilitado
     var btnPDF = document.getElementById('btnExportPDF');
     btnPDF.disabled=false; btnPDF.style.opacity='1'; btnPDF.style.cursor='pointer';
@@ -1191,6 +1198,11 @@
       sub('3 / 3',W-M,H-4,slate,6.5);
 
       pdf.save('Valorius_'+d.zona.replace(/\s+/g,'_')+'_'+d.tipo+'.pdf');
+      registrarEvento('pdf_exportado', {
+        zona: d.zona, tipo_inmueble: d.tipo,
+        ipr_categoria: d.iprInt.cat, n_comparables: d.n,
+        evento_metadata: {precio: d.precio, area: d.area}
+      });
 
     } catch(err) {
       console.error(err);
@@ -1200,9 +1212,81 @@
     }
   };
 
+  // ─── BETA: VALIDACION DE TOKEN ───────────────────────────
+  var BETA_SESSION_ID = null;
+  var BETA_TOKEN_ID   = null;
+
+  async function validarToken() {
+    // 1. Leer token de la URL
+    var params = new URLSearchParams(window.location.search);
+    var token  = params.get('token');
+
+    // 2. Limpiar token de la URL inmediatamente
+    if (token) {
+      history.replaceState({}, '', window.location.pathname);
+      localStorage.setItem('valorius_beta_token', token);
+    } else {
+      token = localStorage.getItem('valorius_beta_token');
+    }
+
+    if (!token) { window.location.href='index.html'; return false; }
+
+    // 3. Validar contra Supabase
+    try {
+      var r = await fetch(AZ_SURL + '/rest/v1/access_tokens?token=eq.' + encodeURIComponent(token) + '&select=id,activo,expira_en,assigned_to', {
+        headers: Object.assign({}, AZ_HDRS, {'Accept-Profile': 'beta'})
+      });
+      var data = await r.json();
+      if (!data || !data[0] || !data[0].activo) { localStorage.removeItem('valorius_beta_token'); window.location.href='index.html'; return false; }
+      var expira = new Date(data[0].expira_en);
+      if (expira < new Date()) { localStorage.removeItem('valorius_beta_token'); window.location.href='index.html'; return false; }
+
+      // 4. Token valido — guardar ID y generar session
+      BETA_TOKEN_ID   = data[0].id;
+      BETA_SESSION_ID = 'SES-' + Math.random().toString(36).substring(2,10).toUpperCase();
+
+      // 5. Actualizar accesos en DB
+      var ua = navigator.userAgent.substring(0, 200);
+      var isFirst = !data[0].first_access_at;
+      await fetch(AZ_SURL + '/rest/v1/access_tokens?id=eq.' + BETA_TOKEN_ID, {
+        method: 'PATCH',
+        headers: Object.assign({}, AZ_HDRS, {'Accept-Profile': 'beta', 'Prefer': 'return=minimal'}),
+        body: JSON.stringify({
+          last_access_at:   new Date().toISOString(),
+          first_access_at:  isFirst ? new Date().toISOString() : data[0].first_access_at,
+          total_accesos:    (data[0].total_accesos || 0) + 1,
+          user_agent:       ua
+        })
+      });
+
+      return true;
+    } catch(e) {
+      console.error('Error validando token:', e);
+      window.location.href='index.html';
+      return false;
+    }
+  }
+
+  // Registrar evento de uso
+  async function registrarEvento(evento, extra) {
+    if (!BETA_TOKEN_ID || !BETA_SESSION_ID) return;
+    try {
+      await fetch(AZ_SURL + '/rest/v1/usage_events', {
+        method: 'POST',
+        headers: Object.assign({}, AZ_HDRS, {'Accept-Profile': 'beta', 'Prefer': 'return=minimal'}),
+        body: JSON.stringify(Object.assign({
+          token_id:   BETA_TOKEN_ID,
+          session_id: BETA_SESSION_ID,
+          evento:     evento
+        }, extra || {}))
+      });
+    } catch(e) { /* silencioso */ }
+  }
+
   // ─── INICIALIZACION ───────────────────────────────────────
   window.onload = async function() {
-    if (!localStorage.getItem('valorius_token')) { window.location.href='index.html'; return; }
+    var tokenValido = await validarToken();
+    if (!tokenValido) return;
     var fecha=new Date(); fecha.setDate(fecha.getDate()-DIAS_COMPARABLES);
     var fechaISO=fecha.toISOString().split('T')[0];
     var results = await Promise.all([
