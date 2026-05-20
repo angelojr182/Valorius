@@ -36,6 +36,7 @@
       border:5px solid transparent; border-top-color:#0a1428;
     }
 
+```
 /* ── Alerta sanity (datos de entrada) ───────────────── */
 .alerta-sanity {
   display:none; margin-top:10px; padding:14px 16px; border-radius:8px;
@@ -160,6 +161,7 @@
 .chart-guia {
   font-size:10px; color:#475569; margin-bottom:6px; font-style:italic;
 }
+```
 
   </style>
 </head>
@@ -183,6 +185,7 @@
       <p class="page-sub">Valorius Market Intelligence</p>
     </div>
 
+```
 <!-- FORMULARIO -->
 <section class="panel">
   <div class="panel-title">Datos de la propiedad</div>
@@ -211,11 +214,11 @@
       </div>
       <div class="form-group-horizontal">
         <label class="form-label">Area de construccion (M2)</label>
-        <input type="number" id="inpArea" class="form-input" placeholder="ingrede un valor" style="text-align:center;" required />
+        <input type="number" id="inpArea" class="form-input" placeholder="Ej: 85" style="text-align:center;" required />
       </div>
       <div class="form-group-horizontal">
         <label class="form-label">Precio solicitado (USD)</label>
-        <input type="text" id="inpPrecio" class="form-input" placeholder="ingrese un precio" style="text-align:center;" required />
+        <input type="text" id="inpPrecio" class="form-input" placeholder="Ej: 180000" style="text-align:center;" required />
       </div>
     </div>
 
@@ -273,8 +276,7 @@
   <div class="vrd-titulo" id="vrdTitulo">--</div>
   <div class="vrd-descripcion" id="vrdDescripcion">--</div>
   <div class="vrd-ipr-badge">
-    IPR <span class="vrd-ipr-valor" id="vrdIPR">--</span>
-    &nbsp;·&nbsp; basado en <span id="vrdComparables" style="color:#94a3b8">--</span> propiedades similares
+    Basado en <span id="vrdComparables" style="color:#94a3b8">--</span> propiedades similares activas en los ultimos 100 dias
   </div>
 </div>
 
@@ -291,7 +293,7 @@
         <div class="info-tooltip-body">Muestra que tan alejado esta el precio de esta propiedad respecto al precio de referencia de propiedades similares en la zona. El gauge y los colores usan el mismo criterio que el veredicto principal.</div>
       </div>
     </div>
-    <div class="gauge-container">
+    <div class="gauge-container" style="transform:scale(0.78);transform-origin:top center;margin-bottom:-18px;">
       <svg class="gauge-svg" viewBox="0 0 100 100">
         <defs>
           <linearGradient id="fluorescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -442,6 +444,7 @@
   <p class="footer-desc-text" id="lblMetodologia">Completa el analisis para ver la informacion de referencia.</p>
   <button class="btn-export-pdf" id="btnExportPDF" onclick="window.generarPDF()" disabled style="opacity:0.4;cursor:not-allowed;">Exportar Reporte PDF</button>
 </footer>
+```
 
   </main>
 
@@ -478,15 +481,12 @@
     return               {cat:'sobre', clase:'vrd-sobre', label:'Por encima del mercado observable', color:[239,68,68]};
   }
 
-  // IAO = comparables / (DIAS_COMPARABLES / 10)
-  function calcIAO(n) {
-    return n / (DIAS_COMPARABLES / 10);
-  }
-
-  function interpretarIAO(iao, n) {
-    if (iao < 0.3)  return {clase:'iao-baja',  icono:'○', label:'Actividad baja',     sub: n + ' propiedades similares detectadas en ' + DIAS_COMPARABLES + ' dias. Pocas opciones de comparacion.'};
-    if (iao <= 0.8) return {clase:'iao-media', icono:'◎', label:'Actividad moderada', sub: n + ' propiedades similares detectadas en ' + DIAS_COMPARABLES + ' dias. Contexto de referencia razonable.'};
-    return               {clase:'iao-alta',  icono:'●', label:'Actividad alta',     sub: n + ' propiedades similares detectadas en ' + DIAS_COMPARABLES + ' dias. Buena base de comparacion.'};
+  // IAO — rangos discretos simples y defensibles
+  // 1-3 = Baja | 4-8 = Moderada | 9+ = Alta
+  function interpretarIAO(n) {
+    if (n <= 3) return {clase:'iao-baja',  icono:'○', label:'Actividad baja',     sub: n + ' propiedad' + (n===1?'':'es') + ' similar' + (n===1?'':'es') + ' detectada' + (n===1?'':'s') + ' en los ultimos ' + DIAS_COMPARABLES + ' dias. Pocas referencias disponibles en esta zona.'};
+    if (n <= 8) return {clase:'iao-media', icono:'◎', label:'Actividad moderada', sub: n + ' propiedades similares detectadas en los ultimos ' + DIAS_COMPARABLES + ' dias. Contexto de referencia razonable.'};
+    return              {clase:'iao-alta',  icono:'●', label:'Actividad alta',     sub: n + ' propiedades similares detectadas en los ultimos ' + DIAS_COMPARABLES + ' dias. Buena base de comparacion disponible.'};
   }
 
   // Severidad: f(desviacion, cobertura)
@@ -696,11 +696,11 @@
     // IPR + IAO
     var ipr    = calcIPR(tuPM2, mediana);
     var iprInt = modoLimitado ? interpretarIPR(null) : interpretarIPR(ipr);
-    var iao    = calcIAO(n);
-    var iaoInt = interpretarIAO(iao, n);
+    
+    var iaoInt = interpretarIAO(n);
 
     lastData = {zona,tipo,area,precio,mediana,p25,p75,n,min,max,tuPM2,desv,signo,
-                precioMercado,diferenciaPesos,modoLimitado,iqr,ipr,iprInt,iao,iaoInt};
+                precioMercado,diferenciaPesos,modoLimitado,iqr,ipr,iprInt,iaoInt};
 
     document.getElementById('inpPrecio').value = '$' + Math.round(precio).toLocaleString();
 
@@ -709,7 +709,6 @@
     vPanel.className = 'veredicto-principal ' + iprInt.clase;
     vPanel.style.display = 'block';
     document.getElementById('vrdEtiqueta').textContent = modoLimitado ? 'Analisis orientativo' : 'Resultado del analisis';
-    document.getElementById('vrdIPR').textContent = ipr ? ipr.toFixed(2) : 'N/D';
     document.getElementById('vrdComparables').textContent = n;
 
     if (modoLimitado) {
@@ -721,7 +720,7 @@
       var absDesv = Math.abs(Math.round(desv));
       var descMap = {
         bajo:  absDesv + '% por debajo del precio de referencia de propiedades similares en ' + zona + '. Puede representar una oportunidad, pero conviene validar las condiciones de la propiedad.',
-        rango: 'El precio se encuentra dentro del rango habitual de propiedades similares en ' + zona + '. Condiciones alineadas al mercado observable.',
+        rango: 'El precio se encuentra dentro del rango observado de propiedades similares en ' + zona + '. Condiciones alineadas al mercado observable.',
         sobre: absDesv + '% por encima del precio de referencia de propiedades similares en ' + zona + '. Existe margen para negociar o explorar alternativas en la misma zona.'
       };
       document.getElementById('vrdDescripcion').textContent = descMap[iprInt.cat] || '';
@@ -743,7 +742,7 @@
         ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por debajo del precio de referencia de la zona. Si las condiciones de la propiedad son buenas, puede ser un punto de entrada favorable.'
         : iprInt.cat === 'sobre'
           ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por encima del precio de referencia de la zona. Hay margen para negociar: propiedades similares se ofrecen a $' + Math.round(mediana).toLocaleString() + '/m2.'
-          : 'El precio esta alineado con propiedades similares en ' + zona + '. Rango habitual: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
+          : 'El precio esta alineado con propiedades similares en ' + zona + '. Rango observado: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
     document.getElementById('resumenTexto').textContent = resTexto;
 
     // ── GAUGE (colores alineados con IPR) ────────────────────
@@ -776,9 +775,9 @@
 
     // ── TEXTO POSICION ────────────────────────────────────────
     var expMap = {
-      bajo:  'El precio esta por debajo del rango habitual para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
-      rango: 'El precio esta dentro del rango habitual para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
-      sobre: 'El precio esta por encima del rango habitual para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      bajo:  'El precio esta por debajo del rango observado para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      rango: 'El precio esta dentro del rango observado para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      sobre: 'El precio esta por encima del rango observado para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
       ref:   'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.'
     };
     document.getElementById('lblExplanation').textContent = expMap[iprInt.cat];
@@ -806,10 +805,10 @@
     tt.style.left = Math.min(Math.max(tp,5),92) + '%';
 
     var warningMap = {
-      bajo:  'El precio esta por debajo del rango de propiedades similares en ' + zona + '. Valida las condiciones fisicas antes de proceder.',
-      rango: 'El precio esta alineado con propiedades similares en ' + zona + '.',
-      sobre: 'El precio esta por encima del rango de propiedades similares. Hay margen para negociar en ' + zona + '.',
-      ref:   'Con ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' no es posible emitir un veredicto definitivo. Datos orientativos.'
+      bajo:  'El precio observado se encuentra por debajo del rango de propiedades similares activas en ' + zona + '. Puede representar una oportunidad. Se recomienda validar las condiciones fisicas del inmueble antes de proceder.',
+      rango: 'El precio observado se encuentra cercano al de otras propiedades similares activas en ' + zona + '. Condiciones alineadas con el mercado observable.',
+      sobre: 'El precio observado se encuentra por encima del rango de propiedades similares en ' + zona + '. Propiedades comparables se ofrecen a precios menores. Existe margen de negociacion.',
+      ref:   'La zona cuenta con pocas propiedades similares registradas. Los datos mostrados son orientativos. Se recomienda complementar con informacion directa del mercado.'
     };
     document.getElementById('lblWarning').textContent = warningMap[iprInt.cat];
     document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zona + ' · ' + tipo + '.';
@@ -977,7 +976,7 @@
           ? 'El precio solicitado esta '+Math.abs(Math.round(d.desv))+'% por debajo de propiedades similares en '+d.zona+'. Si las condiciones fisicas son buenas, puede representar un punto de entrada favorable.'
           : d.iprInt.cat==='sobre'
             ? 'El precio solicitado esta '+Math.abs(Math.round(d.desv))+'% por encima de propiedades similares en '+d.zona+'. Propiedades comparables se ofrecen a $'+Math.round(d.mediana).toLocaleString()+'/m2. Existe margen de negociacion.'
-            : 'El precio esta alineado con propiedades similares en '+d.zona+'. Rango habitual: $'+Math.round(d.min).toLocaleString()+' - $'+Math.round(d.max).toLocaleString()+'/m2.';
+            : 'El precio esta alineado con propiedades similares en '+d.zona+'. Rango observado: $'+Math.round(d.min).toLocaleString()+' - $'+Math.round(d.max).toLocaleString()+'/m2.';
       bod(resumenPDF,M+5,y+14,white,8.5,W-2*M-10);
 
       y+=32;
@@ -1172,9 +1171,21 @@
       var mediana=n>0?p[Math.floor(n/2)]:0;
       var p25=p[Math.floor(n*0.25)]||mediana*0.85;
       var p75=p[Math.floor(n*0.75)]||mediana*1.15;
+      // P10/P90 como rango visible — elimina outliers extremos
+      // Con n<5 usamos IQR recortado (mas conservador con poca data)
+      var rMin, rMax;
+      if (n >= 5) {
+        rMin = p[Math.max(0, Math.floor(n*0.10))];
+        rMax = p[Math.min(n-1, Math.floor(n*0.90))];
+      } else {
+        var iqr = p75 - p25;
+        rMin = Math.max(p[0], p25 - 1.5*iqr);
+        rMax = Math.min(p[n-1], p75 + 1.5*iqr);
+      }
       return {zona:g.zona,tipo:g.tipo,n,mediana:Math.round(mediana),
               p25:Math.round(p25),p75:Math.round(p75),
-              min:Math.round(p[0]||0),max:Math.round(p[n-1]||0)};
+              min:Math.round(rMin||p25*0.85),
+              max:Math.round(rMax||p75*1.15)};
     });
     poblarDropdownZonas();
   };
