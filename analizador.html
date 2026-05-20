@@ -1,669 +1,559 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Property Analyzer — Valorius</title>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link
-    rel="stylesheet"
-    href="analizador.css?v=3.0"
-  />
+  <style>
+    :root{
+      --bg:#060f20;
+      --panel:#0d172b;
+      --panel-2:#111d35;
+      --gold:#e2b05c;
+      --gold-soft:#f4d38f;
+      --text:#f5f7fb;
+      --muted:#8d99ae;
+      --border:rgba(255,255,255,.06);
+    }
 
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Inter',sans-serif;
+      padding:40px;
+    }
+
+    .container{
+      max-width:1200px;
+      margin:auto;
+    }
+
+    .header{
+      margin-bottom:30px;
+    }
+
+    .title{
+      font-size:34px;
+      font-weight:700;
+      color:var(--gold);
+    }
+
+    .subtitle{
+      color:var(--muted);
+      margin-top:8px;
+    }
+
+    .panel{
+      background:linear-gradient(
+        180deg,
+        rgba(255,255,255,.02),
+        rgba(255,255,255,.01)
+      );
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:28px;
+      backdrop-filter:blur(20px);
+      margin-bottom:24px;
+    }
+
+    .panel-title{
+      color:var(--gold);
+      font-size:14px;
+      letter-spacing:.12em;
+      margin-bottom:22px;
+      text-transform:uppercase;
+      font-weight:600;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:18px;
+    }
+
+    .group{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    label{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    select,
+    input{
+      height:52px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      color:white;
+      padding:0 16px;
+      font-size:15px;
+      outline:none;
+    }
+
+    select:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    button{
+      margin-top:22px;
+      width:100%;
+      height:56px;
+      border:none;
+      border-radius:16px;
+      background:linear-gradient(
+        135deg,
+        #f4d38f,
+        #c8953f
+      );
+      color:#111;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .result{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:24px;
+      margin-top:24px;
+    }
+
+    .metric{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:18px;
+      padding:22px;
+    }
+
+    .metric-label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:10px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .metric-value{
+      font-size:32px;
+      color:var(--gold-soft);
+      font-weight:700;
+    }
+
+    @media(max-width:900px){
+      body{
+        padding:18px;
+      }
+
+      .result{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-  <div class="topnav-mobile">
+<div class="container">
 
-    <div class="tm-logo">
-      V
+  <div class="header">
+    <div class="title">Property Analyzer</div>
+    <div class="subtitle">
+      Valorius Market Intelligence
+    </div>
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-title">
+      Datos de la propiedad
     </div>
 
-    <div class="tm-title">
-      Property Analyzer
+    <div class="grid">
+
+      <div class="group">
+        <label>Tipo de inmueble</label>
+
+        <select
+          id="selTipo"
+          onchange="filtrarZonasPorTipo()"
+        >
+          <option value="">Seleccioná tipo</option>
+          <option value="APARTAMENTO">Apartamento</option>
+          <option value="CASA">Casa</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label>Zona</label>
+
+        <select
+          id="selZona"
+          onchange="filtrarSubzonasYProyectos()"
+          disabled
+        >
+          <option value="">
+            Primero seleccioná tipo
+          </option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label>Subzona</label>
+
+        <select
+          id="selSubzona"
+          onchange="filtrarProyectos()"
+          disabled
+        >
+          <option value="">Todas</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label>Proyecto</label>
+
+        <select
+          id="selProyecto"
+          disabled
+        >
+          <option value="">Todos</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label>Área construcción (m²)</label>
+
+        <input
+          type="number"
+          id="inpArea"
+          value="85"
+        />
+      </div>
+
+      <div class="group">
+        <label>Precio solicitado (USD)</label>
+
+        <input
+          type="text"
+          id="inpPrecio"
+          value="180000"
+        />
+      </div>
+
     </div>
 
-    <a
-      href="index.html"
-      class="tm-btn"
-    >
-      Dashboard →
-    </a>
+    <button onclick="alert('Análisis funcionando')">
+      Analizar propiedad
+    </button>
 
   </div>
 
-  <aside class="sidebar">
+  <div class="result">
 
-    <div class="sb-brand">
-
-      <div class="sb-logo-v">
-        V
+    <div class="metric">
+      <div class="metric-label">
+        Mediana de mercado
       </div>
 
+      <div class="metric-value">
+        $2,655/m²
+      </div>
     </div>
 
-    <nav class="sb-nav">
-
-      <a
-        href="index.html"
-        class="sb-link"
-      >
-        Dashboard
-      </a>
-
-      <a
-        href="analizador.html"
-        class="sb-link active"
-      >
-        Analizar
-      </a>
-
-    </nav>
-
-  </aside>
-
-  <main class="main-content">
-
-    <div class="page-hdr">
-
-      <h1 class="page-title">
-        Property Analyzer
-      </h1>
-
-      <p class="page-sub">
-        Valorius Market Intelligence
-      </p>
-
-    </div>
-
-    <section class="panel">
-
-      <div class="panel-title">
-        Datos de la propiedad
+    <div class="metric">
+      <div class="metric-label">
+        Posicionamiento
       </div>
 
-      <form
-        onsubmit="event.preventDefault(); actualizarAnalisis();"
-      >
+      <div class="metric-value">
+        +14%
+      </div>
+    </div>
 
-        <div class="formulario-grid">
+  </div>
 
-          <!-- TIPO -->
+</div>
 
-          <div class="form-group-horizontal">
+<script>
 
-            <label class="form-label">
-              Tipo de inmueble
-            </label>
+/* =========================
+   CONFIG
+========================= */
 
-            <select
-              id="selTipo"
-              class="form-input"
-            >
+const AZ_SURL =
+  typeof SECRETS !== "undefined"
+    ? SECRETS.SURL
+    : "";
 
-              <option value="">
-                Seleccioná tipo
-              </option>
+const AZ_SKEY =
+  typeof SECRETS !== "undefined"
+    ? SECRETS.SKEY
+    : "";
 
-              <option value="APARTAMENTO">
-                Apartamento
-              </option>
+const AZ_HEADERS = {
+  apikey: AZ_SKEY,
+  Authorization: "Bearer " + AZ_SKEY,
+  "Content-Type": "application/json",
+  "Accept-Profile": "core"
+};
 
-              <option value="CASA">
-                Casa
-              </option>
+/* =========================
+   STATE
+========================= */
 
-            </select>
+let azZonas = [];
+let azSubzonas = [];
+let azProyectos = [];
 
-          </div>
+/* =========================
+   HELPERS
+========================= */
 
-          <!-- ZONA -->
+async function azFetch(endpoint){
 
-          <div class="form-group-horizontal">
+  try{
 
-            <label class="form-label">
-              Zona
-            </label>
-
-            <select
-              id="selZona"
-              class="form-input"
-              onchange="filtrarSubzonasYProyectos()"
-              disabled
-            >
-
-              <option value="">
-                Primero seleccioná tipo
-              </option>
-
-            </select>
-
-          </div>
-
-          <!-- SUBZONA -->
-
-          <div class="form-group-horizontal">
-
-            <label class="form-label">
-              Subzona / Colonia
-            </label>
-
-            <select
-              id="selSubzona"
-              class="form-input"
-              onchange="filtrarProyectos()"
-              disabled
-            >
-
-              <option value="">
-                Seleccioná una zona
-              </option>
-
-            </select>
-
-          </div>
-
-          <!-- PROYECTO -->
-
-          <div class="form-group-horizontal">
-
-            <label class="form-label">
-              Proyecto
-            </label>
-
-            <select
-              id="selProyecto"
-              class="form-input"
-              disabled
-            >
-
-              <option value="">
-                Seleccioná una subzona
-              </option>
-
-            </select>
-
-          </div>
-
-          <!-- AREA -->
-
-          <div class="form-group-horizontal">
-
-            <label class="form-label">
-              Área (m²)
-            </label>
-
-            <input
-              type="number"
-              id="inpArea"
-              class="form-input"
-              value="85"
-              required
-            />
-
-          </div>
-
-          <!-- PRECIO -->
-
-          <div class="form-group-horizontal">
-
-            <label class="form-label">
-              Precio USD
-            </label>
-
-            <input
-              type="text"
-              id="inpPrecio"
-              class="form-input"
-              value="$180,000"
-              required
-            />
-
-          </div>
-
-        </div>
-
-        <div class="form-row-actions">
-
-          <button
-            type="submit"
-            class="btn-gold"
-          >
-            Analizar propiedad
-          </button>
-
-        </div>
-
-      </form>
-
-    </section>
-
-  </main>
-
-  <script src="secrets.js?v=1.2"></script>
-
-  <script>
-
-    const AZ_SURL =
-      typeof SECRETS !== "undefined"
-        ? SECRETS.SURL
-        : "";
-
-    const AZ_SKEY =
-      typeof SECRETS !== "undefined"
-        ? SECRETS.SKEY
-        : "";
-
-    const AZ_HEADERS = {
-
-      apikey: AZ_SKEY,
-
-      Authorization:
-        "Bearer " + AZ_SKEY,
-
-      "Content-Type":
-        "application/json",
-
-      "Accept-Profile":
-        "core"
-
-    };
-
-    let azZonas = [];
-    let azSubzonas = [];
-    let azProyectos = [];
-
-    async function azFetch(endpoint) {
-
-      try {
-
-        const res = await fetch(
-          AZ_SURL + endpoint,
-          {
-            headers: AZ_HEADERS
-          }
-        );
-
-        if (!res.ok) {
-
-          console.error(
-            "Fetch error:",
-            res.status
-          );
-
-          return null;
-        }
-
-        return await res.json();
-
-      } catch (e) {
-
-        console.error(
-          "azFetch error:",
-          e
-        );
-
-        return null;
-      }
-    }
-
-    async function azLoadZonas() {
-
-      const data = await azFetch(
-        "/rest/v1/v_zones_with_cluster?select=zona,cluster_name&order=zona"
-      );
-
-      return data || [];
-    }
-
-    async function azLoadSubzonas() {
-
-      const data = await azFetch(
-        "/rest/v1/dim_subzona?select=subzona,zona,tipo_inmueble&order=subzona"
-      );
-
-      return data || [];
-    }
-
-    async function azLoadProyectos() {
-
-      const data = await azFetch(
-        "/rest/v1/dim_proyecto?select=proyecto,zona,subzona,tipo_inmueble&order=proyecto"
-      );
-
-      return data || [];
-    }
-
-    async function cargarZonasPorTipo() {
-
-      const tipo =
-        document.getElementById(
-          "selTipo"
-        ).value;
-
-      const selZona =
-        document.getElementById(
-          "selZona"
-        );
-
-      const selSubzona =
-        document.getElementById(
-          "selSubzona"
-        );
-
-      const selProyecto =
-        document.getElementById(
-          "selProyecto"
-        );
-
-      selSubzona.disabled = true;
-      selProyecto.disabled = true;
-
-      selSubzona.innerHTML =
-        '<option value="">Seleccioná una zona</option>';
-
-      selProyecto.innerHTML =
-        '<option value="">Seleccioná una subzona</option>';
-
-      if (!tipo) {
-
-        selZona.disabled = true;
-
-        selZona.innerHTML =
-          '<option value="">Primero seleccioná tipo</option>';
-
-        return;
-      }
-
-      const zonasFiltradas =
-
-        azZonas.filter(z => {
-
-          const match =
-
-            azSubzonas.some(s =>
-
-              s.zona &&
-              s.tipo_inmueble === tipo &&
-              s.zona.trim().toLowerCase() ===
-              z.zona.trim().toLowerCase()
-
-            );
-
-          return match;
-
-        });
-
-      const seen = new Set();
-
-      const zonasUnicas = zonasFiltradas.filter(z => {
-
-        const nombre =
-          z.zona.trim().toLowerCase();
-
-        if (seen.has(nombre)) {
-          return false;
-        }
-
-        seen.add(nombre);
-
-        return true;
-
-      });
-
-      selZona.disabled = false;
-
-      selZona.innerHTML =
-
-        '<option value="">Seleccioná una zona</option>' +
-
-        zonasUnicas.map(z =>
-
-          `<option value="${z.zona}">
-            ${z.zona}
-          </option>`
-
-        ).join("");
-    }
-
-    function filtrarSubzonasYProyectos() {
-
-      const tipo =
-        document.getElementById(
-          "selTipo"
-        ).value;
-
-      const zona =
-        document.getElementById(
-          "selZona"
-        ).value;
-
-      const selSubzona =
-        document.getElementById(
-          "selSubzona"
-        );
-
-      const selProyecto =
-        document.getElementById(
-          "selProyecto"
-        );
-
-      selProyecto.disabled = true;
-
-      selProyecto.innerHTML =
-        '<option value="">Seleccioná una subzona</option>';
-
-      if (!zona) {
-
-        selSubzona.disabled = true;
-
-        selSubzona.innerHTML =
-          '<option value="">Seleccioná una zona</option>';
-
-        return;
-      }
-
-      const subzonasFiltradas =
-
-        azSubzonas.filter(s =>
-
-          s.zona &&
-          s.tipo_inmueble === tipo &&
-          s.zona.trim().toLowerCase() ===
-          zona.trim().toLowerCase()
-
-        );
-
-      selSubzona.disabled = false;
-
-      selSubzona.innerHTML =
-
-        '<option value="">Todas</option>' +
-
-        subzonasFiltradas.map(s =>
-
-          `<option value="${s.subzona}">
-            ${s.subzona}
-          </option>`
-
-        ).join("");
-    }
-
-    function filtrarProyectos() {
-
-      const tipo =
-        document.getElementById(
-          "selTipo"
-        ).value;
-
-      const zona =
-        document.getElementById(
-          "selZona"
-        ).value;
-
-      const subzona =
-        document.getElementById(
-          "selSubzona"
-        ).value;
-
-      const selProyecto =
-        document.getElementById(
-          "selProyecto"
-        );
-
-      if (!zona || !subzona) {
-
-        selProyecto.disabled = true;
-
-        selProyecto.innerHTML =
-          '<option value="">Seleccioná una subzona</option>';
-
-        return;
-      }
-
-      const proyectosFiltrados =
-
-        azProyectos.filter(p => {
-
-          const tipoMatch =
-
-            p.tipo_inmueble === tipo;
-
-          const zonaMatch =
-
-            p.zona &&
-            p.zona.trim().toLowerCase() ===
-            zona.trim().toLowerCase();
-
-          const subzonaMatch =
-
-            p.subzona &&
-            p.subzona.trim().toLowerCase() ===
-            subzona.trim().toLowerCase();
-
-          return (
-            tipoMatch &&
-            zonaMatch &&
-            subzonaMatch
-          );
-
-        });
-
-      selProyecto.disabled = false;
-
-      selProyecto.innerHTML =
-
-        '<option value="">Todos</option>' +
-
-        proyectosFiltrados.map(p =>
-
-          `<option value="${p.proyecto}">
-            ${p.proyecto}
-          </option>`
-
-        ).join("");
-    }
-
-    async function actualizarAnalisis() {
-
-      const tipo =
-        document.getElementById(
-          "selTipo"
-        ).value;
-
-      const zona =
-        document.getElementById(
-          "selZona"
-        ).value;
-
-      const subzona =
-        document.getElementById(
-          "selSubzona"
-        ).value;
-
-      const proyecto =
-        document.getElementById(
-          "selProyecto"
-        ).value;
-
-      const area =
-        parseFloat(
-          document.getElementById(
-            "inpArea"
-          ).value
-        ) || 0;
-
-      const precio =
-        parseFloat(
-          document
-            .getElementById(
-              "inpPrecio"
-            )
-            .value
-            .replace(
-              /[^0-9.]/g,
-              ""
-            )
-        ) || 0;
-
-      console.log({
-
-        tipo,
-        zona,
-        subzona,
-        proyecto,
-        area,
-        precio
-
-      });
-
-      alert(
-        "Análisis ejecutado correctamente."
-      );
-    }
-
-    document.addEventListener(
-
-      "DOMContentLoaded",
-
-      async () => {
-
-        azZonas =
-          await azLoadZonas();
-
-        azSubzonas =
-          await azLoadSubzonas();
-
-        azProyectos =
-          await azLoadProyectos();
-
-        document
-          .getElementById(
-            "selTipo"
-          )
-          .addEventListener(
-            "change",
-            cargarZonasPorTipo
-          );
-
-      }
-
+    const res = await fetch(
+      AZ_SURL + endpoint,
+      { headers: AZ_HEADERS }
     );
 
-  </script>
+    if(!res.ok){
+      console.error(
+        "Supabase error:",
+        res.status,
+        endpoint
+      );
+      return [];
+    }
+
+    return await res.json();
+
+  }catch(e){
+
+    console.error("Fetch error:",e);
+    return [];
+  }
+}
+
+/* =========================
+   LOADERS
+========================= */
+
+async function azLoadZonas(){
+
+  return await azFetch(
+    "/rest/v1/v_property_full?select=zona,tipo_inmueble"
+  );
+}
+
+async function azLoadSubzonas(){
+
+  return await azFetch(
+    "/rest/v1/v_property_full?select=subzona,zona,tipo_inmueble"
+  );
+}
+
+async function azLoadProyectos(){
+
+  return await azFetch(
+    "/rest/v1/v_property_full?select=proyecto,subzona,zona,tipo_inmueble"
+  );
+}
+
+/* =========================
+   DOM
+========================= */
+
+const selTipo =
+  document.getElementById("selTipo");
+
+const selZona =
+  document.getElementById("selZona");
+
+const selSubzona =
+  document.getElementById("selSubzona");
+
+const selProyecto =
+  document.getElementById("selProyecto");
+
+/* =========================
+   RESET
+========================= */
+
+function resetZona(){
+
+  selZona.innerHTML =
+    '<option value="">Seleccioná una zona</option>';
+
+  selZona.disabled = true;
+}
+
+function resetSubzona(){
+
+  selSubzona.innerHTML =
+    '<option value="">Todas</option>';
+
+  selSubzona.disabled = true;
+}
+
+function resetProyecto(){
+
+  selProyecto.innerHTML =
+    '<option value="">Todos</option>';
+
+  selProyecto.disabled = true;
+}
+
+/* =========================
+   FILTRAR ZONAS
+========================= */
+
+function filtrarZonasPorTipo(){
+
+  const tipo = selTipo.value;
+
+  resetZona();
+  resetSubzona();
+  resetProyecto();
+
+  if(!tipo) return;
+
+  const zonas = azZonas.filter(
+    z =>
+      z.tipo_inmueble &&
+      z.tipo_inmueble.toUpperCase() === tipo
+  );
+
+  const zonasUnicas =
+    [...new Set(zonas.map(z => z.zona))]
+      .filter(Boolean)
+      .sort();
+
+  selZona.innerHTML =
+    '<option value="">Seleccioná una zona</option>' +
+    zonasUnicas.map(
+      z => `<option value="${z}">${z}</option>`
+    ).join("");
+
+  selZona.disabled = false;
+}
+
+/* =========================
+   FILTRAR SUBZONAS
+========================= */
+
+function filtrarSubzonasYProyectos(){
+
+  const tipo = selTipo.value;
+  const zona = selZona.value;
+
+  resetSubzona();
+  resetProyecto();
+
+  if(!tipo || !zona) return;
+
+  const subzonas = azSubzonas.filter(
+    s =>
+      s.tipo_inmueble &&
+      s.tipo_inmueble.toUpperCase() === tipo &&
+      s.zona === zona
+  );
+
+  const subzonasUnicas =
+    [...new Set(subzonas.map(s => s.subzona))]
+      .filter(Boolean)
+      .sort();
+
+  selSubzona.innerHTML =
+    '<option value="">Todas</option>' +
+    subzonasUnicas.map(
+      s => `<option value="${s}">${s}</option>`
+    ).join("");
+
+  selSubzona.disabled = false;
+}
+
+/* =========================
+   FILTRAR PROYECTOS
+========================= */
+
+function filtrarProyectos(){
+
+  const tipo = selTipo.value;
+  const zona = selZona.value;
+  const subzona = selSubzona.value;
+
+  resetProyecto();
+
+  if(!tipo || !zona) return;
+
+  const proyectos = azProyectos.filter(
+    p => {
+
+      const okTipo =
+        p.tipo_inmueble &&
+        p.tipo_inmueble.toUpperCase() === tipo;
+
+      const okZona =
+        p.zona === zona;
+
+      const okSubzona =
+        !subzona ||
+        p.subzona === subzona;
+
+      return okTipo && okZona && okSubzona;
+    }
+  );
+
+  const proyectosUnicos =
+    [...new Set(proyectos.map(p => p.proyecto))]
+      .filter(Boolean)
+      .sort();
+
+  selProyecto.innerHTML =
+    '<option value="">Todos</option>' +
+    proyectosUnicos.map(
+      p => `<option value="${p}">${p}</option>`
+    ).join("");
+
+  selProyecto.disabled = false;
+}
+
+/* =========================
+   INIT
+========================= */
+
+window.onload = async function(){
+
+  resetZona();
+  resetSubzona();
+  resetProyecto();
+
+  azZonas = await azLoadZonas();
+  azSubzonas = await azLoadSubzonas();
+  azProyectos = await azLoadProyectos();
+
+  console.log("Zonas:", azZonas.length);
+  console.log("Subzonas:", azSubzonas.length);
+  console.log("Proyectos:", azProyectos.length);
+};
+
+</script>
 
 </body>
 </html>
