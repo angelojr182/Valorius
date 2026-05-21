@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ingesta de Propiedades — Valorius</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #06090f;
+      --surface:  #0d1520;
+      --border:   #1a2840;
+      --gold:     #e2b05c;
+      --gold-dim: rgba(226,176,92,0.12);
+      --green:    #10b981;
+      --red:      #ef4444;
+      --amber:    #f59e0b;
+      --slate:    #64748b;
+      --muted:    #94a3b8;
+      --text:     #e2e8f0;
+      --mono:     'DM Mono', monospace;
+      --sans:     'DM Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      padding: 32px 20px 60px;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    .header {
+      max-width: 760px; margin: 0 auto 36px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .logo-v {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--gold); display: flex; align-items: center;
+      justify-content: center; font-family: var(--mono);
+      font-weight: 500; color: #06090f; font-size: 16px; flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 18px; font-weight: 600; color: var(--text); }
+    .header-text p  { font-size: 12px; color: var(--slate); margin-top: 2px; }
+
+    /* ── FORMULARIO ─────────────────────────────────────── */
+    .form-wrap { max-width: 760px; margin: 0 auto; }
+
+    .seccion {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 24px; margin-bottom: 16px;
+    }
+    .seccion-titulo {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .seccion-titulo::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .col-full { grid-column: 1 / -1; }
+
+    .campo { display: flex; flex-direction: column; gap: 5px; }
+    .campo label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--slate);
+    }
+    .campo label .req { color: var(--gold); margin-left: 2px; }
+    .campo label .opc { color: var(--slate); font-weight: 400; margin-left: 4px; font-size: 9px; letter-spacing: 0; text-transform: none; }
+
+    .campo input, .campo select, .campo textarea {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 9px 12px;
+      font-family: var(--sans); font-size: 13px; color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%; outline: none;
+    }
+    .campo input:focus, .campo select:focus, .campo textarea:focus {
+      border-color: var(--gold); box-shadow: 0 0 0 2px rgba(226,176,92,0.1);
+    }
+    .campo input.invalido, .campo select.invalido {
+      border-color: var(--red); box-shadow: 0 0 0 2px rgba(239,68,68,0.1);
+    }
+    .campo input.valido, .campo select.valido {
+      border-color: var(--green); box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
+    }
+    .campo select option { background: #0d1520; }
+    .campo textarea { resize: vertical; min-height: 70px; }
+
+    .campo-hint {
+      font-size: 10px; color: var(--slate); margin-top: 2px; line-height: 1.4;
+    }
+    .campo-error {
+      font-size: 10px; color: var(--red); margin-top: 2px; display: none;
+    }
+
+    /* Moneda toggle */
+    .moneda-wrap { display: flex; gap: 8px; }
+    .moneda-btn {
+      flex: 1; padding: 9px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--muted); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; font-family: var(--sans);
+    }
+    .moneda-btn.activo {
+      border-color: var(--gold); background: var(--gold-dim); color: var(--gold);
+    }
+
+    /* Conversion display */
+    .conversion-box {
+      display: none; padding: 10px 12px; border-radius: 6px;
+      background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2);
+      font-size: 12px; color: var(--green);
+    }
+    .conversion-box span { font-family: var(--mono); font-weight: 500; }
+
+    /* Tipo cambio */
+    .tc-wrap { display: flex; align-items: center; gap: 8px; }
+    .tc-badge {
+      font-size: 10px; font-family: var(--mono); color: var(--slate);
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 4px; padding: 4px 8px; white-space: nowrap;
+    }
+
+    /* Deteccion duplicados */
+    .dup-box {
+      display: none; padding: 12px 14px; border-radius: 8px;
+      margin-top: 12px;
+    }
+    .dup-box.alerta {
+      background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.3);
+    }
+    .dup-box.ok {
+      background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2);
+    }
+    .dup-titulo { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+    .dup-box.alerta .dup-titulo { color: var(--red); }
+    .dup-box.ok    .dup-titulo { color: var(--green); }
+    .dup-lista { font-size: 10px; color: var(--muted); line-height: 1.8; }
+
+    /* Calidad dato */
+    .calidad-wrap { display: flex; gap: 8px; }
+    .calidad-btn {
+      flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--muted); font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; font-family: var(--sans); text-align: center;
+    }
+    .calidad-btn.alta   { border-color: var(--green); background: rgba(16,185,129,0.08); color: var(--green); }
+    .calidad-btn.media  { border-color: var(--amber); background: rgba(245,158,11,0.08); color: var(--amber); }
+    .calidad-btn.baja   { border-color: var(--red);   background: rgba(239,68,68,0.08); color: var(--red); }
+
+    /* Precio m2 preview */
+    .preview-pm2 {
+      display: none; padding: 10px 14px; border-radius: 6px;
+      background: var(--gold-dim); border: 1px solid rgba(226,176,92,0.2);
+      font-size: 12px; color: var(--muted);
+    }
+    .preview-pm2 strong { font-family: var(--mono); font-size: 16px; color: var(--gold); }
+
+    /* Botones */
+    .acciones {
+      display: flex; gap: 10px; margin-top: 20px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-primary {
+      flex: 1; padding: 13px; border-radius: 8px; border: 1px solid var(--gold);
+      background: transparent; color: var(--gold); font-family: var(--sans);
+      font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+    .btn-primary:hover { background: var(--gold); color: #06090f; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-secondary {
+      padding: 13px 20px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-family: var(--sans);
+      font-size: 13px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+
+    /* Toast notificaciones */
+    .toast {
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      padding: 14px 18px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4); opacity: 0;
+      transform: translateX(20px); transition: all 0.25s;
+      max-width: 320px;
+    }
+    .toast.visible { opacity: 1; transform: translateX(0); }
+    .toast.exito  { background: #0d2818; border: 1px solid var(--green); color: var(--green); }
+    .toast.error  { background: #1f0a0a; border: 1px solid var(--red);   color: var(--red); }
+    .toast.info   { background: #1a1400; border: 1px solid var(--amber); color: var(--amber); }
+
+    /* Resumen validacion */
+    .resumen-validacion {
+      display: none; padding: 14px 16px; border-radius: 8px; margin-bottom: 16px;
+    }
+    .resumen-validacion.ok    { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); }
+    .resumen-validacion.error { background: rgba(239,68,68,0.06);  border: 1px solid rgba(239,68,68,0.2); }
+    .resumen-titulo { font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+    .resumen-validacion.ok    .resumen-titulo { color: var(--green); }
+    .resumen-validacion.error .resumen-titulo { color: var(--red); }
+    .resumen-lista { font-size: 11px; color: var(--muted); line-height: 1.8; }
+
+    @media (max-width: 580px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .col-full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-v">V</div>
+    <div class="header-text">
+      <h1>Ingesta de Propiedades</h1>
+      <p>Valorius · Sistema de captura validada</p>
+    </div>
+  </div>
+
+  <div class="form-wrap">
+
+    <!-- SECCION 1: UBICACION -->
+    <div class="seccion">
+      <div class="seccion-titulo">Ubicacion</div>
+      <div class="grid-2">
+
+        <div class="campo">
+          <label>Tipo de inmueble <span class="req">*</span></label>
+          <select id="tipo_inmueble" onchange="onTipoChange()">
+            <option value="">Selecciona tipo</option>
+            <option value="CASA">Casa</option>
+            <option value="APARTAMENTO">Apartamento</option>
+            <option value="LOCAL_COMERCIAL">Local comercial</option>
+          </select>
+          <span class="campo-error" id="err-tipo">Campo requerido</span>
+        </div>
+
+        <div class="campo">
+          <label>Zona <span class="req">*</span></label>
+          <select id="zona" onchange="onZonaChange()">
+            <option value="">Cargando zonas...</option>
+          </select>
+          <span class="campo-error" id="err-zona">Campo requerido</span>
+        </div>
+
+        <div class="campo">
+          <label>Subzona <span class="opc">(opcional)</span></label>
+          <select id="subzona">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Proyecto <span class="opc">(opcional)</span></label>
+          <select id="proyecto">
+            <option value="">Ninguno</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label>Ciudad <span class="req">*</span></label>
+          <select id="ciudad">
+            <option value="Tegucigalpa">Tegucigalpa</option>
+            <option value="San Pedro Sula">San Pedro Sula</option>
+            <option value="Roatan">Roatan</option>
+            <option value="La Ceiba">La Ceiba</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECCION 2: PRECIO -->
+    <div class="seccion">
+      <div class="seccion-titulo">Precio</div>
+      <div class="grid-2">
+
+        <div class="campo">
+          <label>Moneda <span class="req">*</span></label>
+          <div class="moneda-wrap">
+            <button type="button" class="moneda-btn activo" id="btn-usd" onclick="setMoneda('USD')">USD $</button>
+            <button type="button" class="moneda-btn" id="btn-lps" onclick="setMoneda('LPS')">LPS L.</button>
+          </div>
+        </div>
+
+        <div class="campo" id="campo-tc" style="display:none;">
+          <label>Tipo de cambio <span class="req">*</span></label>
+          <div class="tc-wrap">
+            <input type="number" id="tipo_cambio" value="26.50" step="0.01" min="1" />
+            <span class="tc-badge">LPS/USD</span>
+          </div>
+          <span class="campo-hint">Tipo de cambio al momento del registro</span>
+        </div>
+
+        <div class="campo col-full">
+          <label>Precio original <span class="req">*</span></label>
+          <input type="number" id="precio_original" placeholder="Ej: 180000" min="0"
+                 oninput="onPrecioChange()" />
+          <span class="campo-error" id="err-precio">Ingresa un precio valido</span>
+        </div>
+
+        <div class="conversion-box col-full" id="conversionBox">
+          Equivalente en USD: <span id="conversionUSD">--</span>
+        </div>
+
+        <div class="preview-pm2 col-full" id="previewPm2">
+          Precio / m2 estimado: <strong id="pm2Val">--</strong>
+          <span style="font-size:10px; color:var(--slate); margin-left:8px;" id="pm2Ref"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECCION 3: CARACTERISTICAS -->
+    <div class="seccion">
+      <div class="seccion-titulo">Caracteristicas</div>
+      <div class="grid-3">
+
+        <div class="campo">
+          <label>Area construccion m2 <span class="req">*</span></label>
+          <input type="number" id="area_construccion" placeholder="Ej: 120" min="0"
+                 oninput="onAreaChange()" />
+          <span class="campo-error" id="err-area">Campo requerido</span>
+        </div>
+
+        <div class="campo">
+          <label>Area terreno m2 <span class="opc">(opc)</span></label>
+          <input type="number" id="area_terreno" placeholder="Ej: 200" min="0" />
+        </div>
+
+        <div class="campo">
+          <label>Habitaciones <span class="opc">(opc)</span></label>
+          <input type="number" id="habitaciones" placeholder="Ej: 3" min="0" max="20" />
+        </div>
+
+        <div class="campo">
+          <label>Banos <span class="opc">(opc)</span></label>
+          <input type="number" id="banos" placeholder="Ej: 2" min="0" max="20" step="0.5" />
+        </div>
+
+        <div class="campo">
+          <label>Estacionamientos <span class="opc">(opc)</span></label>
+          <input type="number" id="estacionamientos" placeholder="Ej: 1" min="0" max="10" />
+        </div>
+
+        <div class="campo">
+          <label>Nivel seguridad <span class="opc">(opc)</span></label>
+          <select id="nivel_seguridad">
+            <option value="">No especificado</option>
+            <option value="ALTA">Alta</option>
+            <option value="MEDIA">Media</option>
+            <option value="BAJA">Baja</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECCION 4: FUENTE -->
+    <div class="seccion">
+      <div class="seccion-titulo">Fuente y trazabilidad</div>
+      <div class="grid-2">
+
+        <div class="campo">
+          <label>Fuente <span class="req">*</span></label>
+          <select id="fuente">
+            <option value="">Selecciona fuente</option>
+            <option value="Encuentra24">Encuentra24</option>
+            <option value="Portal Mariposa">Portal Mariposa</option>
+            <option value="Facebook Marketplace">Facebook Marketplace</option>
+            <option value="Contacto Directo">Contacto Directo</option>
+            <option value="Apify - Encuentra24">Apify — Encuentra24</option>
+            <option value="Apify - Portal Mariposa">Apify — Portal Mariposa</option>
+            <option value="Otra">Otra</option>
+          </select>
+          <span class="campo-error" id="err-fuente">Campo requerido</span>
+        </div>
+
+        <div class="campo">
+          <label>Fecha de registro <span class="req">*</span></label>
+          <input type="date" id="fecha_registro" />
+        </div>
+
+        <div class="campo col-full">
+          <label>URL del anuncio <span class="opc">(recomendado)</span></label>
+          <input type="url" id="url" placeholder="https://..." />
+          <span class="campo-hint">Facilita la verificacion y deduplicacion</span>
+        </div>
+
+        <div class="campo col-full">
+          <label>Descripcion <span class="opc">(opc)</span></label>
+          <textarea id="descripcion" placeholder="Notas adicionales sobre la propiedad..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- CALIDAD DEL DATO -->
+      <div style="margin-top:16px;">
+        <div class="campo">
+          <label>Calidad del dato</label>
+          <div class="calidad-wrap">
+            <button type="button" class="calidad-btn" id="cal-alta" onclick="setCalidad('ALTA')">ALTA — URL + foto verificada</button>
+            <button type="button" class="calidad-btn media activo" id="cal-media" onclick="setCalidad('MEDIA')">MEDIA — Fuente confiable</button>
+            <button type="button" class="calidad-btn" id="cal-baja" onclick="setCalidad('BAJA')">BAJA — Sin verificar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETECCION DUPLICADOS -->
+    <div class="dup-box" id="dupBox">
+      <div class="dup-titulo" id="dupTitulo">--</div>
+      <div class="dup-lista" id="dupLista">--</div>
+    </div>
+
+    <!-- RESUMEN VALIDACION -->
+    <div class="resumen-validacion" id="resumenValidacion">
+      <div class="resumen-titulo" id="resumenTitulo">--</div>
+      <div class="resumen-lista" id="resumenLista">--</div>
+    </div>
+
+    <!-- ACCIONES -->
+    <div class="acciones">
+      <button type="button" class="btn-secondary" onclick="limpiarFormulario()">Limpiar</button>
+      <button type="button" class="btn-primary" id="btnValidar" onclick="validarYSubir()">Validar y registrar propiedad</button>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="secrets.js?v=1.2"></script>
+  <script>
+  // ─── CONFIGURACION ────────────────────────────────────────
+  const SURL = typeof SECRETS !== 'undefined' ? SECRETS.SURL : '';
+  const SKEY = typeof SECRETS !== 'undefined' ? SECRETS.SKEY  : '';
+  const HDRS = {
+    'apikey': SKEY, 'Authorization': 'Bearer ' + SKEY,
+    'Content-Type': 'application/json', 'Accept-Profile': 'core'
+  };
+  const TC_DEFAULT = 26.50;
+
+  // Estado
+  let monedaActual = 'USD';
+  let calidadActual = 'MEDIA';
+  let zonas = [], subzonas = [], proyectos = [];
+  let dupTimeout = null;
+
+  // ─── FETCH ────────────────────────────────────────────────
+  async function apiFetch(ep, opts) {
+    const r = await fetch(SURL + ep, Object.assign({headers: HDRS}, opts || {}));
+    const d = await r.json();
+    return {ok: r.ok, status: r.status, data: d};
+  }
+
+  // ─── TOAST ────────────────────────────────────────────────
+  function toast(msg, tipo) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast visible ' + (tipo || 'info');
+    clearTimeout(t._t);
+    t._t = setTimeout(function() { t.className = 'toast'; }, 4000);
+  }
+
+  // ─── MONEDA ───────────────────────────────────────────────
+  function setMoneda(m) {
+    monedaActual = m;
+    document.getElementById('btn-usd').className = 'moneda-btn' + (m==='USD'?' activo':'');
+    document.getElementById('btn-lps').className = 'moneda-btn' + (m==='LPS'?' activo':'');
+    document.getElementById('campo-tc').style.display = m==='LPS' ? 'flex' : 'none';
+    onPrecioChange();
+  }
+
+  // ─── CONVERSION ───────────────────────────────────────────
+  function onPrecioChange() {
+    var precio = parseFloat(document.getElementById('precio_original').value) || 0;
+    var tc     = parseFloat(document.getElementById('tipo_cambio').value) || TC_DEFAULT;
+    var caja   = document.getElementById('conversionBox');
+    if (monedaActual === 'LPS' && precio > 0) {
+      var usd = (precio / tc).toFixed(2);
+      document.getElementById('conversionUSD').textContent = '$' + parseFloat(usd).toLocaleString();
+      caja.style.display = 'block';
+    } else {
+      caja.style.display = 'none';
+    }
+    calcularPm2();
+    programarDupCheck();
+  }
+
+  function onAreaChange() {
+    calcularPm2();
+    programarDupCheck();
+  }
+
+  function calcularPm2() {
+    var precio = parseFloat(document.getElementById('precio_original').value) || 0;
+    var area   = parseFloat(document.getElementById('area_construccion').value) || 0;
+    var tc     = parseFloat(document.getElementById('tipo_cambio').value) || TC_DEFAULT;
+    var caja   = document.getElementById('previewPm2');
+    if (precio > 0 && area > 0) {
+      var precioUSD = monedaActual === 'LPS' ? precio / tc : precio;
+      var pm2 = Math.round(precioUSD / area);
+      document.getElementById('pm2Val').textContent = '$' + pm2.toLocaleString() + '/m2';
+      document.getElementById('pm2Ref').textContent = 'USD ' + (monedaActual==='LPS'?'(convertido)':'');
+      caja.style.display = 'block';
+    } else {
+      caja.style.display = 'none';
+    }
+  }
+
+  // ─── CALIDAD ──────────────────────────────────────────────
+  function setCalidad(c) {
+    calidadActual = c;
+    ['alta','media','baja'].forEach(function(k) {
+      var btn = document.getElementById('cal-' + k);
+      btn.className = 'calidad-btn' + (k === c.toLowerCase() ? ' ' + k + ' activo' : '');
+    });
+  }
+
+  // ─── ZONAS / SUBZONAS / PROYECTOS ─────────────────────────
+  async function cargarDimensiones() {
+    var [rz, rs, rp] = await Promise.all([
+      apiFetch('/rest/v1/dim_zone?select=zone_id,zona&order=zona'),
+      apiFetch('/rest/v1/dim_subzona?select=subzona_id,zone_id,subzona&order=subzona'),
+      apiFetch('/rest/v1/dim_proyecto?select=proyecto_id,zone_id,proyecto&order=proyecto')
+    ]);
+    zonas     = rz.data  || [];
+    subzonas  = rs.data  || [];
+    proyectos = rp.data  || [];
+
+    var selZona = document.getElementById('zona');
+    selZona.innerHTML = '<option value="">Selecciona una zona</option>';
+    zonas.forEach(function(z) {
+      var opt = document.createElement('option');
+      opt.value = z.zone_id; opt.textContent = z.zona;
+      opt.dataset.nombre = z.zona;
+      selZona.appendChild(opt);
+    });
+  }
+
+  function onZonaChange() {
+    var zid = document.getElementById('zona').value;
+    var ss  = subzonas.filter(function(s) { return s.zone_id === zid; });
+    var ps  = proyectos.filter(function(p) { return p.zone_id === zid; });
+    var selSub  = document.getElementById('subzona');
+    var selProy = document.getElementById('proyecto');
+    selSub.innerHTML  = '<option value="">Todas</option>'  + ss.map(function(s) { return '<option value="'+s.subzona_id+'">'+s.subzona+'</option>'; }).join('');
+    selProy.innerHTML = '<option value="">Ninguno</option>' + ps.map(function(p) { return '<option value="'+p.proyecto_id+'">'+p.proyecto+'</option>'; }).join('');
+    programarDupCheck();
+  }
+
+  function onTipoChange() {
+    programarDupCheck();
+  }
+
+  // ─── DETECCION DE DUPLICADOS ──────────────────────────────
+  function programarDupCheck() {
+    clearTimeout(dupTimeout);
+    dupTimeout = setTimeout(checkDuplicados, 800);
+  }
+
+  async function checkDuplicados() {
+    var zid   = document.getElementById('zona').value;
+    var tipo  = document.getElementById('tipo_inmueble').value;
+    var area  = parseFloat(document.getElementById('area_construccion').value) || 0;
+    var precio = parseFloat(document.getElementById('precio_original').value) || 0;
+    var url   = document.getElementById('url').value.trim();
+    var dupBox = document.getElementById('dupBox');
+
+    if (!zid || !tipo || (!area && !precio && !url)) { dupBox.style.display='none'; return; }
+
+    // Buscar propiedades similares en la misma zona+tipo
+    var r = await apiFetch(
+      '/rest/v1/property?zone_id=eq.' + zid +
+      '&property_type_id=in.(' + getTipoId(tipo) + ')' +
+      '&select=property_id,colonia,habitaciones,banos,listing(area_construccion,precio_original,url,fecha_registro)'
+    );
+
+    if (!r.ok || !r.data || r.data.length === 0) {
+      dupBox.className = 'dup-box ok';
+      document.getElementById('dupTitulo').textContent = 'Sin duplicados detectados';
+      document.getElementById('dupLista').textContent = 'No se encontraron propiedades similares en esta zona para el tipo seleccionado.';
+      dupBox.style.display = 'block';
+      return;
+    }
+
+    // Verificar si hay coincidencias criticas
+    var posiblesDup = [];
+    r.data.forEach(function(prop) {
+      if (!prop.listing) return;
+      var listings = Array.isArray(prop.listing) ? prop.listing : [prop.listing];
+      listings.forEach(function(l) {
+        var areaMatch   = area > 0 && l.area_construccion && Math.abs(l.area_construccion - area) < 5;
+        var precioMatch = precio > 0 && l.precio_original && Math.abs(l.precio_original - precio) / precio < 0.02;
+        var urlMatch    = url && l.url && url === l.url;
+        if (areaMatch && precioMatch) posiblesDup.push({area: l.area_construccion, precio: l.precio_original, fecha: l.fecha_registro, url: l.url, razon: 'Mismo area y precio'});
+        else if (urlMatch)           posiblesDup.push({area: l.area_construccion, precio: l.precio_original, fecha: l.fecha_registro, url: l.url, razon: 'Misma URL'});
+      });
+    });
+
+    if (posiblesDup.length > 0) {
+      dupBox.className = 'dup-box alerta';
+      document.getElementById('dupTitulo').textContent = 'Posible duplicado detectado (' + posiblesDup.length + ')';
+      document.getElementById('dupLista').innerHTML = posiblesDup.map(function(d) {
+        return '· ' + d.razon + ' — ' + d.area + 'm2 · $' + parseFloat(d.precio).toLocaleString() + ' · ' + (d.fecha || 'sin fecha');
+      }).join('<br>');
+    } else {
+      dupBox.className = 'dup-box ok';
+      document.getElementById('dupTitulo').textContent = 'Sin duplicados detectados';
+      document.getElementById('dupLista').textContent = r.data.length + ' propiedad(es) similar(es) en la zona, pero ningun duplicado critico.';
+    }
+    dupBox.style.display = 'block';
+  }
+
+  // Helper: obtener property_type_id por nombre
+  var _tipoCache = {};
+  async function getTipoIdAsync(tipo) {
+    if (_tipoCache[tipo]) return _tipoCache[tipo];
+    var r = await apiFetch('/rest/v1/dim_property_type?tipo_inmueble=eq.' + encodeURIComponent(tipo) + '&select=property_type_id');
+    if (r.ok && r.data && r.data[0]) { _tipoCache[tipo] = r.data[0].property_type_id; return r.data[0].property_type_id; }
+    return null;
+  }
+  function getTipoId(tipo) { return _tipoCache[tipo] || '00000000-0000-0000-0000-000000000000'; }
+
+  // ─── VALIDACION ───────────────────────────────────────────
+  function validarCampos() {
+    var errores = [];
+    var campos  = [
+      {id:'tipo_inmueble', errId:'err-tipo',  msg:'Tipo de inmueble requerido'},
+      {id:'zona',          errId:'err-zona',  msg:'Zona requerida'},
+      {id:'precio_original',errId:'err-precio',msg:'Precio requerido'},
+      {id:'area_construccion',errId:'err-area',msg:'Area de construccion requerida'},
+      {id:'fuente',        errId:'err-fuente',msg:'Fuente requerida'},
+    ];
+
+    campos.forEach(function(c) {
+      var el  = document.getElementById(c.id);
+      var err = document.getElementById(c.errId);
+      var val = el.value.trim();
+      if (!val || val === '0') {
+        el.className += ' invalido';
+        if (err) err.style.display = 'block';
+        errores.push(c.msg);
+      } else {
+        el.classList.remove('invalido');
+        el.classList.add('valido');
+        if (err) err.style.display = 'none';
+      }
+    });
+
+    // Validacion de precio > 0
+    var precio = parseFloat(document.getElementById('precio_original').value);
+    if (precio <= 0 || isNaN(precio)) {
+      document.getElementById('precio_original').classList.add('invalido');
+      errores.push('El precio debe ser mayor a 0');
+    }
+
+    // Tipo cambio si moneda es LPS
+    if (monedaActual === 'LPS') {
+      var tc = parseFloat(document.getElementById('tipo_cambio').value);
+      if (!tc || tc <= 0) errores.push('Tipo de cambio requerido para LPS');
+    }
+
+    // Fecha registro
+    var fecha = document.getElementById('fecha_registro').value;
+    if (!fecha) errores.push('Fecha de registro requerida');
+
+    return errores;
+  }
+
+  // ─── SUBIR ────────────────────────────────────────────────
+  async function validarYSubir() {
+    var btn = document.getElementById('btnValidar');
+    var resumen = document.getElementById('resumenValidacion');
+
+    var errores = validarCampos();
+
+    if (errores.length > 0) {
+      resumen.className = 'resumen-validacion error';
+      document.getElementById('resumenTitulo').textContent = errores.length + ' campo(s) requerido(s):';
+      document.getElementById('resumenLista').innerHTML = errores.map(function(e) { return '· ' + e; }).join('<br>');
+      resumen.style.display = 'block';
+      resumen.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    resumen.style.display = 'none';
+
+    btn.disabled = true; btn.textContent = 'Registrando...';
+
+    try {
+      var zoneId  = document.getElementById('zona').value;
+      var tipoId  = await getTipoIdAsync(document.getElementById('tipo_inmueble').value);
+      var ciudad  = document.getElementById('ciudad').value;
+      var colonia = document.getElementById('zona').options[document.getElementById('zona').selectedIndex]?.dataset?.nombre || '';
+      var subzonaId  = document.getElementById('subzona').value   || null;
+      var proyectoId = document.getElementById('proyecto').value  || null;
+      var hab   = parseInt(document.getElementById('habitaciones').value)    || null;
+      var ban   = parseFloat(document.getElementById('banos').value)         || null;
+      var est   = parseInt(document.getElementById('estacionamientos').value) || null;
+      var segur = document.getElementById('nivel_seguridad').value || null;
+      var desc  = document.getElementById('descripcion').value.trim() || null;
+
+      // 1. Insertar property
+      var rProp = await fetch(SURL + '/rest/v1/property', {
+        method: 'POST',
+        headers: Object.assign({}, HDRS, {'Prefer': 'return=representation'}),
+        body: JSON.stringify({
+          zone_id: zoneId, property_type_id: tipoId,
+          ciudad, colonia,
+          habitaciones: hab, banos: ban, estacionamientos: est,
+          nivel_seguridad: segur, descripcion: desc,
+          subzona_id: subzonaId || undefined,
+          proyecto_id: proyectoId || undefined
+        })
+      });
+      var propData = await rProp.json();
+      if (!rProp.ok) throw new Error('Error al crear propiedad: ' + JSON.stringify(propData));
+      var propId = propData[0].property_id;
+
+      // 2. Insertar listing
+      var precio       = parseFloat(document.getElementById('precio_original').value);
+      var areaCons     = parseFloat(document.getElementById('area_construccion').value) || null;
+      var areaTerreno  = parseFloat(document.getElementById('area_terreno').value) || null;
+      var tc           = monedaActual === 'LPS' ? (parseFloat(document.getElementById('tipo_cambio').value) || TC_DEFAULT) : null;
+      var fuente       = document.getElementById('fuente').value;
+      var urlVal       = document.getElementById('url').value.trim() || null;
+      var fecha        = document.getElementById('fecha_registro').value;
+
+      var rList = await fetch(SURL + '/rest/v1/listing', {
+        method: 'POST',
+        headers: Object.assign({}, HDRS, {'Prefer': 'return=representation'}),
+        body: JSON.stringify({
+          property_id: propId,
+          fecha_registro: fecha,
+          fuente, url: urlVal,
+          precio_original: precio,
+          moneda: monedaActual,
+          tipo_cambio: tc,
+          area_construccion: areaCons,
+          area_terreno: areaTerreno,
+          calidad_dato: calidadActual,
+          created_by_token: window._ingestToken || null
+        })
+      });
+      var listData = await rList.json();
+      if (!rList.ok) throw new Error('Error al crear listing: ' + JSON.stringify(listData));
+
+      toast('Propiedad registrada correctamente', 'exito');
+      resumen.className = 'resumen-validacion ok';
+      document.getElementById('resumenTitulo').textContent = 'Propiedad registrada correctamente';
+      document.getElementById('resumenLista').textContent  = 'Zona: ' + colonia + ' · ' + document.getElementById('tipo_inmueble').value + ' · $' + precio.toLocaleString();
+      resumen.style.display = 'block';
+
+      setTimeout(limpiarFormulario, 2000);
+
+    } catch(e) {
+      console.error(e);
+      toast('No fue posible registrar la propiedad. Verifica los datos.', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Validar y registrar propiedad';
+    }
+  }
+
+  // ─── LIMPIAR ──────────────────────────────────────────────
+  function limpiarFormulario() {
+    ['tipo_inmueble','zona','subzona','proyecto','ciudad','precio_original',
+     'area_construccion','area_terreno','habitaciones','banos','estacionamientos',
+     'nivel_seguridad','fuente','fecha_registro','url','descripcion','tipo_cambio']
+      .forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = id === 'tipo_cambio' ? '26.50' : '';
+        el.classList.remove('invalido','valido');
+      });
+    setMoneda('USD');
+    setCalidad('MEDIA');
+    document.getElementById('conversionBox').style.display = 'none';
+    document.getElementById('previewPm2').style.display    = 'none';
+    document.getElementById('dupBox').style.display        = 'none';
+    document.getElementById('resumenValidacion').style.display = 'none';
+    ['err-tipo','err-zona','err-precio','err-area','err-fuente'].forEach(function(id) {
+      var el = document.getElementById(id); if(el) el.style.display='none';
+    });
+    onZonaChange();
+  }
+
+  // ─── INICIALIZACION ───────────────────────────────────────
+  window.onload = async function() {
+    // Verificar acceso
+    if (!localStorage.getItem('valorius_token') && !localStorage.getItem('valorius_beta_token')) {
+      window.location.href = 'index.html'; return;
+    }
+
+    // Identificar token activo para trazabilidad
+    window._ingestToken = localStorage.getItem('valorius_beta_token') || 
+                          localStorage.getItem('valorius_token') || 
+                          'ADMIN';
+
+    // Fecha de hoy por defecto
+    document.getElementById('fecha_registro').value = new Date().toISOString().split('T')[0];
+
+    // Cargar dimensiones
+    await cargarDimensiones();
+
+    // Pre-cargar cache de tipos
+    var tipos = await apiFetch('/rest/v1/dim_property_type?select=property_type_id,tipo_inmueble');
+    if (tipos.ok && tipos.data) {
+      tipos.data.forEach(function(t) { _tipoCache[t.tipo_inmueble] = t.property_type_id; });
+    }
+  };
+  </script>
+</body>
+</html>
