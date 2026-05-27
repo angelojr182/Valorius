@@ -1,1 +1,23 @@
+# Variables de entorno
 .env
+
+# Archivos temporales del scraper / ingesta
+files/tmp_*
+files/backup_*.sql
+files/revision_export.csv
+
+# Archivos Excel y locks de Office
+*.xlsx
+*.xls
+~$*
+
+# Memoria local de sesiones Claude
+.claude/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración de scraper (contienen URLs privadas)
+Configuracion scraping Rentify.txt
+COnfiguracion verificada CSBienesraices.txt
