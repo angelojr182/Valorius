@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-05-27
+
+### FEATURE — Auditoría completa FASE 1-A completada (solo lectura)
+- 134 propiedades auditadas: colonias, zonas y proyectos
+- 58 valores únicos en `property.colonia` identificados
+- 43 propiedades con `colonia ≠ zona` clasificadas en 3 categorías:
+  - **Cat A (13 props):** diferencias ortográficas puras — fix seguro y directo
+  - **Cat B (26 props):** colonias válidas dentro de la zona — requieren catálogo canónico
+  - **Cat C (4 props):** nombre de proyecto o arteria en campo colonia — requieren decisión especial
+- Resultado guardado en `docs/database/audit_01_colonias.md`
+
+### DECISION — 4 hallazgos críticos pendientes de resolución (FASE 1-B)
+- `Cefiro Azul` en zona Anillo Periférico (2 props sin proyecto): proyecto "Céfiro Azul" en dim_proyecto apunta a Zarahemla II — posible error de zona o proyecto distinto
+- El Trapiche: `"El Trapiche"` vs `"Residencial El Trapiche"` — ¿misma colonia o dos?
+- Miraflores: `"Miraflores"` vs `"Colonia Miraflores"` — ¿misma colonia o dos?
+- San Ignacio: `"San Ignacio"`, `"Residencial San Ignacio"`, `"Residencial Palmeras De San Ignacio"` — ¿cuántas colonias?
+
+### FEATURE — FASE 0 completa: repositorio GitHub organizado
+- `.gitignore` actualizado, `/docs` creada, `CLAUDE.md` en raíz
+- `CHANGELOG.md` iniciado para capturar decisiones desde el día 1
+- Commits: `f3a4515`, `1ba154e` en github.com/angelojr182/Valorius
+
+---
+
 ## 2026-05-26
 
 ### DECISION — Plan maestro de ingeniería acordado

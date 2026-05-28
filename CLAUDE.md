@@ -11,20 +11,28 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-05-26
-Último paso    : FASE 0-A y 0-B completadas (.gitignore + /docs creados)
-Próximo paso   : FASE 0-C completándose (CLAUDE.md + commit + push) → FASE 1-A auditoría
-Pendiente auth : FASE 1 completa — ningún cambio DB sin autorización explícita
-Tipo cambio    : L 26.5923 (Ficohsa venta, 2026-05-26)
+Última sesión  : 2026-05-27
+Último paso    : FASE 1-A completada — auditoría en docs/database/audit_01_colonias.md
+Próximo paso   : FASE 1-B — proponer catálogo canónico de colonias (solo propuesta, sin tocar DB)
+Pendiente auth : CERO cambios a DB sin autorización explícita
+Tipo cambio    : L 26.5923 (Ficohsa venta, 2026-05-26) — verificar si Edge Function actualizó
 DB count       : 134 properties / 134 listings
 Edge Functions : update_exchange_rate + generar_snapshot — CREADAS y funcionando
-Plan maestro   : Fases 0→1→2→3 acordadas — ver CHANGELOG.md y memory/project_plan_valorius.md
+Plan maestro   : FASE 0 ✅ completa · FASE 1-A ✅ completa · FASE 1-B pendiente
+Hallazgos FASE 1-A:
+  - 43 props con colonia≠zona: Cat A 13 (ortografía), Cat B 26 (colonias válidas), Cat C 4 (errores)
+  - Decisiones pendientes usuario: Cefiro Azul/Anillo Periférico, El Trapiche, Miraflores, San Ignacio
 ```
 
 ---
 
 ## 📋 LOG DE SESIONES
 ```
+2026-05-27 | FASE 1-A completada — auditoría completa de colonias, zonas y proyectos (solo lectura)
+           | 43 propiedades con colonia≠zona identificadas y clasificadas en 3 categorías
+           | Documento guardado: docs/database/audit_01_colonias.md (commit 24dd9d9)
+           | 4 hallazgos críticos identificados — requieren decisión del usuario en FASE 1-B
+
 2026-05-26 | Plan maestro Fases 0-3 acordado con el usuario
            | Jerarquía geográfica confirmada: Zona → Colonia → Proyecto
            | dim_subzona: DEPRECATED (no eliminar, no usar en nuevas inserciones)
