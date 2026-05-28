@@ -7,6 +7,50 @@
 
 ## 2026-05-27
 
+### SCHEMA — dim_zone: 4 zonas eliminadas, 1 creada, 1 renombrada
+- **ELIMINADAS** (eran colonias, no zonas): Colonia Palmira, Las Colinas, Las Hadas, Residencial Centroamérica
+- **CREADA**: Boulevard Centroamerica → `8ed4d462-5c32-456b-ab2f-06fab6275e90`
+- **RENOMBRADA**: Roble Oeste → Los Robles (mismo UUID `8d6639c9`)
+- dim_zone: 50 zonas activas
+
+### DATA — Todos los hallazgos de auditoría resueltos (FASE 1-B/1-F)
+- **H1 Torre Aura:** zone=Boulevard Centroamerica, colonia=Las Colinas, proyecto=Torre Aura
+- **H2 Céfiro Azul:** 2 props en Anillo Periférico → colonia=Zarahemla II, proyecto asignado
+- **H3-A El Trapiche:** 10 props → colonia=Colonia El Trapiche, proyecto=Distrito Artemisa
+- **H3-B Miraflores:** 11 props → colonia=Colonia Miraflores, proyecto=Torre Lirios de Miraflores
+- **H3-C San Ignacio:** 17 props → Residencial San Ignacio (13 props) + Residencial Palmeras (3 props)
+- **Cat A:** 12 correcciones ortográficas + Res. Los Angeles → Res. Mirador de Los Ángeles/Anillo Periférico
+- **Cat B:** Res. Zarahemla → zone=Anillo Periférico; Montecarlo Morazán → proyecto=Torre Atlas
+
+### RULE — tipo_proyecto normalizado
+- Antes: TORRE, CONDOMINIO, VERTICAL (3 valores)
+- Después: solo **TORRE** (edificio vertical único) y **CONDOMINIO** (complejo múltiples edificios)
+- 10 proyectos VERTICAL → TORRE; Ecovivienda → CONDOMINIO
+- Definición inamovible: TORRE ≠ CONDOMINIO por estructura física, no por tamaño
+
+### RULE — Torres son proyectos, NUNCA colonias
+- Si el scraper pone nombre de torre en campo colonia → corregir a nombre de colonia real
+- Ejemplo: "Torre Aura Las Colinas" en colonia → error; colonia debe ser "Las Colinas"
+
+### RULE — Zonas con múltiples colonias no se generalizan
+- El Trapiche: zona amplia, colonia canónica = "Colonia El Trapiche" (no "El Trapiche" a secas)
+- Miraflores: múltiples colonias (Miraflores Sur, etc.) — colonia canónica = "Colonia Miraflores"
+
+### RULE — Zarahemla II es colonia dentro de Anillo Periférico
+- Propiedades de Residencial Zarahemla II → zone_id = Anillo Periférico
+- No existe como zona independiente en dim_zone
+
+### SECURITY — RLS activado en 5 tablas
+- `core.audit_log`, `core.data_quarantine`, `core.dim_zone_cluster`,
+  `core.zone_cluster_assignment`, `core.exchange_rate`
+
+### DECISION — FASE 4 Mercado Primario aprobada
+- Nuevas tablas: `core.developer_project` + `core.developer_inventory_observation`
+- Vista: `v_primary_market_context`
+- Regla crítica: `core.listing` = solo mercado secundario, NUNCA mezclar con Fase 4
+- Audiencia: comprador usado vs nuevo, inversionista, agente, propietario vs torres nuevas
+- Tareas: 4-A (tablas) → 4-B (captura manual) → 4-C (vista) → 4-D (integrar analizador)
+
 ### FEATURE — Auditoría completa FASE 1-A completada (solo lectura)
 - 134 propiedades auditadas: colonias, zonas y proyectos
 - 58 valores únicos en `property.colonia` identificados

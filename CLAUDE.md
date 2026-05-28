@@ -12,26 +12,40 @@
 ## ⚡ SESIÓN ACTIVA
 ```
 Última sesión  : 2026-05-27
-Último paso    : FASE 1-A completada — auditoría en docs/database/audit_01_colonias.md
-Próximo paso   : FASE 1-B — proponer catálogo canónico de colonias (solo propuesta, sin tocar DB)
+Último paso    : FASE 1-B/1-F completadas — todos los hallazgos de auditoría resueltos en DB
+Próximo paso   : FASE 1-C dim_colonia · FASE 1-G deprecar dim_subzona · FASE 1-H property_code
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : L 26.5923 (Ficohsa venta, 2026-05-26) — verificar si Edge Function actualizó
 DB count       : 134 properties / 134 listings
 Edge Functions : update_exchange_rate + generar_snapshot — CREADAS y funcionando
-Plan maestro   : FASE 0 ✅ completa · FASE 1-A ✅ completa · FASE 1-B pendiente
-Hallazgos FASE 1-A:
-  - 43 props con colonia≠zona: Cat A 13 (ortografía), Cat B 26 (colonias válidas), Cat C 4 (errores)
-  - Decisiones pendientes usuario: Cefiro Azul/Anillo Periférico, El Trapiche, Miraflores, San Ignacio
+Plan maestro   : FASE 0 ✅ · FASE 1-A ✅ · FASE 1-B ✅ · FASE 1-F ✅ · pendientes: 1-C,1-G,1-H,1-I,1-J
+dim_zone       : 50 zonas activas (4 eliminadas, 1 creada, 1 renombrada)
+Seguridad      : RLS activado en 5 tablas (audit_log, data_quarantine, dim_zone_cluster,
+                 zone_cluster_assignment, exchange_rate)
+FASE 4         : Mercado Primario APROBADA — ver sección 12
 ```
 
 ---
 
 ## 📋 LOG DE SESIONES
 ```
-2026-05-27 | FASE 1-A completada — auditoría completa de colonias, zonas y proyectos (solo lectura)
-           | 43 propiedades con colonia≠zona identificadas y clasificadas en 3 categorías
-           | Documento guardado: docs/database/audit_01_colonias.md (commit 24dd9d9)
-           | 4 hallazgos críticos identificados — requieren decisión del usuario en FASE 1-B
+2026-05-27 | FASE 1-B/1-F completadas — todos los hallazgos de auditoría resueltos por el usuario
+           | HALLAZGO 1: Torre Aura Las Colinas → zone=Boulevard Centroamerica, colonia=Las Colinas
+           | HALLAZGO 2: Cefiro Azul/Anillo Periférico → colonia=Zarahemla II, proyecto=Céfiro Azul asignado
+           | HALLAZGO 3-A: El Trapiche (10 props) → colonia=Colonia El Trapiche, proyecto=Distrito Artemisa
+           | HALLAZGO 3-B: Miraflores (11 props) → colonia=Colonia Miraflores, proyecto=Torre Lirios
+           | HALLAZGO 3-C: San Ignacio (17 props) → Res. San Ignacio (13) + Res. Palmeras (3) + NULL(1)
+           | HALLAZGO 4: tipo_proyecto normalizado → solo TORRE y CONDOMINIO (10 VERTICAL→TORRE, Ecovivienda→CONDOMINIO)
+           | Cat A: 12 correcciones ortográficas directas + Res. Los Angeles → Res. Mirador de Los Ángeles
+           | Cat B: Res. Zarahemla (zona→Anillo Periférico), Montecarlo Morazán→Torre Atlas asignado
+           | dim_zone: 4 eliminadas (Colonia Palmira, Las Colinas, Las Hadas, Res. Centroamérica)
+           |          1 creada: Boulevard Centroamerica (8ed4d462) · 1 renombrada: Roble Oeste→Los Robles
+           | RLS activado en 5 tablas: audit_log, data_quarantine, dim_zone_cluster,
+           |   zone_cluster_assignment, exchange_rate
+           | FASE 4 Mercado Primario aprobada — tablas developer_project + developer_inventory_observation
+           |
+           | FASE 1-A completada — auditoría completa de colonias, zonas y proyectos (solo lectura)
+           | 43 propiedades con colonia≠zona identificadas — docs/database/audit_01_colonias.md
 
 2026-05-26 | Plan maestro Fases 0-3 acordado con el usuario
            | Jerarquía geográfica confirmada: Zona → Colonia → Proyecto
@@ -172,8 +186,12 @@ CASA         → 8c4efee8-42c2-43ee-b4de-82a64798365e
 TERRENO      → d6006231-4bc5-4375-a6c2-1381089aea84
 ```
 
-### dim_zone (52 zonas)
+### dim_zone (50 zonas activas — actualizado 2026-05-27)
 ```
+-- ELIMINADAS 2026-05-27 (eran colonias, no zonas): Colonia Palmira, Las Colinas, Las Hadas, Residencial Centroamérica
+-- CREADA 2026-05-27: Boulevard Centroamerica
+-- RENOMBRADA 2026-05-27: Roble Oeste → Los Robles
+
 Aldea de Guasculile                  → 20083c6e-8ddb-4e7d-a7d4-86ecc4793fc6
 Altos de la Granja                   → f1e5dd52-cb62-449c-a329-cb062a43884c
 Anillo Periférico                    → c577b26f-3041-483b-be3c-6d849d35eca7
@@ -182,6 +200,7 @@ Barrio Buenos Aires                  → 22a4b83f-ea0d-472d-b4be-53b7fe702fe9
 Barrio Guanacaste                    → f34d9881-844d-487b-84dc-3cbb5a351421
 Barrio La Leona                      → ca7bb1fa-6a38-4647-811d-068ddbdf210f
 Boulevard Fuerzas Armadas            → 672062c4-102d-45de-935e-515e39abfa14
+Boulevard Centroamerica              → 8ed4d462-5c32-456b-ab2f-06fab6275e90  ← NUEVA
 Bulevar Morazán                      → 7fd29b38-d38f-4e8d-8007-976ef5d1bc71
 Colonia América                      → 208c243f-078e-489e-947c-01d52c5d40c5
 Colonia Guadalupe López Villanueva   → 1c67efcb-0693-4fd4-abd0-54db40ed67c4
@@ -194,21 +213,18 @@ Colonia Loma Linda Norte             → 0fd3ac13-3a9d-492c-8b3e-556b3e902145
 Colonia Lomas de Tiloarque           → f6278593-c5a1-4618-a8c7-cc68038dfeb2
 Colonia Los Ángeles                  → ff7b572e-b220-418c-9031-ae0aa01c4daf
 Colonia Modelo                       → 860b90f9-c281-455f-a181-e1c654ca4110
-Colonia Palmira                      → 3847381f-a39a-4371-bbc5-c8ba054a2b50
 Colonia San José del Loarque         → 0b3bd9e0-37a8-4834-a1d1-75951f5a02ac
 Colonia Satélite                     → c554b5d4-124c-4e78-ada1-cfec9ea446eb
 Colonia Tepeyac                      → 6cea85c7-84c7-4ffc-ae45-f401d80ef6ab
 El Hatillo                           → 432dd604-58fc-414c-9d67-fd18ed4ba835
 El Trapiche                          → 6ffdc66c-a15b-498c-a60d-cadc4346f89a
 La Esperanza                         → 9e004954-e5e1-475f-9f16-088bceaee359
-Las Colinas                          → 82a39405-20fd-494e-8d11-3b7fdfc82350
-Las Hadas                            → 95ebf11d-30da-4ebd-8117-73366864ddee
 Las Uvas                             → 3df25638-0d68-4726-b411-928fb7335ad5
 Lomas del Guijarro                   → 18e45e8c-1143-487e-aad3-5efd1af5b763
 Lomas del Molino                     → 7a41ace6-454f-4e68-a456-69a13bd61186
+Los Robles                           → 8d6639c9-6de7-4766-94c8-954160d6f796  ← antes: Roble Oeste
 Miraflores                           → b61262d0-7710-4da4-b01b-65efedf376a2
 Residencial Buena Vista              → 976e27bf-0f0b-4c4f-a1af-455237d494a1
-Residencial Centroamérica            → d98733cb-130a-4a1d-849a-57fa8562713f
 Residencial Ciudad Nueva             → 768480af-b7f2-420b-9557-d69e8b0832bf
 Residencial Concepción II            → c1a85e8f-5350-454a-b4cd-1a1308ac83e1
 Residencial El Sauce                 → 8e11848a-54a9-484e-98aa-ebf35ce7b77e
@@ -222,7 +238,6 @@ Residencial Quinta Isabel            → 5b02fd93-bff4-428f-9a93-70cc759a1929
 Residencial San Juan                 → 83743355-33cd-42ea-bc68-f1d869538c21
 Residencial Villa Elena              → ab73c240-311e-4b1f-a081-15cccb0c6f7b
 Residencial Zarahemla II             → 4924abf6-7379-432d-99df-99702eb56e9e
-Roble Oeste                          → 8d6639c9-6de7-4766-94c8-954160d6f796
 San Ignacio                          → 3924ec4a-bd5e-4871-8dc3-3d1e3d78d887
 Torocagua                            → fdd06173-ad0c-42e6-acf6-b85e9e2e6dc9
 Zambrano                             → 66062aa9-b8a7-4a08-ac4a-7e9ec9aba1fc
@@ -236,9 +251,9 @@ Torre Centro Morazán         (Bulevar Morazán)          → 99882a59-6b6a-4ece
 Torre Costa Próceres         (Colonia Lara)             → fbf840fd-656e-4d2f-a2bf-068987cc0841
 Torre Urbana Lara            (Colonia Lara)             → 3efa9abf-245a-42fc-b971-8a840da7e648
 Avalon                       (Colonia Loma Linda Norte) → d7db94b5-a90b-48df-88dd-f56da32348c8
-Ecovivienda                  (Colonia La Era)           → 6ec02bcc-68fa-4d07-9467-4db0fd09f20c
+Ecovivienda                  (Colonia La Era)           → 6ec02bcc-68fa-4d07-9467-4db0fd09f20c  tipo: CONDOMINIO
 Distrito Artemisa            (El Trapiche)              → 75ca4e4e-d5d8-4fe0-a0dd-cbe5659018ee
-Torre Aura                   (Las Colinas)              → acc4398f-9b78-45fa-98c3-8127356715f1
+Torre Aura                   (Boulevard Centroamerica)  → acc4398f-9b78-45fa-98c3-8127356715f1  ← zona actualizada
 Torre Ámbar                  (Lomas del Guijarro)       → 95631612-5d72-42a4-8bf0-76ad1ec50db2
 Torre KIREI                  (Lomas del Guijarro)       → 7ae6fe12-5f67-480f-baf4-815eeef09d51
 Torre la Trinidad            (Lomas del Guijarro)       → 3a176ceb-df50-4075-a0b2-811aefa8907e
@@ -284,11 +299,16 @@ Zona (dim_zone) → Colonia (dim_colonia — PENDIENTE) → Proyecto (dim_proyec
 
 **Reglas:**
 - `dim_subzona` existe en DB pero **DEPRECATED — NO se usa en nuevas inserciones**
-- `colonia` en property = nombre de la colonia dentro de la zona (hoy texto libre, pendiente FK)
+- `colonia` en property = nombre de la colonia dentro de la zona (hoy texto libre, pendiente FK dim_colonia)
 - `proyecto_id` solo si existe en catálogo — NUNCA inventar
 - `subzona_id` → solo registros legados, no poblar en nuevas inserciones
-- Bulevares (Bulevar Morazán, Boulevard Fuerzas Armadas) están en dim_zone pero son arterias viales — pendiente revisar si deben ser zonas
-- Distrito Artemisa = zona El Trapiche (confirmado Google Maps)
+- Torres son **proyectos**, NUNCA colonias — si el scraper pone nombre de torre en colonia, corregir
+- El Trapiche es zona amplia con múltiples colonias — NO generalizar como colonia única
+- Miraflores tiene múltiples colonias (Miraflores Sur, etc.) — NO generalizar
+- Zarahemla II es colonia dentro de Anillo Periférico (no zona independiente) — propiedades van a zone_id=Anillo Periférico
+- Distrito Artemisa = proyecto en zona El Trapiche, colonia = Colonia El Trapiche
+- tipo_proyecto: solo **TORRE** (edificio vertical único) y **CONDOMINIO** (complejo múltiples edificios)
+- Bulevares (Bulevar Morazán, Boulevard Fuerzas Armadas) en dim_zone — pendiente revisar si deben permanecer
 
 ---
 
@@ -434,7 +454,52 @@ generar_snapshot      → corre cada 15 DÍAS
 
 ---
 
-## 12. INSTRUCCIONES PARA ACTUALIZAR ESTE ARCHIVO
+## 12. FASE 4 — MERCADO PRIMARIO (APROBADA 2026-05-27)
+
+### Objetivo
+Incorporar datos de proyectos nuevos/preventa como capa separada de inteligencia.
+**NUNCA mezclar con el benchmark principal (core.listing = solo mercado secundario).**
+
+### Tablas nuevas (pendiente crear — FASE 4-A)
+```sql
+core.developer_project
+  -- proyecto como entidad: desarrollador, zona, estado, fecha entrega, avance obra, url
+
+core.developer_inventory_observation
+  -- observaciones de precios por tipología/piso con fecha_observacion
+  -- INMUTABLES: no son verdad permanente, cada captura lleva fecha
+```
+
+### Vista (pendiente crear — FASE 4-C)
+```sql
+v_primary_market_context
+  -- zona, proyecto, desarrollador, precio_m2 min/mediana/max,
+  -- unidades observadas, fecha_ultima_observacion
+```
+
+### Reglas inamovibles
+- `core.listing` = solo mercado secundario — NUNCA mezclar
+- NUNCA presentar como "precio justo" ni incluir en mediana principal
+- Cada captura lleva `fecha_observacion`
+- Captura manual primero (5–10 proyectos), automatizar después
+
+### Integración en el analizador (FASE 4-D)
+Bloque secundario debajo del veredicto principal:
+> "En esta zona existen proyectos nuevos con precios oficiales observados desde $X/m².
+>  Estos precios no forman parte del benchmark principal."
+
+### Audiencia objetivo
+Comprador usado vs nuevo · pequeño inversionista · agente inmobiliario · propietario que compite contra torres nuevas
+
+### Tareas
+- 4-A: Crear tablas developer_project + developer_inventory_observation
+- 4-B: Captura manual inicial (5–10 proyectos)
+- 4-C: Crear vista v_primary_market_context
+- 4-D: Integrar bloque en analizador.html
+
+---
+
+## 13. INSTRUCCIONES PARA ACTUALIZAR ESTE ARCHIVO
 
 Al cerrar cada sesión, Claude Code debe actualizar automáticamente:
 1. **SESIÓN ACTIVA** — último paso, próximo paso, tipo de cambio
