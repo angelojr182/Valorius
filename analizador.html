@@ -1744,15 +1744,10 @@
     panel.style.display = 'block';
 
     if (!window.mapCtxInstance) {
-      window.mapCtxInstance = L.map('mapContext', { scrollWheelZoom: false, zoomControl: true })
-        .setView([14.0900, -87.1900], 12);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: 'abcd', maxZoom: 18, opacity: 0.82
-      }).addTo(window.mapCtxInstance);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd', maxZoom: 18, opacity: 0.35
-      }).addTo(window.mapCtxInstance);
+      window.mapCtxInstance = L.map('mapContext', {
+        scrollWheelZoom: false, zoomControl: true,
+        attributionControl: false
+      }).setView([14.0900, -87.1900], 12);
       window.mapCtxMarkers = L.layerGroup().addTo(window.mapCtxInstance);
     }
     window.mapCtxInstance.invalidateSize();

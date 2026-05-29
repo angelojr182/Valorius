@@ -518,10 +518,9 @@ body {
   border: 1px solid rgba(255,255,255,0.06);
   background: #06080f;
 }
-/* Fondo negro — tiles invisibles, solo el background del contenedor */
-.map-ctx-container .leaflet-tile-pane {
-  opacity: 0;
-}
+/* Sin tiles — fondo del contenedor domina */
+.map-ctx-container .leaflet-tile-pane { display: none !important; }
+.map-ctx-container .leaflet-attribution-flag { display: none; }
 
 /* Botones de zoom dorado */
 .map-ctx-container .leaflet-control-zoom {
