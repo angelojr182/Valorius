@@ -486,9 +486,9 @@
   <div id="mapContext" class="map-ctx-container"></div>
   <div class="map-ctx-footer">
     <div class="map-ctx-legend">
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#10b981"></span>Precio por debajo de la media</span>
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#e2b05c"></span>Precio similar a las demás zonas</span>
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#ef4444"></span>Precio por encima de la media</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#2F6F5F"></span>Precio por debajo de la media</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#C59A52"></span>Precio similar a las demás zonas</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#9F5A52"></span>Precio por encima de la media</span>
       <span class="map-leg-item map-leg-item-target"><span class="map-leg-dot map-leg-target"></span>Tu zona analizada</span>
     </div>
     <p class="map-ctx-nota">Los puntos representan zonas de referencia, no ubicaciones exactas de propiedades.</p>
@@ -1733,12 +1733,12 @@
     var targetZ = zonasMapa.find(function(z){ return z.zone_id === zoneId; });
     var targetMedian = targetZ ? targetZ.mediana : gMedian;
 
-    // Verde / dorado / rojo — saturados y vivos
+    // Paleta premium
     function zoneColor(m) {
       var ratio = m / gMedian;
-      if (ratio < 0.90)  return '#10b981';  // esmeralda vivo
-      if (ratio <= 1.15) return '#e2b05c';  // dorado Valorius
-      return '#ef4444';                      // rojo vivo
+      if (ratio < 0.90)  return '#2F6F5F';  // verde pino elegante
+      if (ratio <= 1.15) return '#C59A52';  // oro viejo / ámbar premium
+      return '#9F5A52';                      // terracota vino
     }
 
     panel.style.display = 'block';
@@ -1768,7 +1768,7 @@
       // Diferencia vs zona analizada
       var diffPct = targetMedian > 0
         ? Math.round(((z.mediana - targetMedian) / targetMedian) * 100) : 0;
-      var diffColor = diffPct > 0 ? '#ef4444' : (diffPct < 0 ? '#10b981' : '#94a3b8');
+      var diffColor = diffPct > 0 ? '#9F5A52' : (diffPct < 0 ? '#2F6F5F' : '#94a3b8');
       var diffHtml = isTarget
         ? '<span class="mcp-diff-tag mcp-diff-target">tu zona analizada</span>'
         : '<span class="mcp-diff-tag" style="color:' + diffColor + '">' + (diffPct >= 0 ? '+' : '') + diffPct + '% vs tu zona</span>';
@@ -1785,24 +1785,24 @@
         .replace('Boulevard ', 'Blvd. ')
         .replace('Bulevar ', 'Blvr. ');
 
-      // Anillo exterior dorado para zona analizada
+      // Anillo exterior champán para zona analizada
       if (isTarget) {
         L.circleMarker(coords, {
           radius: r + 9, fillColor: 'transparent',
-          color: 'rgba(226,176,92,0.25)', weight: 1.5,
+          color: 'rgba(228,199,138,0.18)', weight: 1.5,
           fillOpacity: 0, opacity: 1, interactive: false
         }).addTo(window.mapCtxMarkers);
         L.circleMarker(coords, {
           radius: r + 5, fillColor: 'transparent',
-          color: 'rgba(226,176,92,0.45)', weight: 1,
+          color: 'rgba(228,199,138,0.40)', weight: 1,
           fillOpacity: 0, opacity: 1, interactive: false
         }).addTo(window.mapCtxMarkers);
       }
 
       var circle = L.circleMarker(coords, {
         radius:      isTarget ? r + 3 : r,
-        fillColor:   isTarget ? '#e2b05c' : color,
-        color:       isTarget ? '#f0c060' : 'rgba(255,255,255,0.2)',
+        fillColor:   isTarget ? '#B88A3B' : color,
+        color:       isTarget ? '#E4C78A' : 'rgba(255,255,255,0.15)',
         weight:      isTarget ? 2 : 1,
         fillOpacity: isTarget ? 1 : 0.88,
         opacity: 1

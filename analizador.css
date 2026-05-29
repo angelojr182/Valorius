@@ -564,12 +564,12 @@ body {
   width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
 }
 .map-leg-target {
-  background: #c8963e;
-  border: 2px solid #e2b05c;
-  box-shadow: 0 0 8px rgba(226,176,92,0.6);
+  background: #B88A3B;
+  border: 2px solid #E4C78A;
+  box-shadow: 0 0 7px rgba(228,199,138,0.5);
   width: 11px; height: 11px;
 }
-.map-leg-item-target { color: #c8963e; font-weight: 500; }
+.map-leg-item-target { color: #C59A52; font-weight: 500; }
 .map-ctx-nota {
   font-size: 9px; color: #334155; font-style: italic; margin: 0;
 }
