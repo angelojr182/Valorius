@@ -316,6 +316,10 @@ body {
   stroke: #fff; stroke-width: 2;
   filter: drop-shadow(0 0 8px var(--gold-primary));
 }
+.chart-ref-line     { stroke: rgba(255,255,255,0.3); stroke-width: 1.5; }
+.chart-ref-price    { fill: #fff; font-size: 9px; font-weight: 700; font-family: Inter,sans-serif; }
+.chart-ref-word     { fill: rgba(255,255,255,0.45); font-size: 7.5px; font-family: Inter,sans-serif; }
+.chart-target-level { stroke: rgba(226,176,92,0.3); stroke-width: 1; stroke-dasharray: 6 4; }
 .explain-box-wrapper {
   margin-top: 16px;
   display: flex; flex-direction: column; gap: 5px;

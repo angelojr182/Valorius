@@ -363,7 +363,13 @@
       </div>
     </div>
     <div class="line-chart-area">
-      <svg class="chart-svg-curve" viewBox="0 0 300 220">
+      <svg class="chart-svg-curve" viewBox="0 0 325 220">
+        <rect id="refBox" x="0" y="0" width="0" height="0" rx="3"
+              fill="rgba(12,25,52,0.95)" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+        <text id="refPrice" x="0" y="0" text-anchor="end" class="chart-ref-price"></text>
+        <text id="refWord"  x="0" y="0" text-anchor="end" class="chart-ref-word">Referencia</text>
+        <line id="refLine" x1="0" y1="0" x2="0" y2="0" class="chart-ref-line"/>
+        <line id="targetLevelLine" x1="0" y1="0" x2="0" y2="0" class="chart-target-level"/>
         <path id="curvePath" class="chart-curve-path" d="M 15 110 L 285 110"/>
         <g id="curveNodes"></g>
       </svg>
@@ -982,7 +988,7 @@
       ? 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' en ' + zonaLabel + ' · ' + tipo + '. Datos orientativos. No constituye valuacion formal.'
       : 'Referencia construida con ' + n + ' propiedades similares activas en ' + zonaLabel + ' · ' + tipo + ' · ultimos ' + DIAS_COMPARABLES + ' dias. No constituye valuacion formal ni avaluo profesional.';
 
-    renderChart(min, mediana, max, tuPM2, n);
+    renderChart(min, mediana, max, tuPM2, cob.items || []);
 
     registrarEvento('analisis_completado', {
       zona: zona, tipo_inmueble: tipo,
@@ -995,38 +1001,109 @@
     btnPDF.disabled=false; btnPDF.style.opacity='1'; btnPDF.style.cursor='pointer';
   }
 
-  function renderChart(min, mediana, max, tuPrecio, count) {
-    var g = document.getElementById('curveNodes');
+  function renderChart(min, mediana, max, tuPrecio, items) {
+    var g  = document.getElementById('curveNodes');
     g.innerHTML = '';
-    var n = Math.max(count, 2);
-    var step = (max-min)/Math.max(n-1,1), pts = [];
-    for (var i=0; i<n; i++) {
-      var osc = i%2===0?0.82:1.18;
-      pts.push(Math.round(Math.max(min*0.95, Math.min(max*1.05, min+step*i*osc))));
+    var NS = 'http://www.w3.org/2000/svg';
+    var H=210, W=270, ML=15, REF_X=318, BOX_W=57, BOX_H=22;
+
+    // ── Escala de precios ─────────────────────────────────────
+    var pMin  = Math.min(min, tuPrecio) * 0.97;
+    var pMax  = Math.max(max, tuPrecio) * 1.03;
+    var pRng  = pMax - pMin || 1;
+    function toX(v){ return Math.round(ML + ((v-pMin)/pRng)*W); }
+    function toY(v){ return Math.min(Math.max(Math.round(H - ((v-pMin)/pRng)*H*0.78), 10), H-10); }
+
+    // ── Escala de área → radio (3–9 px) ──────────────────────
+    var areas  = (items||[]).map(function(it){return it.area||0;}).filter(Boolean);
+    var aMin   = areas.length ? Math.min.apply(null,areas) : 50;
+    var aMax   = areas.length ? Math.max.apply(null,areas) : 500;
+    if(aMax<=aMin) aMax=aMin*2;
+    function toR(area){
+      if(!area) return 4;
+      return +(3 + Math.max(0,Math.min(1,(area-aMin)/(aMax-aMin)))*6).toFixed(1);
     }
-    var ti = pts.findIndex(function(p){return p>tuPrecio;});
-    if (ti===-1){pts.push(tuPrecio);ti=pts.length-1;} else pts.splice(ti,0,tuPrecio);
-    var H=220,W=270,xs=W/Math.max(pts.length-1,1),d='';
-    pts.forEach(function(v,i){
-      var x=15+i*xs;
-      var y=H-((v-min)/(max-min+1))*H*0.8;
-      if(i>0&&i<pts.length-1) y+=i%2===0?-18:18;
-      y=Math.min(Math.max(y,8),H-8);
-      if(i===0){d+='M '+x+' '+y;}
-      else {
-        var px=15+(i-1)*xs;
-        var py=H-((pts[i-1]-min)/(max-min+1))*H*0.8;
-        if(i-1>0&&i-1<pts.length-1) py+=(i-1)%2===0?-18:18;
-        py=Math.min(Math.max(py,8),H-8);
-        d+=' C '+(px+xs/2)+' '+py+', '+(x-xs/2)+' '+y+', '+x+' '+y;
-      }
-      var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-      c.setAttribute('cx',x); c.setAttribute('cy',y);
-      c.setAttribute('r',i===ti?'6':'4');
-      c.setAttribute('class',i===ti?'chart-node-point active-target':'chart-node-point');
-      g.appendChild(c);
+
+    // ── Construir puntos: comparables ordenados + tu precio ──
+    var sorted = (items && items.length ? items.slice() : [
+      {pm2:Math.round(min), area:100},
+      {pm2:Math.round(min+(max-min)*0.33), area:150},
+      {pm2:Math.round(min+(max-min)*0.66), area:200},
+      {pm2:Math.round(max), area:250}
+    ]).sort(function(a,b){return a.pm2-b.pm2;});
+
+    var pts = sorted.map(function(it){return {pm2:it.pm2, area:it.area, isTarget:false};});
+    var ti  = pts.findIndex(function(p){return p.pm2>tuPrecio;});
+    if(ti===-1){pts.push({pm2:tuPrecio,area:0,isTarget:true}); ti=pts.length-1;}
+    else pts.splice(ti,0,{pm2:tuPrecio,area:0,isTarget:true});
+
+    // ── Coordenadas ───────────────────────────────────────────
+    var coords = pts.map(function(p){return {x:toX(p.pm2),y:toY(p.pm2),pm2:p.pm2,area:p.area,isTarget:p.isTarget};});
+    var targetY = toY(tuPrecio);
+
+    // ── Curva bezier ──────────────────────────────────────────
+    var d='';
+    coords.forEach(function(pt,i){
+      if(i===0){d+='M '+pt.x+' '+pt.y; return;}
+      var pr=coords[i-1], cpx=(pr.x+pt.x)/2;
+      d+=' C '+cpx+' '+pr.y+','+cpx+' '+pt.y+','+pt.x+' '+pt.y;
     });
     document.getElementById('curvePath').setAttribute('d',d);
+
+    // ── Nodos + etiquetas ─────────────────────────────────────
+    coords.forEach(function(pt){
+      if(pt.isTarget){
+        var lt=document.createElementNS(NS,'text');
+        lt.setAttribute('x',pt.x); lt.setAttribute('y',Math.max(pt.y-10,10));
+        lt.setAttribute('text-anchor','middle'); lt.setAttribute('font-family','Inter,sans-serif');
+        lt.setAttribute('font-size','8'); lt.setAttribute('font-weight','600');
+        lt.setAttribute('fill','rgba(226,176,92,0.85)'); lt.textContent='tu precio';
+        g.appendChild(lt);
+        var c=document.createElementNS(NS,'circle');
+        c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
+        c.setAttribute('r','6'); c.setAttribute('class','chart-node-point active-target');
+        g.appendChild(c);
+        var lb=document.createElementNS(NS,'text');
+        lb.setAttribute('x',pt.x); lb.setAttribute('y',Math.min(pt.y+18,H+8));
+        lb.setAttribute('text-anchor','middle'); lb.setAttribute('font-family','Inter,sans-serif');
+        lb.setAttribute('font-size','9'); lb.setAttribute('font-weight','700');
+        lb.setAttribute('fill','#e2b05c');
+        lb.textContent='$'+Math.round(tuPrecio).toLocaleString()+'/m²';
+        g.appendChild(lb);
+      } else {
+        var r=toR(pt.area);
+        if(pt.area>0){
+          var la=document.createElementNS(NS,'text');
+          la.setAttribute('x',pt.x); la.setAttribute('y',Math.min(pt.y+r+10,H+5));
+          la.setAttribute('text-anchor','middle'); la.setAttribute('font-family','Inter,sans-serif');
+          la.setAttribute('font-size','7.5'); la.setAttribute('fill','#475569');
+          la.textContent=Math.round(pt.area)+'m²';
+          g.appendChild(la);
+        }
+        var c=document.createElementNS(NS,'circle');
+        c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
+        c.setAttribute('r',r); c.setAttribute('class','chart-node-point');
+        g.appendChild(c);
+      }
+    });
+
+    // ── Línea vertical de referencia + caja etiqueta ─────────
+    var rb=document.getElementById('refBox');
+    rb.setAttribute('x',REF_X-BOX_W); rb.setAttribute('y',3);
+    rb.setAttribute('width',BOX_W);   rb.setAttribute('height',BOX_H);
+    var rp=document.getElementById('refPrice');
+    rp.setAttribute('x',REF_X-3); rp.setAttribute('y',12);
+    rp.textContent='$'+Math.round(mediana).toLocaleString()+'/m²';
+    var rw=document.getElementById('refWord');
+    rw.setAttribute('x',REF_X-3); rw.setAttribute('y',22);
+    var rl=document.getElementById('refLine');
+    rl.setAttribute('x1',REF_X); rl.setAttribute('y1',BOX_H+5);
+    rl.setAttribute('x2',REF_X); rl.setAttribute('y2',H-5);
+
+    // ── Línea horizontal al nivel de tu precio ────────────────
+    var tl=document.getElementById('targetLevelLine');
+    tl.setAttribute('x1',ML);     tl.setAttribute('y1',targetY);
+    tl.setAttribute('x2',REF_X);  tl.setAttribute('y2',targetY);
   }
 
   // ─── PDF PREMIUM ──────────────────────────────────────────
@@ -1496,13 +1573,15 @@
       }
       // Zona aggregate (P10/P90 para rango — IQR con n<5)
       var kz=zoneId+'||'+tipo;
-      if(!gruposZona[kz]) gruposZona[kz]={zone_id:zoneId, zona:zonaNombre, tipo, precios:[]};
+      if(!gruposZona[kz]) gruposZona[kz]={zone_id:zoneId, zona:zonaNombre, tipo, precios:[], items:[]};
       gruposZona[kz].precios.push(pm2);
+      gruposZona[kz].items.push({pm2:Math.round(pm2), area:r.area_construccion||0});
       // Colonia aggregate
       if(!coloniaId) return;
       var kc=zoneId+'||'+coloniaId+'||'+tipo;
-      if(!gruposColonia[kc]) gruposColonia[kc]={zone_id:zoneId, colonia_id:coloniaId, zona:zonaNombre, colonia:colNombre, tipo, precios:[]};
+      if(!gruposColonia[kc]) gruposColonia[kc]={zone_id:zoneId, colonia_id:coloniaId, zona:zonaNombre, colonia:colNombre, tipo, precios:[], items:[]};
       gruposColonia[kc].precios.push(pm2);
+      gruposColonia[kc].items.push({pm2:Math.round(pm2), area:r.area_construccion||0});
     });
 
     function computeStats(grupos){
