@@ -478,7 +478,7 @@
   <div class="map-ctx-header">
     <div>
       <div class="panel-title">Mapa de contexto competitivo</div>
-      <p class="map-ctx-desc">Este mapa compara la zona y propiedad analizada con otras zonas activas para el mismo tipo de propiedad. El tamaño del punto refleja la cobertura disponible: a mayor tamaño, mayor cantidad de propiedades de referencia observadas.</p>
+      <p class="map-ctx-desc">Este mapa compara tu propiedad y la zona con otras zonas activas para el mismo tipo de propiedad. El tamaño del punto refleja la cobertura disponible: a mayor tamaño, mayor cantidad de propiedades de referencia observadas.</p>
     </div>
     <span class="map-ctx-badge" id="mapCtxCount"></span>
   </div>
@@ -486,9 +486,9 @@
   <div id="mapContext" class="map-ctx-container"></div>
   <div class="map-ctx-footer">
     <div class="map-ctx-legend">
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#34d399"></span>Precio por debajo de la media</span>
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#c8963e"></span>Precio similar a las demás zonas</span>
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#f87171"></span>Precio por encima de la media</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#10b981"></span>Precio por debajo de la media</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#e2b05c"></span>Precio similar a las demás zonas</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#ef4444"></span>Precio por encima de la media</span>
       <span class="map-leg-item map-leg-item-target"><span class="map-leg-dot map-leg-target"></span>Tu zona analizada</span>
     </div>
     <p class="map-ctx-nota">Los puntos representan zonas de referencia, no ubicaciones exactas de propiedades.</p>
@@ -1733,12 +1733,12 @@
     var targetZ = zonasMapa.find(function(z){ return z.zone_id === zoneId; });
     var targetMedian = targetZ ? targetZ.mediana : gMedian;
 
-    // Verde elegante / dorado / rojo suave
+    // Verde / dorado / rojo — saturados y vivos
     function zoneColor(m) {
       var ratio = m / gMedian;
-      if (ratio < 0.90)  return '#34d399';  // esmeralda elegante
-      if (ratio <= 1.15) return '#c8963e';  // dorado muted
-      return '#f87171';                      // rojo suave/coral
+      if (ratio < 0.90)  return '#10b981';  // esmeralda vivo
+      if (ratio <= 1.15) return '#e2b05c';  // dorado Valorius
+      return '#ef4444';                      // rojo vivo
     }
 
     panel.style.display = 'block';
@@ -1770,7 +1770,7 @@
       // Diferencia vs zona analizada
       var diffPct = targetMedian > 0
         ? Math.round(((z.mediana - targetMedian) / targetMedian) * 100) : 0;
-      var diffColor = diffPct > 0 ? '#f87171' : (diffPct < 0 ? '#34d399' : '#94a3b8');
+      var diffColor = diffPct > 0 ? '#ef4444' : (diffPct < 0 ? '#10b981' : '#94a3b8');
       var diffHtml = isTarget
         ? '<span class="mcp-diff-tag mcp-diff-target">tu zona analizada</span>'
         : '<span class="mcp-diff-tag" style="color:' + diffColor + '">' + (diffPct >= 0 ? '+' : '') + diffPct + '% vs tu zona</span>';
@@ -1803,10 +1803,10 @@
 
       var circle = L.circleMarker(coords, {
         radius:      isTarget ? r + 3 : r,
-        fillColor:   isTarget ? '#d4a44c' : color,
-        color:       isTarget ? '#e2b05c' : 'rgba(255,255,255,0.15)',
-        weight:      isTarget ? 2 : 0.8,
-        fillOpacity: isTarget ? 1 : 0.72,
+        fillColor:   isTarget ? '#e2b05c' : color,
+        color:       isTarget ? '#f0c060' : 'rgba(255,255,255,0.2)',
+        weight:      isTarget ? 2 : 1,
+        fillOpacity: isTarget ? 1 : 0.88,
         opacity: 1
       })
       .bindPopup(popContent, { className: 'map-ctx-popup', closeButton: false, maxWidth: 220 });

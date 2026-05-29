@@ -516,10 +516,11 @@ body {
 .map-ctx-container {
   height: 340px; border-radius: 10px; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.06);
+  background: #06080f;
 }
-/* Calles más sutiles sin distorsionar colores */
+/* Fondo casi negro uniforme — calles apenas visibles */
 .map-ctx-container .leaflet-tile-pane {
-  filter: brightness(0.80) saturate(0.68);
+  filter: brightness(0.22) saturate(0);
 }
 
 /* Botones de zoom dorado */
