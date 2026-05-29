@@ -4,9 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Property Analyzer — Valorius</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="analizador.css?v=1.7">
+  <link rel="stylesheet" href="analizador.css?v=2.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* ── Tooltips ⓘ ─────────────────────────────────────── */
@@ -449,6 +452,8 @@
 
   <script>
   // ─── CONFIGURACION ────────────────────────────────────────
+  const ANALIZADOR_VERSION = 'FASE 2-A2 (2026-05-28 — filtro proyecto x tipo)';
+  console.log('%c[Valorius] Analizador cargado — ' + ANALIZADOR_VERSION, 'color:#e2b05c;font-weight:bold');
   const DIAS_COMPARABLES = 100;
   const UMBRAL_ATIPICO   = 1.8;
 
@@ -462,6 +467,7 @@
   let comparablesZona = [], comparablesColonia = [];
   let todosLosComparables = [];  // alias de comparablesZona
   let azColonias = [], azProyectos = [];
+  let proyectoTipos = {};  // {proyecto_id: Set<tipo_inmueble>} construido desde listings reales
   let lastData = null;
   let pendienteAtipico = false;
   let autoColoniaSet = false;
@@ -581,8 +587,8 @@
       var opt = document.createElement('option');
       opt.value = c.colonia_id;
       if (n >= 3)      { opt.textContent = c.colonia + ' (' + n + ' props)'; }
-      else if (n > 0)  { opt.textContent = c.colonia + ' — Pocas refs (' + n + ')'; opt.style.color = '#f59e0b'; }
-      else             { opt.textContent = c.colonia; opt.style.color = '#475569'; }
+      else if (n > 0)  { opt.textContent = c.colonia + ' (' + n + ' ref)'; }
+      else             { opt.textContent = c.colonia + ' (sin datos)'; }
       sel.appendChild(opt);
     });
     if (prev && Array.from(sel.options).some(function(o){ return o.value===prev; })) sel.value = prev;
@@ -590,6 +596,7 @@
   }
 
   function filtrarProyectos() {
+    var tipo      = document.getElementById('selTipo').value;
     var coloniaId = document.getElementById('selColonia').value;
     var zoneId    = document.getElementById('selZona').value;
     var sp        = document.getElementById('selProyecto');
@@ -599,13 +606,24 @@
     var proys = coloniaId
       ? azProyectos.filter(function(p) { return p.colonia_id === coloniaId; })
       : azProyectos.filter(function(p) { return p.zone_id   === zoneId; });
+    // Solo mostrar proyectos que tengan propiedades del tipo seleccionado (basado en data real)
+    proys = proys.filter(function(p) {
+      var tipos = proyectoTipos[p.proyecto_id];
+      return tipos && tipos[tipo] > 0;
+    });
     proys.forEach(function(p) {
+      var n = proyectoTipos[p.proyecto_id][tipo];
       var opt = document.createElement('option');
       opt.value = p.proyecto_id;
-      opt.textContent = p.proyecto;
+      opt.textContent = p.proyecto + ' (' + n + ')';
       sp.appendChild(opt);
     });
     if (prev && Array.from(sp.options).some(function(o){ return o.value===prev; })) sp.value = prev;
+    else if (prev) {
+      // El proyecto previo ya no es compatible con el tipo actual — limpiar
+      sp.value = '';
+      document.getElementById('proyectoColoniaHint').textContent = '';
+    }
   }
 
   function actualizarBadge() {
@@ -669,7 +687,13 @@
     window.onColoniaChange();
     autoColoniaSet = false;
     var coloniaObj = azColonias.find(function(c) { return c.colonia_id === proy.colonia_id; });
-    hint.textContent = coloniaObj ? 'Proyecto ubicado en ' + coloniaObj.colonia + '.' : '';
+    var otras = azColonias.filter(function(c) { return c.zone_id === proy.zone_id && c.colonia_id !== proy.colonia_id; }).length;
+    if (coloniaObj) {
+      hint.textContent = 'Proyecto ubicado en ' + coloniaObj.colonia + '.'
+        + (otras > 0 ? ' Hay ' + otras + ' colonia' + (otras>1?'s':'') + ' mas disponible' + (otras>1?'s':'') + ' en esta zona.' : '');
+    } else {
+      hint.textContent = '';
+    }
   };
   window.onTipoChange = function() { poblarDropdownZonas(); actualizarBadge(); };
 
@@ -1401,7 +1425,7 @@
     var fecha=new Date(); fecha.setDate(fecha.getDate()-DIAS_COMPARABLES);
     var fechaISO=fecha.toISOString().split('T')[0];
     var results = await Promise.all([
-      azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
+      azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
       azFetch('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
       azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto')
     ]);
@@ -1410,9 +1434,11 @@
     azProyectos = (results[2]||[]).map(function(p){ return {proyecto_id:p.proyecto_id, proyecto:p.proyecto, zone_id:p.zone_id, colonia_id:p.colonia_id}; });
 
     var gruposColonia={}, gruposZona={};
+    proyectoTipos = {};
     rows.forEach(function(r){
       var zoneId     = r.property?.zone_id;
       var coloniaId  = r.property?.colonia_id;
+      var proyectoId = r.property?.proyecto_id;
       var zonaNombre = r.property?.dim_zone?.zona;
       var colNombre  = r.property?.dim_colonia?.colonia;
       var tipo       = r.property?.dim_property_type?.tipo_inmueble;
@@ -1420,6 +1446,10 @@
       var pUSD=r.moneda==='USD'?r.precio_original:r.precio_original/(r.tipo_cambio||26.5);
       var pm2=pUSD/r.area_construccion;
       if(pm2<=50||pm2>=15000) return;
+      if(proyectoId){
+        if(!proyectoTipos[proyectoId]) proyectoTipos[proyectoId] = {};
+        proyectoTipos[proyectoId][tipo] = (proyectoTipos[proyectoId][tipo]||0) + 1;
+      }
       // Zona aggregate (P10/P90 para rango — IQR con n<5)
       var kz=zoneId+'||'+tipo;
       if(!gruposZona[kz]) gruposZona[kz]={zone_id:zoneId, zona:zonaNombre, tipo, precios:[]};

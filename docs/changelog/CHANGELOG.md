@@ -7,6 +7,21 @@
 
 ## 2026-05-28
 
+### FIX — FASE 2-A2: filtro de proyectos por tipo de inmueble (basado en data real)
+- Bug detectado: con tipo=CASA seleccionado, el dropdown mostraba torres (Torre Acacias, Torre Cipreses, etc.) que son edificios de apartamentos — visualmente contradictorio para el usuario
+- Solución: nuevo mapa `proyectoTipos = {proyecto_id: {tipo: n}}` construido desde listings reales (`property.proyecto_id` + `dim_property_type.tipo_inmueble`)
+- `filtrarProyectos()` ahora filtra primero por colonia/zona y luego por tipo: solo muestra proyectos que tienen ≥1 propiedad del tipo seleccionado en los últimos 100 días
+- Cada opción muestra el conteo: `Torre Acacias (6)` — 6 apartamentos en data
+- Si el proyecto previo no es compatible con el nuevo tipo, se limpia automáticamente junto con el hint
+- Fetch ampliado: `property(zone_id,colonia_id,proyecto_id,...)` — agregado proyecto_id
+- Resultado actual: con tipo=CASA, dropdown de proyectos siempre vacío (ningún proyecto en DB tiene casas registradas todavía); con tipo=APARTAMENTO, dropdown muestra las torres correspondientes con su conteo
+
+### UX — FASE 2-A2: dropdown de colonia + hint enriquecido
+- Quitado color naranja `#f59e0b` y gris oscuro `#475569` de las opciones — todas usan color por defecto legible
+- Sufijos uniformes: `(N props)` para n≥3, `(N ref)` para 1≤n<3, `(sin datos)` para n=0
+- Hint de proyecto ahora indica colonias adicionales: "Proyecto ubicado en X. Hay N colonia(s) mas disponible(s) en esta zona."
+- Aplica a las 3 zonas con múltiples colonias: Anillo Periférico (3), Lomas del Guijarro (2), San Ignacio (2)
+
 ### FEATURE — FASE 2-A: analizador.html refactorizado con cascada Zona → Colonia → Proyecto
 - `selSubzona` eliminado y reemplazado por `selColonia` (guarda `colonia_id`, cascada desde `zone_id`)
 - `selZona` ahora guarda `zone_id` en lugar de texto libre de colonia
