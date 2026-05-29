@@ -475,17 +475,23 @@
 
 <!-- MAPA DE CONTEXTO DE MERCADO -->
 <section class="panel map-ctx-panel" id="mapContextPanel" style="display:none;">
-  <div class="panel-title info-wrap">
-    Contexto de mercado por zona
-    <span style="font-size:9px;color:#64748b;font-weight:400;margin-left:6px;" id="mapCtxCount"></span>
+  <div class="map-ctx-header">
+    <div>
+      <div class="panel-title">Mapa de contexto competitivo</div>
+      <p class="map-ctx-desc">Compara el precio de la zona analizada contra otras zonas activas con datos del mismo tipo de propiedad. El tamaño de cada punto refleja la cantidad de referencias disponibles — a mayor tamaño, más confiable la referencia.</p>
+    </div>
+    <span class="map-ctx-badge" id="mapCtxCount"></span>
   </div>
   <p class="map-ctx-label" id="mapContextLabel">--</p>
   <div id="mapContext" class="map-ctx-container"></div>
-  <div class="map-ctx-legend">
-    <span class="map-leg-item"><span class="map-leg-dot" style="background:#10b981"></span>Por debajo del entorno</span>
-    <span class="map-leg-item"><span class="map-leg-dot" style="background:#e2b05c"></span>En rango</span>
-    <span class="map-leg-item"><span class="map-leg-dot" style="background:#f87171"></span>Por encima del entorno</span>
-    <span class="map-leg-item"><span class="map-leg-dot map-leg-target"></span>Zona analizada</span>
+  <div class="map-ctx-footer">
+    <div class="map-ctx-legend">
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#2dd4bf"></span>Precio menor al entorno</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#e2b05c"></span>Precio en rango</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#cd7c50"></span>Precio mayor al entorno</span>
+      <span class="map-leg-item"><span class="map-leg-dot map-leg-target"></span>Zona analizada</span>
+    </div>
+    <p class="map-ctx-nota">Los puntos representan zonas de referencia, no ubicaciones exactas de propiedades.</p>
   </div>
 </section>
 
@@ -1721,26 +1727,32 @@
     });
     if (zonasMapa.length === 0) { panel.style.display = 'none'; return; }
 
-    // Mediana global para color relativo
     var meds = zonasMapa.map(function(z){ return z.mediana; }).sort(function(a,b){return a-b;});
     var gMedian = meds[Math.floor(meds.length / 2)] || 1;
 
+    var targetZ = zonasMapa.find(function(z){ return z.zone_id === zoneId; });
+    var targetMedian = targetZ ? targetZ.mediana : gMedian;
+
+    // Paleta sobria: teal / dorado / cobre
     function zoneColor(m) {
       var r = m / gMedian;
-      if (r < 0.90)  return '#10b981';
+      if (r < 0.90)  return '#2dd4bf';
       if (r <= 1.15) return '#e2b05c';
-      return '#f87171';
+      return '#cd7c50';
     }
 
-    // Mostrar panel ANTES de inicializar mapa (Leaflet necesita el div visible)
     panel.style.display = 'block';
 
     if (!window.mapCtxInstance) {
       window.mapCtxInstance = L.map('mapContext', { scrollWheelZoom: false, zoomControl: true })
         .setView([14.0900, -87.1900], 12);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
         subdomains: 'abcd', maxZoom: 18
+      }).addTo(window.mapCtxInstance);
+      // Capa sutil de etiquetas encima (más discretas)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', maxZoom: 18, opacity: 0.4
       }).addTo(window.mapCtxInstance);
       window.mapCtxMarkers = L.layerGroup().addTo(window.mapCtxInstance);
     }
@@ -1756,10 +1768,19 @@
       var color    = zoneColor(z.mediana);
       var r        = Math.max(9, Math.min(18, 9 + Math.min(z.n / 15, 1) * 9));
 
+      // Diferencia vs zona analizada
+      var diffPct = targetMedian > 0
+        ? Math.round(((z.mediana - targetMedian) / targetMedian) * 100) : 0;
+      var diffColor = diffPct > 0 ? '#cd7c50' : (diffPct < 0 ? '#2dd4bf' : '#94a3b8');
+      var diffHtml = isTarget
+        ? '<span class="mcp-diff-tag mcp-diff-target">zona analizada</span>'
+        : '<span class="mcp-diff-tag" style="color:' + diffColor + '">' + (diffPct >= 0 ? '+' : '') + diffPct + '% vs zona analizada</span>';
+
       var popContent =
         '<div class="mcp-zona' + (isTarget ? ' mcp-target' : '') + '">' + z.zona + '</div>' +
         '<div class="mcp-price">$' + z.mediana.toLocaleString() + '/m²</div>' +
-        '<div class="mcp-refs">' + z.n + ' referencias' + (isTarget ? ' · zona analizada' : '') + '</div>';
+        '<div class="mcp-refs">' + z.n + ' referencias · ' + tipo.toLowerCase() + '</div>' +
+        '<div class="mcp-diff">' + diffHtml + '</div>';
 
       var shortName = z.zona
         .replace('Residencial ', 'Res. ')
@@ -1770,13 +1791,25 @@
       var circle = L.circleMarker(coords, {
         radius:      isTarget ? r + 4 : r,
         fillColor:   color,
-        color:       isTarget ? '#e2b05c' : 'rgba(0,0,0,0.4)',
-        weight:      isTarget ? 2.5 : 1,
-        fillOpacity: isTarget ? 0.95 : 0.72,
+        color:       isTarget ? '#e2b05c' : 'rgba(255,255,255,0.12)',
+        weight:      isTarget ? 2 : 0.8,
+        fillOpacity: isTarget ? 0.92 : 0.68,
         opacity: 1
       })
-      .bindPopup(popContent, { className: 'map-ctx-popup', closeButton: false, maxWidth: 200 })
-      .bindTooltip(shortName, { direction: 'top', className: 'map-ctx-tooltip', offset: [0, -(r+4)] });
+      .bindPopup(popContent, { className: 'map-ctx-popup', closeButton: false, maxWidth: 220 });
+
+      // Etiqueta permanente solo para la zona analizada
+      if (isTarget) {
+        circle.bindTooltip(shortName, {
+          permanent: true, direction: 'top',
+          className: 'map-ctx-tooltip map-ctx-tooltip-target',
+          offset: [0, -(r + 10)]
+        });
+      } else {
+        circle.bindTooltip(shortName, {
+          direction: 'top', className: 'map-ctx-tooltip', offset: [0, -(r + 4)]
+        });
+      }
 
       window.mapCtxMarkers.addLayer(circle);
       bounds.push(coords);
@@ -1784,15 +1817,14 @@
     });
 
     if (bounds.length > 1) {
-      window.mapCtxInstance.fitBounds(L.latLngBounds(bounds), { padding: [45, 45], maxZoom: 14 });
+      window.mapCtxInstance.fitBounds(L.latLngBounds(bounds), { padding: [55, 55], maxZoom: 13 });
     }
-    if (targetCircle) { setTimeout(function(){ targetCircle.openPopup(); }, 600); }
+    if (targetCircle) { setTimeout(function(){ targetCircle.openPopup(); }, 700); }
 
-    // Label contextual
     var lbl = zonaLabel;
     if (proyNombre) lbl += ' · ' + proyNombre;
-    document.getElementById('mapContextLabel').textContent = 'Zona analizada: ' + lbl;
-    document.getElementById('mapCtxCount').textContent = zonasMapa.length + ' zonas con datos activos para ' + tipo.toLowerCase();
+    document.getElementById('mapContextLabel').innerHTML = '<b>' + lbl + '</b>';
+    document.getElementById('mapCtxCount').textContent = zonasMapa.length + ' zonas · ' + tipo.toLowerCase();
   }
   </script>
 

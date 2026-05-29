@@ -491,63 +491,98 @@ body {
 }
 
 /* ── MAPA DE CONTEXTO DE MERCADO ────────────────────────── */
-.map-ctx-panel {
-  margin-top: 20px;
-  padding: 20px;
+.map-ctx-panel { margin-top: 20px; padding: 20px 20px 16px; }
+
+.map-ctx-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 12px; margin-bottom: 10px;
+}
+.map-ctx-badge {
+  flex-shrink: 0; font-size: 9px; color: #475569;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px; padding: 2px 8px; white-space: nowrap; margin-top: 2px;
+}
+.map-ctx-desc {
+  font-size: 11px; color: #64748b; line-height: 1.6;
+  margin: 4px 0 0; max-width: 640px;
 }
 .map-ctx-label {
   font-size: 11px; color: #94a3b8;
-  margin: 0 0 12px;
-  letter-spacing: 0.02em;
+  margin: 0 0 10px; letter-spacing: 0.02em;
 }
 .map-ctx-label b { color: #e2b05c; font-weight: 600; }
+
 .map-ctx-container {
-  height: 340px; border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.07);
+  height: 340px; border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.map-ctx-footer {
+  margin-top: 12px;
+  display: flex; flex-wrap: wrap; justify-content: space-between;
+  align-items: center; gap: 8px;
 }
 .map-ctx-legend {
   display: flex; flex-wrap: wrap; gap: 14px;
-  margin-top: 12px; font-size: 10px; color: #64748b;
+  font-size: 10px; color: #64748b;
 }
 .map-leg-item { display: flex; align-items: center; gap: 5px; }
 .map-leg-dot {
-  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
 }
 .map-leg-target {
   background: transparent;
   border: 2px solid #e2b05c;
-  box-shadow: 0 0 6px rgba(226,176,92,0.4);
+  box-shadow: 0 0 5px rgba(226,176,92,0.35);
+}
+.map-ctx-nota {
+  font-size: 9px; color: #334155; font-style: italic; margin: 0;
 }
 
 /* Leaflet popup override */
 .map-ctx-popup .leaflet-popup-content-wrapper {
-  background: rgba(8,18,40,0.97);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(6,14,32,0.98);
+  border: 1px solid rgba(255,255,255,0.09);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.7);
   padding: 0;
 }
 .map-ctx-popup .leaflet-popup-content {
-  margin: 10px 12px; color: #e2e8f0;
+  margin: 11px 14px 10px; color: #e2e8f0;
   font-family: 'Inter', sans-serif;
 }
 .map-ctx-popup .leaflet-popup-tip-container { display: none; }
-.mcp-zona { font-size: 11px; font-weight: 600; color: #e2e8f0; margin-bottom: 3px; }
+
+.mcp-zona { font-size: 10px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; letter-spacing: 0.03em; text-transform: uppercase; }
 .mcp-zona.mcp-target { color: #e2b05c; }
-.mcp-price { font-size: 14px; font-weight: 700; color: #fff; }
-.mcp-refs { font-size: 10px; color: #64748b; margin-top: 2px; }
+.mcp-price { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+.mcp-refs { font-size: 10px; color: #475569; margin-top: 3px; }
+.mcp-diff { margin-top: 6px; }
+.mcp-diff-tag {
+  font-size: 10px; font-weight: 600; padding: 2px 6px;
+  border-radius: 4px; background: rgba(255,255,255,0.05);
+}
+.mcp-diff-target { color: #e2b05c !important; }
 
 /* Leaflet tooltip override */
 .map-ctx-tooltip {
-  background: rgba(8,18,40,0.92) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  color: #94a3b8 !important;
+  background: rgba(6,14,32,0.92) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #64748b !important;
   font-family: 'Inter', sans-serif !important;
   font-size: 10px !important;
   border-radius: 4px !important;
-  padding: 2px 6px !important;
+  padding: 2px 7px !important;
   box-shadow: none !important;
   white-space: nowrap !important;
 }
 .map-ctx-tooltip::before { display: none !important; }
+
+/* Tooltip permanente de zona analizada */
+.map-ctx-tooltip-target {
+  color: #e2b05c !important;
+  border-color: rgba(226,176,92,0.3) !important;
+  font-weight: 600 !important;
+  font-size: 10px !important;
+  background: rgba(6,14,32,0.96) !important;
+}
