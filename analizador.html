@@ -1748,7 +1748,9 @@
         scrollWheelZoom: false, zoomControl: true,
         attributionControl: false
       }).setView([14.0900, -87.1900], 12);
-      window.mapCtxInstance._container.style.background = '#06080f';
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', maxZoom: 18, opacity: 0.9
+      }).addTo(window.mapCtxInstance);
       window.mapCtxMarkers = L.layerGroup().addTo(window.mapCtxInstance);
     }
     window.mapCtxInstance.invalidateSize();
