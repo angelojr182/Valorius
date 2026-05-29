@@ -294,7 +294,7 @@
         <div class="info-tooltip-body">Muestra que tan alejado esta el precio de esta propiedad respecto al precio de referencia de propiedades similares en la zona. El gauge y los colores usan el mismo criterio que el veredicto principal.</div>
       </div>
     </div>
-    <div class="gauge-container" style="transform:scale(0.78);transform-origin:top center;margin-bottom:-18px;">
+    <div class="gauge-container">
       <svg class="gauge-svg" viewBox="0 0 100 100">
         <defs>
           <linearGradient id="fluorescentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -302,11 +302,28 @@
             <stop offset="60%" stop-color="#fbbf24"/>
             <stop offset="100%" stop-color="#e2b05c"/>
           </linearGradient>
+          <!-- Bajo mercado: verde claro a azul profundo -->
+          <linearGradient id="gradBajo" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#10b981"/>
+            <stop offset="100%" stop-color="#0ea5e9"/>
+          </linearGradient>
+          <!-- En mercado: amarillo neutro -->
+          <linearGradient id="gradRango" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fbbf24"/>
+            <stop offset="100%" stop-color="#e2b05c"/>
+          </linearGradient>
+          <!-- Sobre mercado: naranja claro a rojo profundo -->
+          <linearGradient id="gradSobre" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fb923c"/>
+            <stop offset="100%" stop-color="#ef4444"/>
+          </linearGradient>
         </defs>
         <circle class="gauge-circle-bg" cx="50" cy="50" r="45"/>
         <circle id="gaugeFill" class="gauge-circle-fill" cx="50" cy="50" r="45"/>
-        <circle class="gauge-start-dot" cx="18.2" cy="81.8" r="3.5"/>
-        <circle id="gaugeBulb" class="gauge-glow-bulb" cx="50" cy="5" r="4.5"/>
+        <!-- Start dot fijo en visual TOP (SVG 95,50 → top tras rotate(-90deg)) -->
+        <circle id="gaugeStartDot" class="gauge-start-dot" cx="95" cy="50" r="3.5"/>
+        <!-- Bulb dinamico al final del arco -->
+        <circle id="gaugeBulb" class="gauge-glow-bulb" cx="95" cy="50" r="4.5"/>
       </svg>
       <div class="gauge-content">
         <span class="gauge-number" id="lblGaugeVal">--</span>
@@ -316,6 +333,11 @@
     <p class="pos-text-desc" id="lblExplanation">Ingresa los datos y presiona Analizar para ver resultados.</p>
     <div class="slider-pill-wrap">
       <div class="slider-pill-bar"><div id="sliderThumb" class="slider-pill-thumb"></div></div>
+      <div class="slider-pill-prices">
+        <span id="lblSliderMin">--</span>
+        <span id="lblSliderMed">--</span>
+        <span id="lblSliderMax">--</span>
+      </div>
       <div class="slider-pill-labels"><span>Bajo mercado</span><span>En rango</span><span>Sobre mercado</span></div>
     </div>
   </section>
@@ -341,8 +363,8 @@
       </div>
     </div>
     <div class="line-chart-area">
-      <svg class="chart-svg-curve" viewBox="0 0 300 150">
-        <path id="curvePath" class="chart-curve-path" d="M 15 75 L 285 75"/>
+      <svg class="chart-svg-curve" viewBox="0 0 300 220">
+        <path id="curvePath" class="chart-curve-path" d="M 15 110 L 285 110"/>
         <g id="curveNodes"></g>
       </svg>
     </div>
@@ -452,7 +474,7 @@
 
   <script>
   // ─── CONFIGURACION ────────────────────────────────────────
-  const ANALIZADOR_VERSION = 'FASE 2-A2 (2026-05-28 — filtro proyecto x tipo)';
+  const ANALIZADOR_VERSION = 'FASE 2-A3b (2026-05-29 — bulb pos fija + metricas signo/color consistente)';
   console.log('%c[Valorius] Analizador cargado — ' + ANALIZADOR_VERSION, 'color:#e2b05c;font-weight:bold');
   const DIAS_COMPARABLES = 100;
   const UMBRAL_ATIPICO   = 1.8;
@@ -865,22 +887,40 @@
           : 'El precio esta alineado con propiedades similares en ' + zonaLabel + '. Rango observado: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
     document.getElementById('resumenTexto').textContent = resTexto;
 
-    // ── GAUGE (colores alineados con IPR) ────────────────────
-    var gaugeColor = iprInt.cat==='bajo' ? '#10b981' : iprInt.cat==='sobre' ? '#f87171' : '#e2b05c';
-    document.getElementById('lblGaugeVal').textContent  = modoLimitado ? '~'+signo+Math.round(desv)+'%' : signo+Math.round(desv)+'%';
+    // ── GAUGE (colores alineados con IPR, signo desde perspectiva del comprador) ─
+    // bajo mercado (desv<0, oportunidad)  → +X%  · arco verde→azul
+    // sobre mercado (desv>0, sobreprecio) → -X%  · arco naranja→rojo
+    // en rango (desv≈0)                   → X%   · arco amarillo
+    var gaugeColor   = iprInt.cat==='bajo' ? '#10b981' : iprInt.cat==='sobre' ? '#ef4444' : '#fbbf24';
+    var gaugeLabelTx = iprInt.cat==='bajo' ? 'bajo el mercado'
+                     : iprInt.cat==='sobre' ? 'sobre el mercado'
+                     : 'en linea con el mercado';
+    var absDesvR = Math.round(Math.abs(desv));
+    var signoComp = iprInt.cat==='bajo' ? '+' : iprInt.cat==='sobre' ? '-' : '';
+    document.getElementById('lblGaugeVal').textContent  = modoLimitado ? '~'+signoComp+absDesvR+'%' : signoComp+absDesvR+'%';
     document.getElementById('lblGaugeVal').style.color  = gaugeColor;
-    document.getElementById('lblGaugeLabel').textContent = 'vs referencia zona';
+    document.getElementById('lblGaugeLabel').textContent = gaugeLabelTx;
+    document.getElementById('lblGaugeLabel').style.color = gaugeColor;
+    document.getElementById('lblGaugeLabel').style.opacity = '0.9';
 
     if (modoLimitado) {
       document.getElementById('gaugeFill').style.strokeDashoffset = 200;
       document.getElementById('gaugeFill').style.stroke = '#334155';
     } else {
-      document.getElementById('gaugeFill').style.stroke = '';
-      var pct = Math.min(Math.max((desv+50)/100, 0.05), 0.95);
-      document.getElementById('gaugeFill').style.strokeDashoffset = 283 - (213*pct);
-      var ang = (135 + pct*320) * Math.PI/180;
+      // Gradiente segun direccion
+      var gradId = iprInt.cat==='bajo' ? 'gradBajo'
+                 : iprInt.cat==='sobre' ? 'gradSobre'
+                 : 'gradRango';
+      document.getElementById('gaugeFill').style.stroke = 'url(#' + gradId + ')';
+      // Arco proporcional a la magnitud |desv|, capado a 50% como maximo visual
+      var arcPct = Math.min(Math.max(Math.abs(desv)/50, 0.05), 0.98);
+      document.getElementById('gaugeFill').style.strokeDashoffset = 283 - (213*arcPct);
+      // Bulb: 0° = SVG(95,50) = visual TOP; max arco = 271° (213/283 * 360)
+      var ang = arcPct * 271 * Math.PI / 180;
       document.getElementById('gaugeBulb').setAttribute('cx', (50+45*Math.cos(ang)).toFixed(2));
       document.getElementById('gaugeBulb').setAttribute('cy', (50+45*Math.sin(ang)).toFixed(2));
+      document.getElementById('gaugeBulb').style.fill = gaugeColor;
+      document.getElementById('gaugeBulb').style.filter = 'drop-shadow(0 0 6px ' + gaugeColor + ')';
     }
 
     // ── SLIDER (alineado con IPR) ─────────────────────────────
@@ -911,14 +951,18 @@
       document.getElementById('lblDiff').textContent = 'Referencia orientativa';
       document.getElementById('lblDiff').className   = 'metrica-valor rango';
     } else {
-      document.getElementById('lblDiff').textContent = signo + desv.toFixed(1) + '%';
-      document.getElementById('lblDiff').className   = desv>=0 ? 'metrica-valor positivo' : 'metrica-valor negativo';
+      document.getElementById('lblDiff').textContent = signoComp + Math.abs(desv).toFixed(1) + '%';
+      document.getElementById('lblDiff').className   = 'metrica-valor';
+      document.getElementById('lblDiff').style.color = gaugeColor;
     }
 
     // ── CONTEXTO / GRAFICO ────────────────────────────────────
     document.getElementById('lblMinVal').textContent = '$' + Math.round(min).toLocaleString();
     document.getElementById('lblMedVal').textContent = '$' + Math.round(mediana).toLocaleString();
     document.getElementById('lblMaxVal').textContent = '$' + Math.round(max).toLocaleString();
+    document.getElementById('lblSliderMin').textContent = '$' + Math.round(min).toLocaleString() + '/m²';
+    document.getElementById('lblSliderMed').textContent = '$' + Math.round(mediana).toLocaleString();
+    document.getElementById('lblSliderMax').textContent = '$' + Math.round(max).toLocaleString() + '/m²';
     var tt = document.getElementById('specTooltip');
     tt.textContent = '$' + tuPM2.toLocaleString() + '/m2';
     var tp = ((tuPM2-min)/(max-min+1))*100;
@@ -962,7 +1006,7 @@
     }
     var ti = pts.findIndex(function(p){return p>tuPrecio;});
     if (ti===-1){pts.push(tuPrecio);ti=pts.length-1;} else pts.splice(ti,0,tuPrecio);
-    var H=150,W=270,xs=W/Math.max(pts.length-1,1),d='';
+    var H=220,W=270,xs=W/Math.max(pts.length-1,1),d='';
     pts.forEach(function(v,i){
       var x=15+i*xs;
       var y=H-((v-min)/(max-min+1))*H*0.8;
