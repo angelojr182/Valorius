@@ -1748,6 +1748,7 @@
         scrollWheelZoom: false, zoomControl: true,
         attributionControl: false
       }).setView([14.0900, -87.1900], 12);
+      window.mapCtxInstance._container.style.background = '#06080f';
       window.mapCtxMarkers = L.layerGroup().addTo(window.mapCtxInstance);
     }
     window.mapCtxInstance.invalidateSize();
