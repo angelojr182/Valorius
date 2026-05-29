@@ -518,9 +518,9 @@ body {
   border: 1px solid rgba(255,255,255,0.06);
   background: #06080f;
 }
-/* Fondo casi negro uniforme — calles apenas visibles */
+/* Fondo negro — tiles invisibles, solo el background del contenedor */
 .map-ctx-container .leaflet-tile-pane {
-  filter: brightness(0.22) saturate(0);
+  opacity: 0;
 }
 
 /* Botones de zoom dorado */
