@@ -1181,6 +1181,7 @@
       var W=210, H=297, M=18;
       var d = lastData;
       var fecha = new Date().toLocaleDateString('es-HN',{year:'numeric',month:'long',day:'numeric'});
+      var TOTAL_PAGS = 3;
 
       // Paleta
       var dark  = [6,15,32];
@@ -1203,18 +1204,73 @@
       function card(x,y,w,h,c){ pdf.setFillColor(...(c||panel)); pdf.roundedRect(x,y,w,h,2,2,'F'); }
       function accent(x,y,h,c){ pdf.setFillColor(...(c||gold)); pdf.rect(x,y,3,h,'F'); }
       function lbl(t,x,y)     { pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','bold'); pdf.text(t.toUpperCase(),x,y); }
-      function big(t,x,y,c,s) { pdf.setFontSize(s||18); pdf.setTextColor(...(c||white)); pdf.setFont('helvetica','bold'); pdf.text(t,x,y); }
       function sub(t,x,y,c,s,w){ pdf.setFontSize(s||9); pdf.setTextColor(...(c||muted)); pdf.setFont('helvetica','normal'); if(w){var l=pdf.splitTextToSize(t,w);pdf.text(l,x,y);return l.length;}pdf.text(t,x,y);return 1; }
       function hline(x,y,w)   { pdf.setFillColor(20,35,65); pdf.rect(x,y,w,0.4,'F'); }
-      function badge(t,x,y,c) { pdf.setFillColor(...c); pdf.roundedRect(x,y-4,pdf.getTextWidth(t)+8,6,1,1,'F'); pdf.setFontSize(7.5); pdf.setTextColor(...dark); pdf.setFont('helvetica','bold'); pdf.text(t,x+4,y); }
+      function pFooter(txt,n) {
+        pdf.setFillColor(...deep); pdf.rect(0,H-11,W,11,'F');
+        pdf.setFillColor(...gold); pdf.rect(0,H-11,W,0.5,'F');
+        pdf.setFontSize(6.5); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
+        pdf.text(txt,M,H-4);
+        pdf.text(n+' / '+TOTAL_PAGS,W-M,H-4,{align:'right'});
+      }
+      function pHeader(subtitle) {
+        pdf.setFillColor(...deep); pdf.rect(0,1,W,13,'F');
+        pdf.setFontSize(9); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold'); pdf.text('VALORIUS',M,10);
+        sub(subtitle,M+28,10,slate,7);
+        pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal'); pdf.text(fecha,W-M,10,{align:'right'});
+      }
+      // Grafico nativo de comparables
+      function drawComparables(ox,oy,cW,cH,items,tuPM2,mediana,iprClr) {
+        var pts=items.slice().sort(function(a,b){return a.pm2-b.pm2;});
+        var N=pts.length; if(!N)return;
+        var allP=pts.map(function(p){return p.pm2;}).concat([tuPM2,mediana]);
+        var pMin=Math.min.apply(null,allP)*0.88, pMax=Math.max.apply(null,allP)*1.12;
+        if(pMax<=pMin)pMax=pMin*1.3;
+        function yOf(v){return oy+cH-((v-pMin)/(pMax-pMin))*cH;}
+        function xOf(i){return ox+(N>1?(i/(N-1))*cW:cW*0.5);}
+        var areas=pts.filter(function(p){return p.area>0;}).map(function(p){return p.area;});
+        var aMin=areas.length?Math.min.apply(null,areas):50,aMax=areas.length?Math.max.apply(null,areas):500;
+        if(aMax<=aMin)aMax=aMin*1.5;
+        function rOf(a){return a?(0.8+((a-aMin)/(aMax-aMin||1))*2):1.2;}
+        // Grid sutil
+        pdf.setDrawColor(20,35,65); pdf.setLineWidth(0.15);
+        [0.25,0.5,0.75].forEach(function(t){
+          var gy=oy+(1-t)*cH; pdf.line(ox,gy,ox+cW,gy);
+          var gv=Math.round((pMin+t*(pMax-pMin))/100)*100;
+          pdf.setFontSize(4.5); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
+          pdf.text('$'+gv.toLocaleString(),ox-1,gy+1.5,{align:'right'});
+        });
+        // Linea mediana (gold)
+        var mY=yOf(mediana);
+        pdf.setDrawColor(...gold); pdf.setLineWidth(0.4);
+        pdf.line(ox,mY,ox+cW,mY);
+        pdf.setFontSize(5.5); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold');
+        pdf.text('med. $'+Math.round(mediana).toLocaleString(),ox+cW+1,mY+1.5);
+        // Linea tu precio
+        var tY=yOf(tuPM2);
+        pdf.setDrawColor(...iprClr); pdf.setLineWidth(0.55);
+        pdf.line(ox,tY,ox+cW,tY);
+        pdf.setFontSize(5.5); pdf.setTextColor(...iprClr); pdf.setFont('helvetica','bold');
+        var tLy=Math.abs(tY-mY)<5?(tY<mY?mY+7:mY-4):tY-2;
+        if(tLy<oy+2)tLy=oy+5;
+        pdf.text('tu precio $'+tuPM2.toLocaleString(),ox+1,tLy);
+        // Dots comparables
+        pts.forEach(function(pt,i){pdf.setFillColor(...muted);pdf.circle(xOf(i),yOf(pt.pm2),rOf(pt.area),'F');});
+        // Marcador tu precio
+        pdf.setFillColor(...iprClr); pdf.circle(ox+cW*0.5,tY,2.2,'F');
+        pdf.setFillColor(...dark); pdf.circle(ox+cW*0.5,tY,0.7,'F');
+      }
+      // Comparables del nivel correcto
+      var cobGrupo=null;
+      if(d.nivel==='colonia'){cobGrupo=comparablesColonia.find(function(g){return g.zone_id===d.zone_id&&g.colonia_id===d.colonia_id&&g.tipo===d.tipo;});}
+      if(!cobGrupo||!cobGrupo.items||cobGrupo.items.length<2){cobGrupo=comparablesZona.find(function(g){return g.zone_id===d.zone_id&&g.tipo===d.tipo;});}
+      var cobItems=(cobGrupo&&cobGrupo.items)?cobGrupo.items:[];
 
-      // ── PAGINA 1: VEREDICTO + DATOS CLAVE ───────────────────
+      // ═══════════════════════════════════════════════════════
+      // PAGINA 1 — VEREDICTO + DATOS CLAVE + GRAFICO
+      // ═══════════════════════════════════════════════════════
       bg();
-
-      // Franja dorada superior
       pdf.setFillColor(...gold); pdf.rect(0,0,W,1,'F');
-
-      // Header
       pdf.setFillColor(...deep); pdf.rect(0,1,W,30,'F');
       pdf.setFillColor(...gold); pdf.circle(M+5,17,5.5,'F');
       pdf.setFontSize(7.5); pdf.setTextColor(...dark); pdf.setFont('helvetica','bold'); pdf.text('V',M+3,19.5);
@@ -1222,143 +1278,115 @@
       pdf.setFontSize(7.5); pdf.setTextColor(...muted); pdf.setFont('helvetica','normal'); pdf.text('Reporte de Analisis de Propiedad',M+15,22);
       pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.text(fecha,W-M,16,{align:'right'});
       pdf.setFontSize(7); pdf.text(d.zonaLabel+' · '+d.tipo,W-M,22,{align:'right'});
+      var y=38;
 
-      var y = 40;
-
-      // ── BLOQUE 1: CONCLUSION PRINCIPAL (dominante) ───────────
-      card(M,y,W-2*M,46,deep);
-      accent(M,y,46,iprColor);
-
-      lbl('Conclusion del analisis',M+8,y+8);
-      var nivelStr = d.nivel==='colonia' ? 'COLONIA' : d.nivel==='zona' ? 'ZONA (pocas refs en colonia)' : 'ORIENTATIVO';
-      var nivelClr = d.nivel==='colonia' ? green : d.nivel==='zona' ? amber : slate;
+      // Bloque 1 — Conclusion (44mm)
+      card(M,y,W-2*M,44,deep); accent(M,y,44,iprColor);
+      lbl('Conclusion del analisis',M+8,y+7);
+      var nivelStr=d.nivel==='colonia'?'COLONIA':d.nivel==='zona'?'ZONA (pocas refs en colonia)':'ORIENTATIVO';
+      var nivelClr=d.nivel==='colonia'?green:d.nivel==='zona'?amber:slate;
       pdf.setFontSize(6); pdf.setTextColor(...nivelClr); pdf.setFont('helvetica','bold');
-      pdf.text('NIVEL: '+nivelStr, W-M-5, y+8, {align:'right'});
+      pdf.text('NIVEL: '+nivelStr,W-M-5,y+7,{align:'right'});
+      pdf.setFontSize(20); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
+      pdf.text(d.iprInt.label,M+8,y+20);
+      pdf.setFontSize(26); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
+      pdf.text((d.modoLimitado?'~':'')+d.signo+Math.round(d.desv)+'%',W-M-5,y+22,{align:'right'});
+      pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
+      pdf.text('vs precio de referencia',W-M-5,y+28,{align:'right'});
+      var concTxt=d.modoLimitado
+        ?'Zona con pocas propiedades similares registradas ('+d.n+'). Los datos son orientativos.'
+        :d.iprInt.cat==='bajo'?'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por debajo de propiedades similares activas en '+d.zonaLabel+'. Puede representar un punto de entrada favorable.'
+        :d.iprInt.cat==='sobre'?'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por encima de propiedades similares activas en '+d.zonaLabel+'. Existe margen para negociar.'
+        :'El precio observado se encuentra dentro del rango de propiedades similares activas en '+d.zonaLabel+'. Condiciones alineadas con el mercado observable.';
+      sub(concTxt,M+8,y+34,white,8,W-2*M-16);
+      y+=51;
 
-      // Veredicto grande
-      pdf.setFontSize(22); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
-      pdf.text(d.iprInt.label,M+8,y+22);
-
-      // Porcentaje a la derecha
-      pdf.setFontSize(28); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
-      pdf.text((d.modoLimitado?'~':'')+d.signo+Math.round(d.desv)+'%',W-M-5,y+24,{align:'right'});
-      sub('vs precio de referencia',W-M-5,y+30,slate,7);
-
-      // Descripcion accionable
-      var conclusionTexto = d.modoLimitado
-        ? 'Zona con pocas propiedades similares registradas ('+d.n+'). Los datos son orientativos y no deben usarse como referencia definitiva.'
-        : d.iprInt.cat==='bajo'
-          ? 'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por debajo de propiedades similares activas en '+d.zonaLabel+'. Puede representar un punto de entrada favorable.'
-          : d.iprInt.cat==='sobre'
-            ? 'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por encima de propiedades similares activas en '+d.zonaLabel+'. Existe margen para negociar.'
-            : 'El precio observado se encuentra dentro del rango de propiedades similares activas en '+d.zonaLabel+'. Condiciones alineadas con el mercado observable.';
-      sub(conclusionTexto,M+8,y+36,white,8.5,W-2*M-16);
-
-      y += 54;
-
-      // ── BLOQUE 2: 4 DATOS CLAVE (la informacion de soporte) ──
-      card(M,y,W-2*M,34);
-      lbl('Datos de referencia',M+5,y+8);
-
-      var cols4 = [
-        {l:'Tu precio/m2',      v:'$'+d.tuPM2.toLocaleString(),                                                          c:iprColor},
-        {l:'Precio referencia', v:'$'+Math.round(d.mediana).toLocaleString()+(d.modoLimitado?'*':''),                    c:d.modoLimitado?slate:white},
-        {l:'Diferencia',        v:d.modoLimitado?'Orientativo':(d.signo+d.desv.toFixed(1)+'%'),                          c:d.modoLimitado?slate:iprColor},
-        {l:'Rango observado',   v:'$'+Math.round(d.min).toLocaleString()+' - $'+Math.round(d.max).toLocaleString()+'/m2', c:muted},
+      // Bloque 2 — 4 datos clave (30mm)
+      card(M,y,W-2*M,30); lbl('Datos de referencia',M+5,y+7);
+      var cols4=[
+        {l:'Tu precio/m2',      v:'$'+d.tuPM2.toLocaleString(),                                                           c:iprColor},
+        {l:'Precio referencia', v:'$'+Math.round(d.mediana).toLocaleString()+(d.modoLimitado?'*':''),                     c:d.modoLimitado?slate:white},
+        {l:'Diferencia',        v:d.modoLimitado?'Orientativo':(d.signo+d.desv.toFixed(1)+'%'),                           c:d.modoLimitado?slate:iprColor},
+        {l:'Rango observado',   v:'$'+Math.round(d.min).toLocaleString()+' – $'+Math.round(d.max).toLocaleString()+'/m2', c:muted},
       ];
       var cw4=(W-2*M-10)/4;
       cols4.forEach(function(col,i){
-        var cx=M+5+i*cw4;
-        lbl(col.l,cx,y+16);
-        pdf.setFontSize(10); pdf.setTextColor(...col.c); pdf.setFont('helvetica','bold');
-        pdf.text(col.v,cx,y+26);
+        var cx=M+5+i*cw4; lbl(col.l,cx,y+15);
+        pdf.setFontSize(10); pdf.setTextColor(...col.c); pdf.setFont('helvetica','bold'); pdf.text(col.v,cx,y+25);
       });
+      y+=37;
 
-      y += 42;
-
-      // ── BLOQUE 3: POSICION VISUAL EN EL RANGO ────────────────
-      card(M,y,W-2*M,20);
-      lbl('Posicion en el rango observable',M+5,y+8);
+      // Bloque 3 — Posicion en rango (18mm)
+      card(M,y,W-2*M,18); lbl('Posicion en el rango observable',M+5,y+7);
       var rw=W-2*M-10;
-      pdf.setFillColor(...green); pdf.roundedRect(M+5,y+11,rw*0.33,3,1,1,'F');
-      pdf.setFillColor(...amber); pdf.rect(M+5+rw*0.33,y+11,rw*0.33,3,'F');
-      pdf.setFillColor(...red);   pdf.roundedRect(M+5+rw*0.66,y+11,rw*0.34,3,1,1,'F');
-      if (!d.modoLimitado) {
-        var px=M+5+Math.min(Math.max(((d.tuPM2-d.min)/(d.max-d.min+1))*rw,2),rw-2);
-        pdf.setFillColor(...white); pdf.circle(px,y+12.5,2,'F');
-      }
-      sub('Bajo mercado',M+5,y+19,slate,6.5);
-      sub('En rango',M+5+rw/2,y+19,muted,6.5,30);
-      sub('Sobre mercado',M+5+rw,y+19,slate,6.5);
+      pdf.setFillColor(...green); pdf.roundedRect(M+5,y+10,rw*0.33,3,1,1,'F');
+      pdf.setFillColor(...amber); pdf.rect(M+5+rw*0.33,y+10,rw*0.33,3,'F');
+      pdf.setFillColor(...red);   pdf.roundedRect(M+5+rw*0.66,y+10,rw*0.34,3,1,1,'F');
+      if(!d.modoLimitado){var px=M+5+Math.min(Math.max(((d.tuPM2-d.min)/(d.max-d.min+1))*rw,2),rw-2);pdf.setFillColor(...white);pdf.circle(px,y+11.5,2,'F');}
+      pdf.setFontSize(6.5); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
+      pdf.text('Bajo mercado',M+5,y+17);
+      pdf.text('En rango',M+5+rw*0.5,y+17,{align:'center'});
+      pdf.text('Sobre mercado',M+5+rw,y+17,{align:'right'});
+      y+=25;
 
-      y += 28;
+      // Bloque 4 — Interpretacion (24mm)
+      card(M,y,W-2*M,24,deep); accent(M,y,24,iprColor);
+      lbl('Lo que esto significa',M+8,y+7);
+      var interp=d.modoLimitado
+        ?'La zona cuenta con pocas propiedades similares. Se recomienda complementar con informacion directa del mercado antes de tomar decisiones.'
+        :d.iprInt.cat==='bajo'?'El precio esta por debajo del rango usual para esta zona. Si las condiciones fisicas son adecuadas, puede representar una oportunidad. Validar estado antes de proceder.'
+        :d.iprInt.cat==='sobre'?'El precio esta por encima del rango usual. Propiedades similares se ofrecen a $'+Math.round(d.mediana).toLocaleString()+'/m2. Hay margen para negociar.'
+        :'El precio esta alineado con propiedades similares activas en '+d.zonaLabel+'. Las condiciones son consistentes con el mercado observable.';
+      sub(interp,M+8,y+14,white,8,W-2*M-16);
+      y+=30;
 
-      // ── BLOQUE 4: INTERPRETACION CONSULTIVA ──────────────────
-      card(M,y,W-2*M,28,deep);
-      accent(M,y,28,iprColor);
-      lbl('Lo que esto significa',M+8,y+8);
-      var interp = d.modoLimitado
-        ? 'La zona cuenta con pocas propiedades similares registradas. Se recomienda complementar este analisis con informacion directa del mercado antes de tomar decisiones.'
-        : d.iprInt.cat==='bajo'
-          ? 'El precio esta por debajo del rango usual para esta zona. Si las condiciones fisicas del inmueble son adecuadas, puede representar una oportunidad. Validar estado antes de proceder.'
-          : d.iprInt.cat==='sobre'
-            ? 'El precio esta por encima del rango usual. Propiedades similares se ofrecen en esta zona a $'+Math.round(d.mediana).toLocaleString()+'/m2. Hay margen para negociar un ajuste de precio.'
-            : 'El precio esta alineado con propiedades similares activas en '+d.zonaLabel+'. Las condiciones son consistentes con el mercado observable en esta zona.';
-      sub(interp,M+8,y+16,white,8.5,W-2*M-16);
-
-      y += 36;
-
-      // ── BLOQUE 5: ACTIVIDAD EN LA ZONA ───────────────────────
+      // Bloque 5 — Actividad + N (20mm)
       var hw2=(W-2*M-6)/2;
+      card(M,y,hw2,20); lbl('Actividad en la zona',M+5,y+7);
+      pdf.setFontSize(11); pdf.setTextColor(...iaoColor); pdf.setFont('helvetica','bold'); pdf.text(d.iaoInt.label,M+5,y+17);
+      card(M+hw2+6,y,hw2,20); lbl('Propiedades similares detectadas',M+hw2+11,y+7);
+      pdf.setFontSize(16); pdf.setTextColor(...white); pdf.setFont('helvetica','bold'); pdf.text(String(d.n),M+hw2+11,y+18);
+      pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
+      pdf.text('en los ultimos '+DIAS_COMPARABLES+' dias',M+hw2+12+String(d.n).length*3.8,y+18);
+      y+=27;
 
-      card(M,y,hw2,22);
-      lbl('Actividad en la zona',M+5,y+8);
-      pdf.setFontSize(11); pdf.setTextColor(...iaoColor); pdf.setFont('helvetica','bold');
-      pdf.text(d.iaoInt.label,M+5,y+17);
+      // Bloque 6 — Grafico nativo (espacio restante)
+      if(cobItems.length>=2&&!d.modoLimitado){
+        var remH=(H-14)-y-4;
+        if(remH>=40){
+          var cgH=Math.min(remH-16,62); var cgW=W-2*M-28;
+          card(M,y,W-2*M,cgH+16); lbl('Comparables visuales — precio/m2 por propiedad activa',M+5,y+8);
+          drawComparables(M+22,y+13,cgW,cgH,cobItems,d.tuPM2,d.mediana,iprColor);
+          y+=cgH+20;
+        }
+      }
 
-      card(M+hw2+6,y,hw2,22);
-      lbl('Propiedades similares detectadas',M+hw2+11,y+8);
-      pdf.setFontSize(18); pdf.setTextColor(...white); pdf.setFont('helvetica','bold');
-      pdf.text(String(d.n),M+hw2+11,y+19);
-      sub('en los ultimos '+DIAS_COMPARABLES+' dias',M+hw2+28,y+19,slate,7);
+      pFooter('Valorius Market Intelligence · Tegucigalpa, Honduras','1');
 
-      // Footer p1
-      pdf.setFillColor(...deep); pdf.rect(0,H-11,W,11,'F');
-      pdf.setFillColor(...gold); pdf.rect(0,H-11,W,0.5,'F');
-      sub('Valorius Market Intelligence · Tegucigalda, Honduras',M,H-4,slate,6.5);
-      sub('1 / 3',W-M,H-4,slate,6.5);
-
-      // ── PAGINA 2: COMPARACION DETALLADA ─────────────────────
+      // ═══════════════════════════════════════════════════════
+      // PAGINA 2 — COMPARACION DETALLADA + CONTEXTO + GRAFICO
+      // ═══════════════════════════════════════════════════════
       pdf.addPage(); bg();
       pdf.setFillColor(...gold); pdf.rect(0,0,W,1,'F');
-      pdf.setFillColor(...deep); pdf.rect(0,1,W,13,'F');
-      pdf.setFontSize(9); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold'); pdf.text('VALORIUS',M,10);
-      sub(d.zonaLabel+' · '+d.tipo,M+28,10,slate,7);
-      sub(fecha,W-M,10,slate,7);
+      pHeader(d.zonaLabel+' · '+d.tipo);
+      y=22;
 
-      y = 22;
-
-      // Tabla de comparacion (solo modo completo)
-      if (!d.modoLimitado) {
-        card(M,y,W-2*M,46);
-        lbl('Comparacion con propiedades similares en '+d.zonaLabel.substring(0,32),M+5,y+8);
-
-        var tcols=[M+5, M+62, M+115, M+158];
-        ['Concepto','Tu propiedad','Referencia zona','Diferencia'].forEach(function(h,i){
-          sub(h,tcols[i],y+16,slate,6.5);
-        });
+      // Tabla de comparacion
+      if(!d.modoLimitado){
+        card(M,y,W-2*M,46); lbl('Comparacion de precio — '+d.tipo.toLowerCase()+'s en la zona',M+5,y+8);
+        var tcols=[M+5,M+62,M+115,M+158];
+        ['Concepto','Tu propiedad','Referencia zona','Diferencia'].forEach(function(h,i){sub(h,tcols[i],y+16,slate,6.5);});
         hline(M+5,y+18,W-2*M-10);
-
         var trows=[
-          ['Precio / m2',         '$'+d.tuPM2.toLocaleString(),          '$'+Math.round(d.mediana).toLocaleString(),    d.signo+d.desv.toFixed(1)+'%'],
-          ['Precio total',        '$'+Math.round(d.precio).toLocaleString(), '$'+d.precioMercado.toLocaleString(),      (d.diferenciaPesos>=0?'+':'')+' $'+Math.abs(d.diferenciaPesos).toLocaleString()],
-          ['Rango min observado', '$'+Math.round(d.min).toLocaleString()+'/m2', '—', '—'],
-          ['Rango max observado', '$'+Math.round(d.max).toLocaleString()+'/m2', '—', '—'],
-          ['Area analizada',      d.area+' m2', '—', '—'],
+          ['Precio / m2',         '$'+d.tuPM2.toLocaleString(),             '$'+Math.round(d.mediana).toLocaleString(),  d.signo+d.desv.toFixed(1)+'%'],
+          ['Precio total',        '$'+Math.round(d.precio).toLocaleString(),'$'+d.precioMercado.toLocaleString(),        (d.diferenciaPesos>=0?'+ ':'- ')+'$'+Math.abs(d.diferenciaPesos).toLocaleString()],
+          ['Rango min observado', '$'+Math.round(d.min).toLocaleString()+'/m2','--','--'],
+          ['Rango max observado', '$'+Math.round(d.max).toLocaleString()+'/m2','--','--'],
+          ['Area analizada',      d.area+' m2','--','--'],
         ];
         trows.forEach(function(row,ri){
           var ry=y+25+ri*5.5;
-          if(ri%2===0){ pdf.setFillColor(10,20,42); pdf.rect(M+5,ry-3,W-2*M-10,5,'F'); }
+          if(ri%2===0){pdf.setFillColor(10,20,42);pdf.rect(M+5,ry-3,W-2*M-10,5,'F');}
           row.forEach(function(cell,ci){
             pdf.setFontSize(8);
             pdf.setTextColor(...(ci===1?iprColor:ci===3&&ri<2?iprColor:white));
@@ -1366,76 +1394,64 @@
             pdf.text(cell,tcols[ci],ry);
           });
         });
-        y += 54;
+        y+=54;
       } else {
-        // Modo limitado: aviso
-        card(M,y,W-2*M,20,deep);
-        accent(M,y,20,slate);
+        card(M,y,W-2*M,20,deep); accent(M,y,20,slate);
         sub('Zona con pocas propiedades similares registradas ('+d.n+'). Los datos mostrados son orientativos.',M+8,y+13,muted,8.5,W-2*M-16);
-        y += 28;
+        y+=28;
       }
 
       // Contexto de la zona — 3 columnas
-      card(M,y,W-2*M,56);
-      lbl('Contexto de la zona',M+5,y+8);
-
+      card(M,y,W-2*M,56); lbl('Contexto de la zona',M+5,y+8);
       var ctxW=(W-2*M-10)/3;
       var ctx=[
-        {
-          t:'Estado de la zona',
-          v: d.n>=9?'Bien documentada': d.n>=4?'En crecimiento': d.n>=1?'Pocas referencias':'Sin referencias',
-          c: d.n>=9?green: d.n>=4?amber: slate,
-          d: 'Se detectaron '+d.n+' propiedad'+(d.n===1?'':'es')+' similar'+(d.n===1?'':'es')+' activa'+(d.n===1?'':'s')+' en los ultimos '+DIAS_COMPARABLES+' dias.'
-        },
-        {
-          t:'Actividad observable',
-          v: d.iaoInt.label,
-          c: iaoColor,
-          d: d.n<=3?'Pocas referencias disponibles actualmente en esta zona.'
-            :d.n<=8?'Cantidad razonable de referencias para orientar el analisis.'
-            :'Buena cantidad de referencias disponibles para este tipo de propiedad.'
-        },
-        {
-          t:'Variabilidad de precios',
-          v: d.modoLimitado?'Sin dato': d.iqr>800?'Alta': d.iqr>400?'Moderada': 'Baja',
-          c: d.modoLimitado?slate: d.iqr>800?red: d.iqr>400?amber: green,
-          d: d.modoLimitado?'Datos insuficientes para calcular variabilidad.'
-            :'Rango intercuartil observado: $'+Math.round(d.p25)+' - $'+Math.round(d.p75)+'/m2.'
-        }
+        {t:'Estado de la zona',
+         v:d.n>=9?'Bien documentada':d.n>=4?'En crecimiento':d.n>=1?'Pocas referencias':'Sin referencias',
+         c:d.n>=9?green:d.n>=4?amber:slate,
+         d:'Se detectaron '+d.n+' propiedad'+(d.n===1?'':'es')+' similar'+(d.n===1?'':'es')+' activa'+(d.n===1?'':'s')+' en los ultimos '+DIAS_COMPARABLES+' dias.'},
+        {t:'Actividad observable',v:d.iaoInt.label,c:iaoColor,
+         d:d.n<=3?'Pocas referencias disponibles actualmente en esta zona.':d.n<=8?'Cantidad razonable de referencias para orientar el analisis.':'Buena cantidad de referencias disponibles para este tipo de propiedad.'},
+        {t:'Variabilidad de precios',
+         v:d.modoLimitado?'Sin dato':d.iqr>800?'Alta':d.iqr>400?'Moderada':'Baja',
+         c:d.modoLimitado?slate:d.iqr>800?red:d.iqr>400?amber:green,
+         d:d.modoLimitado?'Datos insuficientes para calcular variabilidad.':'Rango intercuartil observado: $'+Math.round(d.p25)+' – $'+Math.round(d.p75)+'/m2.'}
       ];
-
       ctx.forEach(function(c,i){
         var cx=M+5+i*ctxW;
-        if(i>0){ pdf.setFillColor(20,35,65); pdf.rect(cx-2,y+10,0.4,42,'F'); }
+        if(i>0){pdf.setFillColor(20,35,65);pdf.rect(cx-2,y+10,0.4,42,'F');}
         lbl(c.t,cx+2,y+16);
-        pdf.setFontSize(10); pdf.setTextColor(...c.c); pdf.setFont('helvetica','bold');
-        pdf.text(c.v,cx+2,y+26);
+        pdf.setFontSize(10); pdf.setTextColor(...c.c); pdf.setFont('helvetica','bold'); pdf.text(c.v,cx+2,y+26);
         sub(c.d,cx+2,y+31,slate,7,ctxW-6);
       });
+      y+=64;
 
-      y += 64;
+      // Grafico nativo en pagina 2 (espacio restante)
+      if(cobItems.length>=2&&!d.modoLimitado){
+        var rem2=(H-14)-y-4;
+        if(rem2>=40){
+          var cg2H=Math.min(rem2-16,58); var cg2W=W-2*M-28;
+          card(M,y,W-2*M,cg2H+16); lbl('Distribucion de precio/m2 — comparables activos en la zona',M+5,y+8);
+          drawComparables(M+22,y+13,cg2W,cg2H,cobItems,d.tuPM2,d.mediana,iprColor);
+          y+=cg2H+20;
+        }
+      }
 
-      // Footer p2
-      pdf.setFillColor(...deep); pdf.rect(0,H-11,W,11,'F');
-      pdf.setFillColor(...gold); pdf.rect(0,H-11,W,0.5,'F');
-      sub('Valorius Market Intelligence · Datos de oferta activa · Tegucigalpa',M,H-4,slate,6.5);
-      sub('2 / 3',W-M,H-4,slate,6.5);
+      pFooter('Valorius Market Intelligence · Datos de oferta activa · Tegucigalpa','2');
 
       // ── PAGINA 3: GUIA DE TERMINOS ───────────────────────────
       pdf.addPage(); bg();
       pdf.setFillColor(...gold); pdf.rect(0,0,W,1,'F');
-      pdf.setFillColor(...deep); pdf.rect(0,1,W,13,'F');
-      pdf.setFontSize(9); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold'); pdf.text('VALORIUS',M,10);
-      sub('Guia de terminos',M+28,10,slate,7);
-      sub(fecha,W-M,10,slate,7);
+      pHeader('Guia de terminos');
 
       y = 22;
 
-      card(M,y,W-2*M,10);
-      pdf.setFontSize(13); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold');
-      pdf.text('GUIA DE TERMINOS',M+5,y+7.5);
-      sub('Para interpretar correctamente este reporte',W-M,y+7.5,slate,7);
-      y += 18;
+      card(M,y,W-2*M,12);
+      accent(M,y,12,gold);
+      pdf.setFontSize(11); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold');
+      pdf.text('GUIA DE TERMINOS',M+8,y+8.5);
+      pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
+      pdf.text('Para interpretar correctamente este reporte',W-M,y+8.5,{align:'right'});
+      y += 20;
 
       var terminos = [
         {
@@ -1471,39 +1487,47 @@
       ];
 
       terminos.forEach(function(term){
-        if (y > H-52) {
-          pdf.setFillColor(...deep); pdf.rect(0,H-11,W,11,'F');
-          pdf.setFillColor(...gold); pdf.rect(0,H-11,W,0.5,'F');
+        var defLines  = pdf.splitTextToSize(term.d, W-2*M-18);
+        var notaLines = pdf.splitTextToSize('Nota: '+term.n, W-2*M-22);
+        var cardH = 8 + defLines.length*3.8 + 4 + notaLines.length*3.4 + 7;
+
+        if (y + cardH > H-18) {
+          pFooter('Valorius Market Intelligence · Tegucigalpa, Honduras','3');
           pdf.addPage(); bg();
           pdf.setFillColor(...gold); pdf.rect(0,0,W,1,'F');
-          y = 16;
+          pHeader('Guia de terminos (cont.)');
+          y = 22;
         }
-        pdf.setFontSize(10); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold');
-        pdf.text(term.t, M, y);
-        hline(M, y+1.5, W-2*M);
-        y += 5;
-        var defLines = pdf.splitTextToSize(term.d, W-2*M);
-        pdf.setFontSize(8); pdf.setTextColor(...muted); pdf.setFont('helvetica','normal');
-        pdf.text(defLines, M, y); y += defLines.length*3.5+2;
-        var notaLines = pdf.splitTextToSize('Nota: '+term.n, W-2*M-4);
-        pdf.setFillColor(14,24,50); pdf.roundedRect(M,y-1,W-2*M,notaLines.length*3.5+4,1,1,'F');
-        pdf.setFontSize(7.5); pdf.setTextColor(...slate); pdf.setFont('helvetica','italic');
-        pdf.text(notaLines, M+3, y+2); y += notaLines.length*3.5+9;
+
+        card(M, y, W-2*M, cardH);
+        accent(M, y, cardH, gold);
+        pdf.setFontSize(9); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold');
+        pdf.text(term.t, M+8, y+7);
+        pdf.setFontSize(7.8); pdf.setTextColor(...white); pdf.setFont('helvetica','normal');
+        pdf.text(defLines, M+8, y+12);
+        var notaY = y+12+defLines.length*3.8+2;
+        pdf.setFillColor(10,20,42); pdf.roundedRect(M+8, notaY-1, W-2*M-16, notaLines.length*3.4+5, 1, 1, 'F');
+        pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','italic');
+        pdf.text(notaLines, M+12, notaY+2.5);
+        y += cardH + 4;
       });
 
-      // Disclaimer
-      y = Math.max(y, H-44);
+      // Disclaimer — page break si no cabe
+      if (y + 32 > H-14) {
+        pFooter('Valorius Market Intelligence · Tegucigalpa, Honduras','3');
+        pdf.addPage(); bg();
+        pdf.setFillColor(...gold); pdf.rect(0,0,W,1,'F');
+        y = 22;
+      } else {
+        y = Math.max(y+4, H-44);
+      }
       card(M,y,W-2*M,28,[8,16,36]);
       accent(M,y,28,slate);
       lbl('Nota legal y metodologica',M+8,y+8);
       var disc='Este reporte fue generado por Valorius Market Intelligence con base en datos de oferta activa disponibles en el mercado inmobiliario de Honduras. La informacion es de caracter referencial y no constituye valuacion formal, avaluo profesional ni asesoramiento legal o financiero. Los datos corresponden a precios de oferta publicados y pueden no reflejar valores de transaccion final. Valorius no se responsabiliza por decisiones tomadas con base exclusiva en este reporte.';
       sub(disc,M+8,y+15,slate,6.5,W-2*M-14);
 
-      // Footer p3
-      pdf.setFillColor(...deep); pdf.rect(0,H-11,W,11,'F');
-      pdf.setFillColor(...gold); pdf.rect(0,H-11,W,0.5,'F');
-      sub('Valorius Market Intelligence · Tegucigalpa, Honduras',M,H-4,slate,6.5);
-      sub('3 / 3',W-M,H-4,slate,6.5);
+      pFooter('Valorius Market Intelligence · Tegucigalpa, Honduras','3');
 
       pdf.save('Valorius_'+d.zonaLabel.replace(/[\s·]+/g,'_')+'_'+d.tipo+'.pdf');
       registrarEvento('pdf_exportado', {
