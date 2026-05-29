@@ -1055,11 +1055,12 @@
     document.getElementById('curvePath').setAttribute('d',d);
 
     // ── Nodos y etiquetas ─────────────────────────────────────
+    var compIdx=0; // índice solo de comparables (para stagger)
     coords.forEach(function(pt,i){
       var SVG=NS;
       if(pt.isTarget){
-        // Etiqueta "tu precio" encima
-        var labelY = pt.y < 30 ? pt.y + 20 : Math.max(pt.y-11,10);
+        // "tu precio" encima (reposiciona si el círculo está muy arriba)
+        var labelY = pt.y < 30 ? pt.y+20 : Math.max(pt.y-11,10);
         var anchor  = pt.y < 30 ? 'start' : 'middle';
         var lt=document.createElementNS(SVG,'text');
         lt.setAttribute('x',pt.x); lt.setAttribute('y',labelY);
@@ -1073,7 +1074,7 @@
         c.setAttribute('r','6'); c.setAttribute('class','chart-node-point active-target');
         g.appendChild(c);
         // Precio debajo
-        var priceY = pt.y < 30 ? Math.min(pt.y+35,H+8) : Math.min(pt.y+18,H+8);
+        var priceY = pt.y<30 ? Math.min(pt.y+35,H+8) : Math.min(pt.y+18,H+8);
         var lb=document.createElementNS(SVG,'text');
         lb.setAttribute('x',pt.x); lb.setAttribute('y',priceY);
         lb.setAttribute('text-anchor','middle'); lb.setAttribute('font-family','Inter,sans-serif');
@@ -1083,16 +1084,18 @@
         g.appendChild(lb);
       } else {
         var r=toR(pt.area);
-        // Área debajo del nodo (solo si hay espacio respecto al target)
-        var distTarget=Math.abs(pt.x - targetX);
-        if(pt.area>0 && distTarget>22){
+        // Etiqueta m²: alterna arriba/abajo (stagger) para evitar solapamiento
+        if(pt.area>0){
+          var arriba=(compIdx%2===0);
+          var laY=arriba ? Math.max(pt.y-r-6,6) : Math.min(pt.y+r+10,H+4);
           var la=document.createElementNS(SVG,'text');
-          la.setAttribute('x',pt.x); la.setAttribute('y',Math.min(pt.y+r+10,H+4));
+          la.setAttribute('x',pt.x); la.setAttribute('y',laY);
           la.setAttribute('text-anchor','middle'); la.setAttribute('font-family','Inter,sans-serif');
           la.setAttribute('font-size','7'); la.setAttribute('fill','#475569');
           la.textContent=Math.round(pt.area)+'m²';
           g.appendChild(la);
         }
+        compIdx++;
         var c=document.createElementNS(SVG,'circle');
         c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
         c.setAttribute('r',r); c.setAttribute('class','chart-node-point');
