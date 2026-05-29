@@ -207,7 +207,8 @@
       </div>
       <div class="form-group-horizontal">
         <label class="form-label">Proyecto <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-        <select id="selProyecto" class="form-input"><option value="">Todos</option></select>
+        <select id="selProyecto" class="form-input" onchange="window.onProyectoChange()"><option value="">Todos</option></select>
+        <div id="proyectoColoniaHint" style="font-size:10px;color:#64748b;margin-top:4px;"></div>
       </div>
       <div class="form-group-horizontal">
         <label class="form-label">Area de construccion (M2)</label>
@@ -463,6 +464,7 @@
   let azColonias = [], azProyectos = [];
   let lastData = null;
   let pendienteAtipico = false;
+  let autoColoniaSet = false;
 
   // ─── INDICES ──────────────────────────────────────────────
   // IPR = precio_m2 / mediana_zona
@@ -591,6 +593,7 @@
     var coloniaId = document.getElementById('selColonia').value;
     var zoneId    = document.getElementById('selZona').value;
     var sp        = document.getElementById('selProyecto');
+    var prev      = sp.value;
     sp.innerHTML  = '<option value="">Todos</option>';
     if (!zoneId) return;
     var proys = coloniaId
@@ -602,6 +605,7 @@
       opt.textContent = p.proyecto;
       sp.appendChild(opt);
     });
+    if (prev && Array.from(sp.options).some(function(o){ return o.value===prev; })) sp.value = prev;
   }
 
   function actualizarBadge() {
@@ -643,9 +647,30 @@
     actualizarBadge();
     document.getElementById('alertaSanity').style.display  = 'none';
     document.getElementById('alertaAtipica').style.display = 'none';
+    document.getElementById('proyectoColoniaHint').textContent = '';
     pendienteAtipico = false;
   };
-  window.onColoniaChange = function() { filtrarProyectos(); actualizarBadge(); };
+  window.onColoniaChange = function() {
+    filtrarProyectos();
+    actualizarBadge();
+    if (!autoColoniaSet) {
+      document.getElementById('selProyecto').value = '';
+      document.getElementById('proyectoColoniaHint').textContent = '';
+    }
+  };
+  window.onProyectoChange = function() {
+    var proyectoId = document.getElementById('selProyecto').value;
+    var hint       = document.getElementById('proyectoColoniaHint');
+    if (!proyectoId) { hint.textContent = ''; return; }
+    var proy = azProyectos.find(function(p) { return p.proyecto_id === proyectoId; });
+    if (!proy || !proy.colonia_id) { hint.textContent = ''; return; }
+    autoColoniaSet = true;
+    document.getElementById('selColonia').value = proy.colonia_id;
+    window.onColoniaChange();
+    autoColoniaSet = false;
+    var coloniaObj = azColonias.find(function(c) { return c.colonia_id === proy.colonia_id; });
+    hint.textContent = coloniaObj ? 'Proyecto ubicado en ' + coloniaObj.colonia + '.' : '';
+  };
   window.onTipoChange = function() { poblarDropdownZonas(); actualizarBadge(); };
 
   // ─── RANGOS SANITY ────────────────────────────────────────
