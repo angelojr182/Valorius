@@ -516,6 +516,10 @@ body {
   height: 340px; border-radius: 10px; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.06);
 }
+/* Fondo más cálido/elegante: quitar el verde azulado del mapa base */
+.map-ctx-container .leaflet-tile-pane {
+  filter: brightness(0.78) saturate(0.55) hue-rotate(195deg);
+}
 
 .map-ctx-footer {
   margin-top: 12px;
@@ -531,10 +535,12 @@ body {
   width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
 }
 .map-leg-target {
-  background: transparent;
+  background: #d4a44c;
   border: 2px solid #e2b05c;
-  box-shadow: 0 0 5px rgba(226,176,92,0.35);
+  box-shadow: 0 0 7px rgba(226,176,92,0.55);
+  width: 11px; height: 11px;
 }
+.map-leg-item-target { color: #c8963e; font-weight: 500; }
 .map-ctx-nota {
   font-size: 9px; color: #334155; font-style: italic; margin: 0;
 }

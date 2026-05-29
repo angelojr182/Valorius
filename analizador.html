@@ -478,7 +478,7 @@
   <div class="map-ctx-header">
     <div>
       <div class="panel-title">Mapa de contexto competitivo</div>
-      <p class="map-ctx-desc">Compara el precio de la zona analizada contra otras zonas activas con datos del mismo tipo de propiedad. El tamaño de cada punto refleja la cantidad de referencias disponibles — a mayor tamaño, más confiable la referencia.</p>
+      <p class="map-ctx-desc">Este mapa compara la zona y propiedad analizada con otras zonas activas para el mismo tipo de propiedad. El tamaño del punto refleja la cobertura disponible: a mayor tamaño, mayor cantidad de propiedades de referencia observadas.</p>
     </div>
     <span class="map-ctx-badge" id="mapCtxCount"></span>
   </div>
@@ -486,10 +486,10 @@
   <div id="mapContext" class="map-ctx-container"></div>
   <div class="map-ctx-footer">
     <div class="map-ctx-legend">
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#2dd4bf"></span>Precio menor al entorno</span>
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#e2b05c"></span>Precio en rango</span>
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#cd7c50"></span>Precio mayor al entorno</span>
-      <span class="map-leg-item"><span class="map-leg-dot map-leg-target"></span>Zona analizada</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#5b9cf6"></span>Precio por debajo de la media</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#c8963e"></span>Precio similar a las demás zonas</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#c4785a"></span>Precio por encima de la media</span>
+      <span class="map-leg-item map-leg-item-target"><span class="map-leg-dot map-leg-target"></span>Tu zona analizada</span>
     </div>
     <p class="map-ctx-nota">Los puntos representan zonas de referencia, no ubicaciones exactas de propiedades.</p>
   </div>
@@ -1733,12 +1733,12 @@
     var targetZ = zonasMapa.find(function(z){ return z.zone_id === zoneId; });
     var targetMedian = targetZ ? targetZ.mediana : gMedian;
 
-    // Paleta sobria: teal / dorado / cobre
+    // Paleta refinada: azul / dorado / cobre
     function zoneColor(m) {
-      var r = m / gMedian;
-      if (r < 0.90)  return '#2dd4bf';
-      if (r <= 1.15) return '#e2b05c';
-      return '#cd7c50';
+      var ratio = m / gMedian;
+      if (ratio < 0.90)  return '#5b9cf6';  // azul (por debajo)
+      if (ratio <= 1.15) return '#c8963e';  // dorado muted (en rango)
+      return '#c4785a';                      // cobre/terracota (por encima)
     }
 
     panel.style.display = 'block';
@@ -1748,11 +1748,10 @@
         .setView([14.0900, -87.1900], 12);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: 'abcd', maxZoom: 18
+        subdomains: 'abcd', maxZoom: 18, opacity: 0.82
       }).addTo(window.mapCtxInstance);
-      // Capa sutil de etiquetas encima (más discretas)
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd', maxZoom: 18, opacity: 0.4
+        subdomains: 'abcd', maxZoom: 18, opacity: 0.35
       }).addTo(window.mapCtxInstance);
       window.mapCtxMarkers = L.layerGroup().addTo(window.mapCtxInstance);
     }
@@ -1771,10 +1770,10 @@
       // Diferencia vs zona analizada
       var diffPct = targetMedian > 0
         ? Math.round(((z.mediana - targetMedian) / targetMedian) * 100) : 0;
-      var diffColor = diffPct > 0 ? '#cd7c50' : (diffPct < 0 ? '#2dd4bf' : '#94a3b8');
+      var diffColor = diffPct > 0 ? '#c4785a' : (diffPct < 0 ? '#5b9cf6' : '#94a3b8');
       var diffHtml = isTarget
-        ? '<span class="mcp-diff-tag mcp-diff-target">zona analizada</span>'
-        : '<span class="mcp-diff-tag" style="color:' + diffColor + '">' + (diffPct >= 0 ? '+' : '') + diffPct + '% vs zona analizada</span>';
+        ? '<span class="mcp-diff-tag mcp-diff-target">tu zona analizada</span>'
+        : '<span class="mcp-diff-tag" style="color:' + diffColor + '">' + (diffPct >= 0 ? '+' : '') + diffPct + '% vs tu zona</span>';
 
       var popContent =
         '<div class="mcp-zona' + (isTarget ? ' mcp-target' : '') + '">' + z.zona + '</div>' +
@@ -1788,22 +1787,35 @@
         .replace('Boulevard ', 'Blvd. ')
         .replace('Bulevar ', 'Blvr. ');
 
+      // Anillo exterior dorado para zona analizada
+      if (isTarget) {
+        L.circleMarker(coords, {
+          radius: r + 9, fillColor: 'transparent',
+          color: 'rgba(226,176,92,0.25)', weight: 1.5,
+          fillOpacity: 0, opacity: 1, interactive: false
+        }).addTo(window.mapCtxMarkers);
+        L.circleMarker(coords, {
+          radius: r + 5, fillColor: 'transparent',
+          color: 'rgba(226,176,92,0.45)', weight: 1,
+          fillOpacity: 0, opacity: 1, interactive: false
+        }).addTo(window.mapCtxMarkers);
+      }
+
       var circle = L.circleMarker(coords, {
-        radius:      isTarget ? r + 4 : r,
-        fillColor:   color,
-        color:       isTarget ? '#e2b05c' : 'rgba(255,255,255,0.12)',
+        radius:      isTarget ? r + 3 : r,
+        fillColor:   isTarget ? '#d4a44c' : color,
+        color:       isTarget ? '#e2b05c' : 'rgba(255,255,255,0.15)',
         weight:      isTarget ? 2 : 0.8,
-        fillOpacity: isTarget ? 0.92 : 0.68,
+        fillOpacity: isTarget ? 1 : 0.72,
         opacity: 1
       })
       .bindPopup(popContent, { className: 'map-ctx-popup', closeButton: false, maxWidth: 220 });
 
-      // Etiqueta permanente solo para la zona analizada
       if (isTarget) {
         circle.bindTooltip(shortName, {
           permanent: true, direction: 'top',
           className: 'map-ctx-tooltip map-ctx-tooltip-target',
-          offset: [0, -(r + 10)]
+          offset: [0, -(r + 14)]
         });
       } else {
         circle.bindTooltip(shortName, {
