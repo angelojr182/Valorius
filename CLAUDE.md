@@ -11,30 +11,77 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-05-28
-Último paso    : FASE 2-A completada — analizador.html refactorizado con cascada Tipo → Zona → Colonia → Proyecto
-               : selSubzona eliminado, selColonia (colonia_id) y selZona (zone_id) implementados
-               : Fallback 3 niveles: colonia ≥3 → colonia; colonia <3 + zona ≥3 → zona degradado; <3 → orientativo
-               : PDF actualizado: zonaLabel (zona·colonia), indicador de nivel por análisis
-Próximo paso   : FASE 2-B — prueba en browser con casos reales · luego FASE 3 documentación
+Última sesión  : 2026-05-29
+Último paso    : FASE 2-E completada — GEO_DICT migrado de JS a core.dim_zone
+               : dim_zone: +5 columnas (lat, lng, geo_precision, geo_source, geo_confidence)
+               : 3 constraints de rango idempotentes (DO $$ ... EXCEPTION)
+               : 49 centroides verificados con fuentes cruzadas (Mapcarta/OSM/WorldPlaces)
+               : analizador.html: GEO_DICT vacío → poblado desde dim_zone en init
+               : Clave cambiada de nombre-zona a zone_id (UUID) — más robusto
+               : Filter/lookup: !== null y !== undefined (correcto para coordenadas)
+               : migration_dim_zone_geo.sql ejecutado y validado (zonas_con_coords=49)
+               : GitHub commit b74072a subido 2026-05-29
+               :
+               : FASE 2-D completada (sesión anterior misma fecha)
+               : Mapa de contexto competitivo (Leaflet.js CartoDB dark)
+               : Zonas coloreadas por precio relativo a la mediana global
+               : Burbujas proporcionales a cobertura · tooltip permanente en zona analizada
+               : Overlay navy ::after z-index 350 para fondos oscuros sin tapar marcadores
+               : Burbuja dorada de precio sobre slider POSICION EN EL MERCADO
+Próximo paso   : Pendiente decisión del usuario · FASE 3 documentación · FASE 4 Mercado Primario
 Pendiente auth : CERO cambios a DB sin autorización explícita
-Tipo cambio    : L 26.5923 (Ficohsa venta, 2026-05-26) — verificar si Edge Function actualizó
+Tipo cambio    : verificar tasa Ficohsa actual (última registrada L 26.5923 / 26.6200)
 DB count       : 134 properties / 134 listings
-Edge Functions : update_exchange_rate + generar_snapshot — CREADAS y funcionando
-Plan maestro   : FASE 0 ✅ · FASE 1 COMPLETA ✅ (A/B/C/D/F/G/H/I/J/K) · pendientes: FASE 2, 3, 4
-dim_zone       : 50 zonas · campo activo agregado · Residencial Zarahemla II activo=false
+dim_colonia    : 55 colonias (51 originales + 4 villas El Sauce: Los Nopales, Cipreses, Napoleón, Las Palmeras)
+dim_zone       : 49 zonas con lat/lng · 48 activas · Residencial Zarahemla II activo=false
+               : Nuevas columnas: lat, lng, geo_precision, geo_source, geo_confidence
+               : El Sauce y San Ignacio pendientes verificación manual de coordenadas
                : REGLA: dropdowns futuros deben filtrar WHERE activo = true
-dim_colonia    : CREADA — 51 colonias canónicas · vistas actualizadas para leerla
-dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones · 14 proyectos tienen subzona_id histórico
-Seguridad      : RLS activado en 5 tablas (audit_log, data_quarantine, dim_zone_cluster,
-                 zone_cluster_assignment, exchange_rate)
+dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones
+Seguridad      : RLS activado en 5 tablas
 FASE 4         : Mercado Primario APROBADA — ver sección 12
+GitHub         : commit b74072a — FASE 2-E subido 2026-05-29
 ```
 
 ---
 
 ## 📋 LOG DE SESIONES
 ```
+2026-05-29 | FASE 2-E completada — GEO_DICT migrado de JS hardcoded a core.dim_zone
+           | dim_zone: +5 columnas geo (lat, lng, geo_precision, geo_source, geo_confidence)
+           | 3 constraints idempotentes (DO $$ EXCEPTION WHEN duplicate_object)
+           | 49 UPDATEs ejecutados y validados: zonas_con_coords=49, sin_coords=0, activas_con_coords=48
+           | 5 coordenadas ajustadas por fuentes cruzadas: Bulevar Morazán, El Trapiche,
+           |   Lomas del Guijarro, Miraflores, Anillo Periférico
+           | El Sauce y San Ignacio: coordenadas originales mantenidas — fuentes externas no concluyentes
+           | analizador.html: GEO_DICT vacío poblado en init · clave zone_id · !== undefined
+           | Decisión arquitectura: Claude como asesor experto de Valorius — rol guardado en memory
+           | migration_dim_zone_geo.sql creado en docs/database/ · GitHub commit b74072a
+           |
+           | FASE 2-D completada — Mapa de contexto competitivo
+           | Panel "Mapa de contexto competitivo" con Leaflet.js CartoDB Dark Matter
+           | Zonas activas coloreadas por precio relativo a mediana global del tipo
+           | Tamaño burbuja proporcional a cobertura (n referencias) · tooltip permanente en zona analizada
+           | Popup con $/m², n referencias, diferencia % vs zona analizada
+           | Overlay navy ::after z-index 350 (tinta fondo sin tapar marcadores z-600)
+           | Burbuja dorada de precio sobre thumb del slider POSICION EN EL MERCADO
+           | GitHub commit 8ebdcfd (sesión anterior misma fecha)
+           |
+           | FASE 2-C completada — Gráfico comparación rediseñado con datos reales
+           | renderChart reescrito: comparables reales ordenados por pm², burbuja proporcional a m²
+           | Línea horizontal dorada al nivel de "tu precio" (adaptiva a su posición)
+           | Caja etiqueta + línea vertical sólida en orilla derecha mostrando mediana
+           | items[] almacenados en gruposZona/gruposColonia · viewBox 325px · 4 clases CSS nuevas
+           | preview_chart.html creado como prototipo iterado con el usuario (5+ versiones)
+           | GitHub commit 8ebdcfd subido
+           |
+           | FASE 2-A3 completada — UX analizador (gauge 220px, bulb formula, signo buyer, chart 220px)
+           | FASE 2-B completada — push GitHub commit ceceaf3, backups eliminados
+           | FASE 2-B1 — 4 colonias villas creadas en Residencial El Sauce (dim_colonia ahora 55)
+           |   Villa Los Nopales, Villa Cipreses, Villa Napoleón, Villa Las Palmeras
+           |   3 properties actualizadas con colonia_id · Villa Cipreses calidad ALTA confirmada
+           | Decisión modelo: villas dentro de residenciales → colonia (no proyecto)
+           |
 2026-05-28 | FASE 1-C2/1-D/1-G/1-J/1-K completadas (sesión anterior)
            | FASE 2-A completada — analizador.html refactorizado
            | selSubzona → selColonia (guarda colonia_id, cascada desde zone_id de selZona)
@@ -158,9 +205,17 @@ created_by_token  TEXT NULL
 
 ### core.dim_zone
 ```sql
-zone_id  UUID PK
-zona     TEXT UNIQUE NOT NULL
--- 52 zonas activas. Ver sección 3.
+zone_id        UUID PK
+zona           TEXT UNIQUE NOT NULL
+activo         BOOLEAN DEFAULT true
+lat            NUMERIC(10,7) NULL  -- centroide de zona (verificado 2026-05-29)
+lng            NUMERIC(10,7) NULL  -- centroide de zona (verificado 2026-05-29)
+geo_precision  TEXT DEFAULT 'ZONA_CENTROIDE'
+geo_source     TEXT DEFAULT 'MANUAL'
+geo_confidence SMALLINT DEFAULT 3  -- escala 1-5
+-- 49 zonas con lat/lng · 48 activas · Zarahemla II activo=false
+-- El Sauce y San Ignacio: coordenadas pendientes verificación manual
+-- REGLA: dropdowns futuros filtran WHERE activo = true
 ```
 
 ### core.dim_colonia (PENDIENTE CREAR — FASE 1-C)
