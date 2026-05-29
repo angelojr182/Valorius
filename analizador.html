@@ -10,6 +10,7 @@
   <title>Property Analyzer — Valorius</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="analizador.css?v=2.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* ── Tooltips ⓘ ─────────────────────────────────────── */
@@ -472,6 +473,22 @@
   </section>
 </div>
 
+<!-- MAPA DE CONTEXTO DE MERCADO -->
+<section class="panel map-ctx-panel" id="mapContextPanel" style="display:none;">
+  <div class="panel-title info-wrap">
+    Contexto de mercado por zona
+    <span style="font-size:9px;color:#64748b;font-weight:400;margin-left:6px;" id="mapCtxCount"></span>
+  </div>
+  <p class="map-ctx-label" id="mapContextLabel">--</p>
+  <div id="mapContext" class="map-ctx-container"></div>
+  <div class="map-ctx-legend">
+    <span class="map-leg-item"><span class="map-leg-dot" style="background:#10b981"></span>Por debajo del entorno</span>
+    <span class="map-leg-item"><span class="map-leg-dot" style="background:#e2b05c"></span>En rango</span>
+    <span class="map-leg-item"><span class="map-leg-dot" style="background:#f87171"></span>Por encima del entorno</span>
+    <span class="map-leg-item"><span class="map-leg-dot map-leg-target"></span>Zona analizada</span>
+  </div>
+</section>
+
 <footer class="footer-row">
   <p class="footer-desc-text" id="lblMetodologia">Completa el analisis para ver la informacion de referencia.</p>
   <button class="btn-export-pdf" id="btnExportPDF" onclick="window.generarPDF()" disabled style="opacity:0.4;cursor:not-allowed;">Exportar Reporte PDF</button>
@@ -479,11 +496,65 @@
 
   </main>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="secrets.js?v=1.2"></script>
 
   <script>
   // ─── CONFIGURACION ────────────────────────────────────────
-  const ANALIZADOR_VERSION = 'FASE 2-A3b (2026-05-29 — bulb pos fija + metricas signo/color consistente)';
+  const ANALIZADOR_VERSION = 'FASE 2-D (2026-05-29 — mapa contexto de mercado)';
+
+  // ─── COORDENADAS APROXIMADAS POR ZONA (centroides) ───────
+  var GEO_DICT = {
+    'Aldea de Guasculile':                 [14.0560, -87.2250],
+    'Altos de la Granja':                  [14.1150, -87.2050],
+    'Anillo Periférico':                   [14.0970, -87.1870],
+    'Barrio Bella Vista':                  [14.0820, -87.2040],
+    'Barrio Buenos Aires':                 [14.0855, -87.2110],
+    'Barrio Guanacaste':                   [14.0810, -87.2095],
+    'Barrio La Leona':                     [14.0800, -87.2060],
+    'Boulevard Centroamerica':             [14.0825, -87.1490],
+    'Boulevard Fuerzas Armadas':           [14.0785, -87.2280],
+    'Bulevar Morazán':                     [14.1000, -87.1950],
+    'Colonia América':                     [14.0830, -87.2070],
+    'Colonia Guadalupe López Villanueva':  [14.0920, -87.2190],
+    'Colonia Guaymuras':                   [14.0790, -87.2165],
+    'Colonia La Era':                      [14.0875, -87.2240],
+    'Colonia La Pradera':                  [14.1005, -87.2105],
+    'Colonia La Sosa':                     [14.0840, -87.2200],
+    'Colonia Lara':                        [14.0840, -87.2160],
+    'Colonia Loma Linda Norte':            [14.0890, -87.2190],
+    'Colonia Lomas de Tiloarque':          [14.0945, -87.2265],
+    'Colonia Los Ángeles':                 [14.0810, -87.2155],
+    'Colonia Modelo':                      [14.0855, -87.2025],
+    'Colonia San José del Loarque':        [14.0930, -87.2310],
+    'Colonia Satélite':                    [14.0945, -87.2145],
+    'Colonia Tepeyac':                     [14.0790, -87.2130],
+    'El Hatillo':                          [14.1220, -87.2290],
+    'El Trapiche':                         [14.0890, -87.1660],
+    'La Esperanza':                        [14.1100, -87.1070],
+    'Las Uvas':                            [14.1060, -87.1820],
+    'Lomas del Guijarro':                  [14.0950, -87.1738],
+    'Lomas del Molino':                    [14.1010, -87.1720],
+    'Los Robles':                          [14.0870, -87.1700],
+    'Miraflores':                          [14.0875, -87.2220],
+    'Residencial Buena Vista':             [14.0990, -87.1990],
+    'Residencial Ciudad Nueva':            [14.0950, -87.2070],
+    'Residencial Concepción II':           [14.0770, -87.1720],
+    'Residencial El Sauce':                [14.0720, -87.1660],
+    'Residencial Hacienda Real':           [14.0840, -87.1780],
+    'Residencial Las Casitas':             [14.0875, -87.2350],
+    'Residencial Los Cerezos':             [14.1025, -87.1960],
+    'Residencial Mirador de los Hidalgos': [14.0675, -87.1810],
+    'Residencial Paseo de las Campanas':   [14.1020, -87.2010],
+    'Residencial Portal del Bosque 1':     [14.0730, -87.1690],
+    'Residencial Quinta Isabel':           [14.0995, -87.2150],
+    'Residencial San Juan':                [14.1050, -87.1920],
+    'Residencial Villa Elena':             [14.0800, -87.1760],
+    'Residencial Zarahemla II':            [14.0960, -87.1845],
+    'San Ignacio':                         [14.0910, -87.1820],
+    'Torocagua':                           [14.1180, -87.1350],
+    'Zambrano':                            [14.1300, -87.1120]
+  };
   console.log('%c[Valorius] Analizador cargado — ' + ANALIZADOR_VERSION, 'color:#e2b05c;font-weight:bold');
   const DIAS_COMPARABLES = 100;
   const UMBRAL_ATIPICO   = 1.8;
@@ -995,6 +1066,15 @@
       : 'Referencia construida con ' + n + ' propiedades similares activas en ' + zonaLabel + ' · ' + tipo + ' · ultimos ' + DIAS_COMPARABLES + ' dias. No constituye valuacion formal ni avaluo profesional.';
 
     renderChart(min, mediana, max, tuPM2, cob.items || []);
+
+    // ── MAPA DE CONTEXTO ──────────────────────────────────────
+    var proyectoId = document.getElementById('selProyecto').value;
+    var proyNombre = '';
+    if (proyectoId) {
+      var py = azProyectos.find(function(p){ return p.proyecto_id === proyectoId; });
+      if (py) proyNombre = py.proyecto;
+    }
+    renderMapContext(zoneId, zonaLabel, tipo, proyNombre);
 
     registrarEvento('analisis_completado', {
       zona: zona, tipo_inmueble: tipo,
@@ -1630,6 +1710,90 @@
     todosLosComparables = comparablesZona;
     poblarDropdownZonas();
   };
+
+  // ─── MAPA DE CONTEXTO DE MERCADO ─────────────────────────
+  function renderMapContext(zoneId, zonaLabel, tipo, proyNombre) {
+    var panel = document.getElementById('mapContextPanel');
+    if (typeof L === 'undefined') { panel.style.display = 'none'; return; }
+
+    var zonasMapa = comparablesZona.filter(function(z) {
+      return z.tipo === tipo && !!GEO_DICT[z.zona];
+    });
+    if (zonasMapa.length === 0) { panel.style.display = 'none'; return; }
+
+    // Mediana global para color relativo
+    var meds = zonasMapa.map(function(z){ return z.mediana; }).sort(function(a,b){return a-b;});
+    var gMedian = meds[Math.floor(meds.length / 2)] || 1;
+
+    function zoneColor(m) {
+      var r = m / gMedian;
+      if (r < 0.90)  return '#10b981';
+      if (r <= 1.15) return '#e2b05c';
+      return '#f87171';
+    }
+
+    // Mostrar panel ANTES de inicializar mapa (Leaflet necesita el div visible)
+    panel.style.display = 'block';
+
+    if (!window.mapCtxInstance) {
+      window.mapCtxInstance = L.map('mapContext', { scrollWheelZoom: false, zoomControl: true })
+        .setView([14.0900, -87.1900], 12);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd', maxZoom: 18
+      }).addTo(window.mapCtxInstance);
+      window.mapCtxMarkers = L.layerGroup().addTo(window.mapCtxInstance);
+    }
+    window.mapCtxInstance.invalidateSize();
+    window.mapCtxMarkers.clearLayers();
+
+    var bounds = [];
+    var targetCircle = null;
+
+    zonasMapa.forEach(function(z) {
+      var coords   = GEO_DICT[z.zona];
+      var isTarget = z.zone_id === zoneId;
+      var color    = zoneColor(z.mediana);
+      var r        = Math.max(9, Math.min(18, 9 + Math.min(z.n / 15, 1) * 9));
+
+      var popContent =
+        '<div class="mcp-zona' + (isTarget ? ' mcp-target' : '') + '">' + z.zona + '</div>' +
+        '<div class="mcp-price">$' + z.mediana.toLocaleString() + '/m²</div>' +
+        '<div class="mcp-refs">' + z.n + ' referencias' + (isTarget ? ' · zona analizada' : '') + '</div>';
+
+      var shortName = z.zona
+        .replace('Residencial ', 'Res. ')
+        .replace('Colonia ', 'Col. ')
+        .replace('Boulevard ', 'Blvd. ')
+        .replace('Bulevar ', 'Blvr. ');
+
+      var circle = L.circleMarker(coords, {
+        radius:      isTarget ? r + 4 : r,
+        fillColor:   color,
+        color:       isTarget ? '#e2b05c' : 'rgba(0,0,0,0.4)',
+        weight:      isTarget ? 2.5 : 1,
+        fillOpacity: isTarget ? 0.95 : 0.72,
+        opacity: 1
+      })
+      .bindPopup(popContent, { className: 'map-ctx-popup', closeButton: false, maxWidth: 200 })
+      .bindTooltip(shortName, { direction: 'top', className: 'map-ctx-tooltip', offset: [0, -(r+4)] });
+
+      window.mapCtxMarkers.addLayer(circle);
+      bounds.push(coords);
+      if (isTarget) targetCircle = circle;
+    });
+
+    if (bounds.length > 1) {
+      window.mapCtxInstance.fitBounds(L.latLngBounds(bounds), { padding: [45, 45], maxZoom: 14 });
+    }
+    if (targetCircle) { setTimeout(function(){ targetCircle.openPopup(); }, 600); }
+
+    // Label contextual
+    var lbl = zonaLabel;
+    if (proyNombre) lbl += ' · ' + proyNombre;
+    document.getElementById('mapContextLabel').textContent = 'Zona analizada: ' + lbl;
+    document.getElementById('mapCtxCount').textContent = zonasMapa.length + ' zonas con datos activos para ' + tipo.toLowerCase();
+  }
   </script>
 
 </body>
