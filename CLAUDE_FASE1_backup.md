@@ -11,21 +11,15 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-05-28
-Último paso    : FASE 2-A completada — analizador.html refactorizado con cascada Tipo → Zona → Colonia → Proyecto
-               : selSubzona eliminado, selColonia (colonia_id) y selZona (zone_id) implementados
-               : Fallback 3 niveles: colonia ≥3 → colonia; colonia <3 + zona ≥3 → zona degradado; <3 → orientativo
-               : PDF actualizado: zonaLabel (zona·colonia), indicador de nivel por análisis
-Próximo paso   : FASE 2-B — prueba en browser con casos reales · luego FASE 3 documentación
+Última sesión  : 2026-05-27
+Último paso    : FASE 1-B/1-F completadas — todos los hallazgos de auditoría resueltos en DB
+Próximo paso   : FASE 1-C dim_colonia · FASE 1-G deprecar dim_subzona · FASE 1-H property_code
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : L 26.5923 (Ficohsa venta, 2026-05-26) — verificar si Edge Function actualizó
 DB count       : 134 properties / 134 listings
 Edge Functions : update_exchange_rate + generar_snapshot — CREADAS y funcionando
-Plan maestro   : FASE 0 ✅ · FASE 1 COMPLETA ✅ (A/B/C/D/F/G/H/I/J/K) · pendientes: FASE 2, 3, 4
-dim_zone       : 50 zonas · campo activo agregado · Residencial Zarahemla II activo=false
-               : REGLA: dropdowns futuros deben filtrar WHERE activo = true
-dim_colonia    : CREADA — 51 colonias canónicas · vistas actualizadas para leerla
-dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones · 14 proyectos tienen subzona_id histórico
+Plan maestro   : FASE 0 ✅ · FASE 1-A ✅ · FASE 1-B ✅ · FASE 1-F ✅ · pendientes: 1-C,1-G,1-H,1-I,1-J
+dim_zone       : 50 zonas activas (4 eliminadas, 1 creada, 1 renombrada)
 Seguridad      : RLS activado en 5 tablas (audit_log, data_quarantine, dim_zone_cluster,
                  zone_cluster_assignment, exchange_rate)
 FASE 4         : Mercado Primario APROBADA — ver sección 12
@@ -35,16 +29,6 @@ FASE 4         : Mercado Primario APROBADA — ver sección 12
 
 ## 📋 LOG DE SESIONES
 ```
-2026-05-28 | FASE 1-C2/1-D/1-G/1-J/1-K completadas (sesión anterior)
-           | FASE 2-A completada — analizador.html refactorizado
-           | selSubzona → selColonia (guarda colonia_id, cascada desde zone_id de selZona)
-           | selZona ahora guarda zone_id (no texto libre de colonia como antes)
-           | Fetch eliminado: dim_subzona — reemplazado por dim_colonia + dim_zone
-           | Clave de comparables: zone_id||colonia_id||tipo (antes: colonia_texto||tipo)
-           | Fallback 3 niveles: colonia ≥3 → 'colonia'; <3 pero zona ≥3 → 'zona' con aviso; <3 → 'limitado'
-           | PDF: zonaLabel (zona·colonia), indicador NIVEL en esquina del bloque conclusión
-           | azProyectos ahora tiene proyecto_id + colonia_id para filtrado correcto
-
 2026-05-27 | FASE 1-B/1-F completadas — todos los hallazgos de auditoría resueltos por el usuario
            | HALLAZGO 1: Torre Aura Las Colinas → zone=Boulevard Centroamerica, colonia=Las Colinas
            | HALLAZGO 2: Cefiro Azul/Anillo Periférico → colonia=Zarahemla II, proyecto=Céfiro Azul asignado

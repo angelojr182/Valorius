@@ -202,8 +202,8 @@
         </select>
       </div>
       <div class="form-group-horizontal">
-        <label class="form-label">Colonia <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-        <select id="selColonia" class="form-input" onchange="window.onColoniaChange()"><option value="">Todas las colonias</option></select>
+        <label class="form-label">Subzona <span style="color:#475569;font-size:9px;">(opcional)</span></label>
+        <select id="selSubzona" class="form-input"><option value="">Todas</option></select>
       </div>
       <div class="form-group-horizontal">
         <label class="form-label">Proyecto <span style="color:#475569;font-size:9px;">(opcional)</span></label>
@@ -458,9 +458,8 @@
     'Content-Type': 'application/json', 'Accept-Profile': 'core'
   };
 
-  let comparablesZona = [], comparablesColonia = [];
-  let todosLosComparables = [];  // alias de comparablesZona
-  let azColonias = [], azProyectos = [];
+  let todosLosComparables = [];
+  let azSubzonas = [], azProyectos = [];
   let lastData = null;
   let pendienteAtipico = false;
 
@@ -532,9 +531,9 @@
     var sel  = document.getElementById('selZona');
     var prev = sel.value;
     var zonasTipo = {};
-    comparablesZona.forEach(function(c) {
+    todosLosComparables.forEach(function(c) {
       if (c.tipo !== tipo) return;
-      if (!zonasTipo[c.zone_id] || zonasTipo[c.zone_id].n < c.n) zonasTipo[c.zone_id] = c;
+      if (!zonasTipo[c.zona] || zonasTipo[c.zona].n < c.n) zonasTipo[c.zona] = c;
     });
     var zonas = Object.values(zonasTipo).sort(function(a,b) {
       if (a.n >= 3 && b.n < 3) return -1;
@@ -544,7 +543,7 @@
     sel.innerHTML = '<option value="">Selecciona una zona</option>';
     zonas.forEach(function(z) {
       var opt = document.createElement('option');
-      opt.value = z.zone_id;
+      opt.value = z.zona;
       opt.textContent = z.n >= 3
         ? z.zona + ' (' + z.n + ' propiedades similares)'
         : z.zona + ' — Pocas propiedades similares (' + z.n + ')';
@@ -552,130 +551,66 @@
       sel.appendChild(opt);
     });
     if (prev) sel.value = prev;
-    poblarDropdownColonias();
     actualizarBadge();
   }
 
-  function poblarDropdownColonias() {
-    var tipo   = document.getElementById('selTipo').value;
-    var zoneId = document.getElementById('selZona').value;
-    var sel    = document.getElementById('selColonia');
-    var prev   = sel.value;
-    sel.innerHTML = '<option value="">Todas las colonias</option>';
-    if (!zoneId) return;
-    var coloniaIds = {};
-    comparablesColonia.forEach(function(c) {
-      if (c.zone_id === zoneId && c.tipo === tipo) coloniaIds[c.colonia_id] = c.n;
-    });
-    var coloniasDeZona = azColonias.filter(function(c) { return c.zone_id === zoneId; })
-      .sort(function(a,b) {
-        var aHas = !!coloniaIds[a.colonia_id], bHas = !!coloniaIds[b.colonia_id];
-        if (aHas && !bHas) return -1;
-        if (!aHas && bHas) return 1;
-        return a.colonia.localeCompare(b.colonia);
-      });
-    coloniasDeZona.forEach(function(c) {
-      var n = coloniaIds[c.colonia_id] || 0;
-      var opt = document.createElement('option');
-      opt.value = c.colonia_id;
-      if (n >= 3)      { opt.textContent = c.colonia + ' (' + n + ' props)'; }
-      else if (n > 0)  { opt.textContent = c.colonia + ' — Pocas refs (' + n + ')'; opt.style.color = '#f59e0b'; }
-      else             { opt.textContent = c.colonia; opt.style.color = '#475569'; }
-      sel.appendChild(opt);
-    });
-    if (prev && Array.from(sel.options).some(function(o){ return o.value===prev; })) sel.value = prev;
-    filtrarProyectos();
-  }
-
-  function filtrarProyectos() {
-    var coloniaId = document.getElementById('selColonia').value;
-    var zoneId    = document.getElementById('selZona').value;
-    var sp        = document.getElementById('selProyecto');
-    sp.innerHTML  = '<option value="">Todos</option>';
-    if (!zoneId) return;
-    var proys = coloniaId
-      ? azProyectos.filter(function(p) { return p.colonia_id === coloniaId; })
-      : azProyectos.filter(function(p) { return p.zone_id   === zoneId; });
-    proys.forEach(function(p) {
-      var opt = document.createElement('option');
-      opt.value = p.proyecto_id;
-      opt.textContent = p.proyecto;
-      sp.appendChild(opt);
-    });
-  }
-
   function actualizarBadge() {
-    var zoneId    = document.getElementById('selZona').value;
-    var coloniaId = document.getElementById('selColonia').value;
-    var tipo      = document.getElementById('selTipo').value;
-    var badge     = document.getElementById('coverageBadge');
-    badge.style.borderColor = ''; badge.style.background = ''; badge.style.color = '';
-    if (!zoneId) { badge.style.display = 'none'; return; }
-    var cobZona = comparablesZona.find(function(c) { return c.zone_id===zoneId && c.tipo===tipo; });
-    var nZona   = cobZona ? cobZona.n : 0;
-    if (coloniaId) {
-      var cobCol = comparablesColonia.find(function(c) { return c.zone_id===zoneId && c.colonia_id===coloniaId && c.tipo===tipo; });
-      var nCol   = cobCol ? cobCol.n : 0;
-      if (nCol >= 3) { badge.style.display = 'none'; return; }
+    var zona  = document.getElementById('selZona').value;
+    var tipo  = document.getElementById('selTipo').value;
+    var badge = document.getElementById('coverageBadge');
+    if (!zona) { badge.style.display = 'none'; return; }
+    var cob = todosLosComparables.find(function(c) { return c.zona===zona && c.tipo===tipo; });
+    var n = cob ? cob.n : 0;
+    if (n >= 3) {
+      badge.style.display = 'none';
+    } else if (n >= 1) {
       badge.style.display = 'block';
-      if (nZona >= 3) {
-        badge.textContent = 'Colonia con pocas referencias (' + nCol + '). El analisis se basara en toda la zona (' + nZona + ' props).';
-      } else if (nZona >= 1) {
-        badge.textContent = 'Pocas propiedades similares en zona y colonia (' + nZona + ' total). El analisis sera orientativo.';
-      } else {
-        badge.style.borderColor = 'rgba(100,116,139,0.3)'; badge.style.background = 'rgba(100,116,139,0.06)'; badge.style.color = '#64748b';
-        badge.textContent = 'Sin propiedades similares registradas en esta zona en los ultimos ' + DIAS_COMPARABLES + ' dias.';
-      }
+      badge.textContent = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' activa' + (n>1?'s':'') + ' en ' + zona + '. El analisis se mostrara como orientativo.';
     } else {
-      if (nZona >= 3) { badge.style.display = 'none'; return; }
       badge.style.display = 'block';
-      if (nZona >= 1) {
-        badge.textContent = 'Referencia basada en ' + nZona + ' propiedad' + (nZona>1?'es':'') + ' similar' + (nZona>1?'es':'') + ' activa' + (nZona>1?'s':'') + '. El analisis se mostrara como orientativo.';
-      } else {
-        badge.style.borderColor = 'rgba(100,116,139,0.3)'; badge.style.background = 'rgba(100,116,139,0.06)'; badge.style.color = '#64748b';
-        badge.textContent = 'Sin propiedades similares registradas en esta zona en los ultimos ' + DIAS_COMPARABLES + ' dias.';
-      }
+      badge.style.borderColor = 'rgba(100,116,139,0.3)';
+      badge.style.background  = 'rgba(100,116,139,0.06)';
+      badge.style.color = '#64748b';
+      badge.textContent = 'Sin propiedades similares registradas en ' + zona + ' en los ultimos ' + DIAS_COMPARABLES + ' dias.';
     }
   }
 
   window.onZonaChange = function() {
-    poblarDropdownColonias();
-    actualizarBadge();
-    document.getElementById('alertaSanity').style.display  = 'none';
-    document.getElementById('alertaAtipica').style.display = 'none';
+    actualizarBadge(); filtrarSubzonasYProyectos();
+    document.getElementById('alertaSanity').style.display   = 'none';
+    document.getElementById('alertaAtipica').style.display  = 'none';
     pendienteAtipico = false;
   };
-  window.onColoniaChange = function() { filtrarProyectos(); actualizarBadge(); };
   window.onTipoChange = function() { poblarDropdownZonas(); actualizarBadge(); };
+
+  function filtrarSubzonasYProyectos() {
+    var zona = document.getElementById('selZona').value;
+    var ss = document.getElementById('selSubzona');
+    var sp = document.getElementById('selProyecto');
+    if (!zona) { ss.innerHTML='<option value="">Todas</option>'; sp.innerHTML='<option value="">Todos</option>'; return; }
+    var subs  = azSubzonas.filter(function(s) { return s.zona===zona; });
+    var proys = azProyectos.filter(function(p) { return p.zona===zona; });
+    ss.innerHTML = '<option value="">Todas</option>'  + subs.map(function(s) { return '<option>'+s.subzona+'</option>'; }).join('');
+    sp.innerHTML = '<option value="">Todos</option>' + proys.map(function(p) { return '<option>'+p.proyecto+'</option>'; }).join('');
+  }
 
   // ─── RANGOS SANITY ────────────────────────────────────────
   var RANGOS_AREA = { 'CASA':{min:45,max:1200}, 'APARTAMENTO':{min:25,max:600} };
   var PRECIO_MIN = 10000, PRECIO_MAX = 5000000;
 
-  // ─── FALLBACK DE TRES NIVELES ─────────────────────────────
-  function resolverComparables(zoneId, coloniaId, tipo) {
-    var cobCol  = coloniaId ? comparablesColonia.find(function(c){ return c.zone_id===zoneId && c.colonia_id===coloniaId && c.tipo===tipo; }) : null;
-    var cobZona = comparablesZona.find(function(c){ return c.zone_id===zoneId && c.tipo===tipo; });
-    var nCol    = cobCol ? cobCol.n : 0;
-    if (cobCol && nCol >= 3)        return {cob: cobCol,  nivel: 'colonia',  nColonia: nCol};
-    if (cobZona && cobZona.n >= 3)  return {cob: cobZona, nivel: 'zona',     nColonia: nCol};
-    return {cob: cobZona || cobCol, nivel: 'limitado', nColonia: nCol};
-  }
-
   // ─── VALIDACION Y FLUJO ───────────────────────────────────
   window.intentarAnalisis = function() {
-    var zoneId    = document.getElementById('selZona').value;
-    var coloniaId = document.getElementById('selColonia').value;
-    var tipo      = document.getElementById('selTipo').value;
-    var area      = parseFloat(document.getElementById('inpArea').value) || 0;
-    var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
-    var precio    = parseFloat(raw) || 0;
+    var zona   = document.getElementById('selZona').value;
+    var tipo   = document.getElementById('selTipo').value;
+    var area   = parseFloat(document.getElementById('inpArea').value) || 0;
+    var raw    = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
+    var precio = parseFloat(raw) || 0;
 
     document.getElementById('alertaSanity').style.display   = 'none';
     document.getElementById('alertaAtipica').style.display  = 'none';
 
     if (!tipo)   return alert('Selecciona el tipo de inmueble.');
-    if (!zoneId) return alert('Selecciona una zona.');
+    if (!zona)   return alert('Selecciona una zona.');
     if (!area)   return alert('Ingresa el area de construccion en m2.');
     if (!precio) return alert('Ingresa el precio solicitado en dolares.');
 
@@ -688,43 +623,43 @@
       return;
     }
 
-    var res = resolverComparables(zoneId, coloniaId, tipo);
-    if (!res.cob || res.cob.n === 0) return alert('Sin propiedades similares registradas para analizar en los ultimos ' + DIAS_COMPARABLES + ' dias.');
+    var cob = todosLosComparables.find(function(c) { return c.zona===zona && c.tipo===tipo; });
+    var n   = cob ? cob.n : 0;
+    if (n === 0) return alert('Sin propiedades similares registradas para analizar ' + zona + ' · ' + tipo + ' en los ultimos ' + DIAS_COMPARABLES + ' dias.');
 
     // Alerta contextual
-    if (!pendienteAtipico && res.cob.mediana > 0) {
+    if (!pendienteAtipico && cob && cob.mediana > 0) {
       var tuPM2 = precio / area;
-      var ratio = tuPM2 / res.cob.mediana;
+      var ratio = tuPM2 / cob.mediana;
       if (ratio > UMBRAL_ATIPICO || ratio < (1/UMBRAL_ATIPICO)) {
-        var desv  = ((tuPM2 - res.cob.mediana) / res.cob.mediana) * 100;
+        var desv  = ((tuPM2 - cob.mediana) / cob.mediana) * 100;
         var signo = desv >= 0 ? '+' : '';
-        var sev   = getSeveridad(desv, res.cob.n);
+        var sev   = getSeveridad(desv, n);
         var alertaEl = document.getElementById('alertaAtipica');
         alertaEl.className = 'alerta-contextual ' + sev.clase;
         document.getElementById('alertaSevBadge').textContent = sev.label;
         document.getElementById('alertaDiffPct').textContent  = signo + Math.round(desv) + '% vs precio de referencia';
         document.getElementById('alertaTuPrecio').textContent = '$' + Math.round(tuPM2).toLocaleString() + '/m2';
-        document.getElementById('alertaMediana').textContent  = '$' + res.cob.mediana.toLocaleString() + '/m2';
+        document.getElementById('alertaMediana').textContent  = '$' + cob.mediana.toLocaleString() + '/m2';
         alertaEl.style.display = 'block';
         pendienteAtipico = true;
         alertaEl.scrollIntoView({behavior:'smooth',block:'center'});
         return;
       }
     }
-    ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res);
+    ejecutarAnalisis(zona, tipo, area, precio, cob, n);
   };
 
   window.confirmarAnalisisAtipico = function() {
     document.getElementById('alertaAtipica').style.display = 'none';
     pendienteAtipico = false;
-    var zoneId    = document.getElementById('selZona').value;
-    var coloniaId = document.getElementById('selColonia').value;
-    var tipo      = document.getElementById('selTipo').value;
-    var area      = parseFloat(document.getElementById('inpArea').value) || 0;
-    var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
-    var precio    = parseFloat(raw) || 0;
-    var res       = resolverComparables(zoneId, coloniaId, tipo);
-    ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res);
+    var zona   = document.getElementById('selZona').value;
+    var tipo   = document.getElementById('selTipo').value;
+    var area   = parseFloat(document.getElementById('inpArea').value) || 0;
+    var raw    = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
+    var precio = parseFloat(raw) || 0;
+    var cob    = todosLosComparables.find(function(c) { return c.zona===zona && c.tipo===tipo; });
+    ejecutarAnalisis(zona, tipo, area, precio, cob, cob ? cob.n : 0);
   };
 
   window.cerrarAlerta = function() {
@@ -734,23 +669,16 @@
   };
 
   // ─── RENDER ───────────────────────────────────────────────
-  function ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res) {
+  function ejecutarAnalisis(zona, tipo, area, precio, cob, n) {
     var btn = document.getElementById('btnAnalizar');
     btn.disabled = true; btn.textContent = 'Analizando...';
-    try { renderAnalisis(zoneId, coloniaId, tipo, area, precio, res); }
+    try { renderAnalisis(zona, tipo, area, precio, cob, n); }
     catch(e) { console.error(e); alert('No fue posible completar el analisis. Intenta de nuevo.'); }
     finally  { btn.disabled = false; btn.textContent = 'Analizar propiedad'; }
   }
 
-  function renderAnalisis(zoneId, coloniaId, tipo, area, precio, res) {
-    var cob = res.cob, n = cob.n, nivel = res.nivel, nColonia = res.nColonia;
-    var zona    = cob.zona || '';
-    var colonia = nivel === 'colonia' && cob.colonia ? cob.colonia
-                : coloniaId ? ((azColonias.find(function(c){ return c.colonia_id===coloniaId; })||{}).colonia||'') : '';
-    var modoLimitado = nivel === 'limitado';
-    var nivelZona    = nivel === 'zona';
-    var zonaLabel    = colonia ? zona + ' · ' + colonia : zona;
-
+  function renderAnalisis(zona, tipo, area, precio, cob, n) {
+    var modoLimitado = n < 3;
     var mediana = cob.mediana, p25 = cob.p25, p75 = cob.p75;
     var iqr = p75 - p25;
     var min = cob.min || Math.max(0, p25 - 1.5*iqr);
@@ -764,11 +692,11 @@
     // IPR + IAO
     var ipr    = calcIPR(tuPM2, mediana);
     var iprInt = modoLimitado ? interpretarIPR(null) : interpretarIPR(ipr);
+    
     var iaoInt = interpretarIAO(n);
 
-    lastData = {zona, colonia, zonaLabel, zone_id: zoneId, colonia_id: coloniaId, tipo, area, precio,
-                mediana, p25, p75, n, min, max, tuPM2, desv, signo, precioMercado, diferenciaPesos,
-                modoLimitado, nivelZona, nivel, nColonia, iqr, ipr, iprInt, iaoInt};
+    lastData = {zona,tipo,area,precio,mediana,p25,p75,n,min,max,tuPM2,desv,signo,
+                precioMercado,diferenciaPesos,modoLimitado,iqr,ipr,iprInt,iaoInt};
 
     document.getElementById('inpPrecio').value = '$' + Math.round(precio).toLocaleString();
 
@@ -776,10 +704,7 @@
     var vPanel = document.getElementById('veredictoPanel');
     vPanel.className = 'veredicto-principal ' + iprInt.clase;
     vPanel.style.display = 'block';
-    document.getElementById('vrdEtiqueta').textContent = modoLimitado
-      ? 'Analisis orientativo'
-      : nivelZona ? 'Analisis por zona (colonia sin suficientes referencias)'
-      : 'Resultado del analisis';
+    document.getElementById('vrdEtiqueta').textContent = modoLimitado ? 'Analisis orientativo' : 'Resultado del analisis';
     document.getElementById('vrdComparables').textContent = n;
 
     if (modoLimitado) {
@@ -790,9 +715,9 @@
       document.getElementById('vrdTitulo').textContent = iprInt.label;
       var absDesv = Math.abs(Math.round(desv));
       var descMap = {
-        bajo:  absDesv + '% por debajo del precio de referencia de propiedades similares en ' + zonaLabel + '. Puede representar una oportunidad, pero conviene validar las condiciones de la propiedad.',
-        rango: 'El precio se encuentra dentro del rango observado de propiedades similares en ' + zonaLabel + '. Condiciones alineadas al mercado observable.',
-        sobre: absDesv + '% por encima del precio de referencia de propiedades similares en ' + zonaLabel + '. Existe margen para negociar o explorar alternativas en la misma zona.'
+        bajo:  absDesv + '% por debajo del precio de referencia de propiedades similares en ' + zona + '. Puede representar una oportunidad, pero conviene validar las condiciones de la propiedad.',
+        rango: 'El precio se encuentra dentro del rango observado de propiedades similares en ' + zona + '. Condiciones alineadas al mercado observable.',
+        sobre: absDesv + '% por encima del precio de referencia de propiedades similares en ' + zona + '. Existe margen para negociar o explorar alternativas en la misma zona.'
       };
       document.getElementById('vrdDescripcion').textContent = descMap[iprInt.cat] || '';
     }
@@ -813,7 +738,7 @@
         ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por debajo del precio de referencia de la zona. Si las condiciones de la propiedad son buenas, puede ser un punto de entrada favorable.'
         : iprInt.cat === 'sobre'
           ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por encima del precio de referencia de la zona. Hay margen para negociar: propiedades similares se ofrecen a $' + Math.round(mediana).toLocaleString() + '/m2.'
-          : 'El precio esta alineado con propiedades similares en ' + zonaLabel + '. Rango observado: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
+          : 'El precio esta alineado con propiedades similares en ' + zona + '. Rango observado: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
     document.getElementById('resumenTexto').textContent = resTexto;
 
     // ── GAUGE (colores alineados con IPR) ────────────────────
@@ -846,9 +771,9 @@
 
     // ── TEXTO POSICION ────────────────────────────────────────
     var expMap = {
-      bajo:  'El precio esta por debajo del rango observado para ' + tipo.toLowerCase() + 's en ' + zonaLabel + '. Referencia: ' + n + ' propiedades similares.',
-      rango: 'El precio esta dentro del rango observado para ' + tipo.toLowerCase() + 's en ' + zonaLabel + '. Referencia: ' + n + ' propiedades similares.',
-      sobre: 'El precio esta por encima del rango observado para ' + tipo.toLowerCase() + 's en ' + zonaLabel + '. Referencia: ' + n + ' propiedades similares.',
+      bajo:  'El precio esta por debajo del rango observado para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      rango: 'El precio esta dentro del rango observado para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
+      sobre: 'El precio esta por encima del rango observado para ' + tipo.toLowerCase() + 's en ' + zona + '. Referencia: ' + n + ' propiedades similares.',
       ref:   'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.'
     };
     document.getElementById('lblExplanation').textContent = expMap[iprInt.cat];
@@ -876,25 +801,26 @@
     tt.style.left = Math.min(Math.max(tp,5),92) + '%';
 
     var warningMap = {
-      bajo:  'El precio observado se encuentra por debajo del rango de propiedades similares activas en ' + zonaLabel + '. Puede representar una oportunidad. Se recomienda validar las condiciones fisicas del inmueble antes de proceder.',
-      rango: 'El precio observado se encuentra cercano al de otras propiedades similares activas en ' + zonaLabel + '. Condiciones alineadas con el mercado observable.',
-      sobre: 'El precio observado se encuentra por encima del rango de propiedades similares en ' + zonaLabel + '. Propiedades comparables se ofrecen a precios menores. Existe margen de negociacion.',
+      bajo:  'El precio observado se encuentra por debajo del rango de propiedades similares activas en ' + zona + '. Puede representar una oportunidad. Se recomienda validar las condiciones fisicas del inmueble antes de proceder.',
+      rango: 'El precio observado se encuentra cercano al de otras propiedades similares activas en ' + zona + '. Condiciones alineadas con el mercado observable.',
+      sobre: 'El precio observado se encuentra por encima del rango de propiedades similares en ' + zona + '. Propiedades comparables se ofrecen a precios menores. Existe margen de negociacion.',
       ref:   'La zona cuenta con pocas propiedades similares registradas. Los datos mostrados son orientativos. Se recomienda complementar con informacion directa del mercado.'
     };
     document.getElementById('lblWarning').textContent = warningMap[iprInt.cat];
-    document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zonaLabel + ' · ' + tipo + '.';
+    document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zona + ' · ' + tipo + '.';
 
     // ── FOOTER ────────────────────────────────────────────────
     document.getElementById('lblMetodologia').textContent = modoLimitado
-      ? 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' en ' + zonaLabel + ' · ' + tipo + '. Datos orientativos. No constituye valuacion formal.'
-      : 'Referencia construida con ' + n + ' propiedades similares activas en ' + zonaLabel + ' · ' + tipo + ' · ultimos ' + DIAS_COMPARABLES + ' dias. No constituye valuacion formal ni avaluo profesional.';
+      ? 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' en ' + zona + ' · ' + tipo + '. Datos orientativos. No constituye valuacion formal.'
+      : 'Referencia construida con ' + n + ' propiedades similares activas en ' + zona + ' · ' + tipo + ' · ultimos ' + DIAS_COMPARABLES + ' dias. No constituye valuacion formal ni avaluo profesional.';
 
     renderChart(min, mediana, max, tuPM2, n);
 
+    // Registrar evento de analisis completado
     registrarEvento('analisis_completado', {
       zona: zona, tipo_inmueble: tipo,
       ipr_categoria: iprInt.cat, n_comparables: n,
-      evento_metadata: {precio: precio, area: area, desv: Math.round(desv), modoLimitado: modoLimitado, nivel: nivel}
+      evento_metadata: {precio: precio, area: area, desv: Math.round(desv), modoLimitado: modoLimitado}
     });
 
     // PDF habilitado
@@ -987,7 +913,7 @@
       pdf.setFontSize(22); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold'); pdf.text('VALORIUS',M+15,16);
       pdf.setFontSize(7.5); pdf.setTextColor(...muted); pdf.setFont('helvetica','normal'); pdf.text('Reporte de Analisis de Propiedad',M+15,22);
       pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.text(fecha,W-M,16,{align:'right'});
-      pdf.setFontSize(7); pdf.text(d.zonaLabel+' · '+d.tipo,W-M,22,{align:'right'});
+      pdf.setFontSize(7); pdf.text(d.zona+' · '+d.tipo,W-M,22,{align:'right'});
 
       var y = 40;
 
@@ -996,10 +922,6 @@
       accent(M,y,46,iprColor);
 
       lbl('Conclusion del analisis',M+8,y+8);
-      var nivelStr = d.nivel==='colonia' ? 'COLONIA' : d.nivel==='zona' ? 'ZONA (pocas refs en colonia)' : 'ORIENTATIVO';
-      var nivelClr = d.nivel==='colonia' ? green : d.nivel==='zona' ? amber : slate;
-      pdf.setFontSize(6); pdf.setTextColor(...nivelClr); pdf.setFont('helvetica','bold');
-      pdf.text('NIVEL: '+nivelStr, W-M-5, y+8, {align:'right'});
 
       // Veredicto grande
       pdf.setFontSize(22); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
@@ -1014,10 +936,10 @@
       var conclusionTexto = d.modoLimitado
         ? 'Zona con pocas propiedades similares registradas ('+d.n+'). Los datos son orientativos y no deben usarse como referencia definitiva.'
         : d.iprInt.cat==='bajo'
-          ? 'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por debajo de propiedades similares activas en '+d.zonaLabel+'. Puede representar un punto de entrada favorable.'
+          ? 'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por debajo de propiedades similares activas en '+d.zona+'. Puede representar un punto de entrada favorable.'
           : d.iprInt.cat==='sobre'
-            ? 'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por encima de propiedades similares activas en '+d.zonaLabel+'. Existe margen para negociar.'
-            : 'El precio observado se encuentra dentro del rango de propiedades similares activas en '+d.zonaLabel+'. Condiciones alineadas con el mercado observable.';
+            ? 'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por encima de propiedades similares activas en '+d.zona+'. Existe margen para negociar.'
+            : 'El precio observado se encuentra dentro del rango de propiedades similares activas en '+d.zona+'. Condiciones alineadas con el mercado observable.';
       sub(conclusionTexto,M+8,y+36,white,8.5,W-2*M-16);
 
       y += 54;
@@ -1069,7 +991,7 @@
           ? 'El precio esta por debajo del rango usual para esta zona. Si las condiciones fisicas del inmueble son adecuadas, puede representar una oportunidad. Validar estado antes de proceder.'
           : d.iprInt.cat==='sobre'
             ? 'El precio esta por encima del rango usual. Propiedades similares se ofrecen en esta zona a $'+Math.round(d.mediana).toLocaleString()+'/m2. Hay margen para negociar un ajuste de precio.'
-            : 'El precio esta alineado con propiedades similares activas en '+d.zonaLabel+'. Las condiciones son consistentes con el mercado observable en esta zona.';
+            : 'El precio esta alineado con propiedades similares activas en '+d.zona+'. Las condiciones son consistentes con el mercado observable en esta zona.';
       sub(interp,M+8,y+16,white,8.5,W-2*M-16);
 
       y += 36;
@@ -1099,7 +1021,7 @@
       pdf.setFillColor(...gold); pdf.rect(0,0,W,1,'F');
       pdf.setFillColor(...deep); pdf.rect(0,1,W,13,'F');
       pdf.setFontSize(9); pdf.setTextColor(...gold); pdf.setFont('helvetica','bold'); pdf.text('VALORIUS',M,10);
-      sub(d.zonaLabel+' · '+d.tipo,M+28,10,slate,7);
+      sub(d.zona+' · '+d.tipo,M+28,10,slate,7);
       sub(fecha,W-M,10,slate,7);
 
       y = 22;
@@ -1107,7 +1029,7 @@
       // Tabla de comparacion (solo modo completo)
       if (!d.modoLimitado) {
         card(M,y,W-2*M,46);
-        lbl('Comparacion con propiedades similares en '+d.zonaLabel.substring(0,32),M+5,y+8);
+        lbl('Comparacion con propiedades similares en '+d.zona.substring(0,28),M+5,y+8);
 
         var tcols=[M+5, M+62, M+115, M+158];
         ['Concepto','Tu propiedad','Referencia zona','Diferencia'].forEach(function(h,i){
@@ -1271,7 +1193,7 @@
       sub('Valorius Market Intelligence · Tegucigalpa, Honduras',M,H-4,slate,6.5);
       sub('3 / 3',W-M,H-4,slate,6.5);
 
-      pdf.save('Valorius_'+d.zonaLabel.replace(/[\s·]+/g,'_')+'_'+d.tipo+'.pdf');
+      pdf.save('Valorius_'+d.zona.replace(/\s+/g,'_')+'_'+d.tipo+'.pdf');
       registrarEvento('pdf_exportado', {
         zona: d.zona, tipo_inmueble: d.tipo,
         ipr_categoria: d.iprInt.cat, n_comparables: d.n,
@@ -1376,53 +1298,44 @@
     var fecha=new Date(); fecha.setDate(fecha.getDate()-DIAS_COMPARABLES);
     var fechaISO=fecha.toISOString().split('T')[0];
     var results = await Promise.all([
-      azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
-      azFetch('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
-      azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto')
+      azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,fecha_registro,property(colonia,dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
+      azFetch('/rest/v1/dim_subzona?select=subzona,zone_id,dim_zone(zona)&order=subzona'),
+      azFetch('/rest/v1/dim_proyecto?select=proyecto,zone_id,dim_zone(zona)&order=proyecto')
     ]);
-    var rows=results[0]||[];
-    azColonias  = results[1]||[];
-    azProyectos = (results[2]||[]).map(function(p){ return {proyecto_id:p.proyecto_id, proyecto:p.proyecto, zone_id:p.zone_id, colonia_id:p.colonia_id}; });
-
-    var gruposColonia={}, gruposZona={};
+    var rows=results[0]||[], subs=results[1]||[], proys=results[2]||[];
+    azSubzonas  = subs.map(function(s){  return {subzona:s.subzona,  zona:s.dim_zone?.zona||''}; });
+    azProyectos = proys.map(function(p){ return {proyecto:p.proyecto, zona:p.dim_zone?.zona||''}; });
+    var grupos={};
     rows.forEach(function(r){
-      var zoneId     = r.property?.zone_id;
-      var coloniaId  = r.property?.colonia_id;
-      var zonaNombre = r.property?.dim_zone?.zona;
-      var colNombre  = r.property?.dim_colonia?.colonia;
-      var tipo       = r.property?.dim_property_type?.tipo_inmueble;
-      if(!zoneId||!tipo) return;
+      var colonia=r.property?.colonia, tipo=r.property?.dim_property_type?.tipo_inmueble;
+      if(!colonia||!tipo) return;
+      var key=colonia+'||'+tipo;
+      if(!grupos[key]) grupos[key]={zona:colonia,tipo,precios:[]};
       var pUSD=r.moneda==='USD'?r.precio_original:r.precio_original/(r.tipo_cambio||26.5);
       var pm2=pUSD/r.area_construccion;
-      if(pm2<=50||pm2>=15000) return;
-      // Zona aggregate (P10/P90 para rango — IQR con n<5)
-      var kz=zoneId+'||'+tipo;
-      if(!gruposZona[kz]) gruposZona[kz]={zone_id:zoneId, zona:zonaNombre, tipo, precios:[]};
-      gruposZona[kz].precios.push(pm2);
-      // Colonia aggregate
-      if(!coloniaId) return;
-      var kc=zoneId+'||'+coloniaId+'||'+tipo;
-      if(!gruposColonia[kc]) gruposColonia[kc]={zone_id:zoneId, colonia_id:coloniaId, zona:zonaNombre, colonia:colNombre, tipo, precios:[]};
-      gruposColonia[kc].precios.push(pm2);
+      if(pm2>50&&pm2<15000) grupos[key].precios.push(pm2);
     });
-
-    function computeStats(grupos){
-      return Object.values(grupos).map(function(g){
-        var p=g.precios.slice().sort(function(a,b){return a-b;}), n=p.length;
-        var mediana=n>0?p[Math.floor(n/2)]:0;
-        var p25=p[Math.floor(n*0.25)]||mediana*0.85;
-        var p75=p[Math.floor(n*0.75)]||mediana*1.15;
-        var rMin, rMax;
-        if(n>=5){ rMin=p[Math.max(0,Math.floor(n*0.10))]; rMax=p[Math.min(n-1,Math.floor(n*0.90))]; }
-        else{ var iqr=p75-p25; rMin=Math.max(p[0],p25-1.5*iqr); rMax=Math.min(p[n-1],p75+1.5*iqr); }
-        return Object.assign({},g,{n, mediana:Math.round(mediana), p25:Math.round(p25), p75:Math.round(p75),
-                                   min:Math.round(rMin||p25*0.85), max:Math.round(rMax||p75*1.15)});
-      });
-    }
-
-    comparablesColonia  = computeStats(gruposColonia);
-    comparablesZona     = computeStats(gruposZona);
-    todosLosComparables = comparablesZona;
+    todosLosComparables=Object.values(grupos).map(function(g){
+      var p=g.precios.slice().sort(function(a,b){return a-b;}), n=p.length;
+      var mediana=n>0?p[Math.floor(n/2)]:0;
+      var p25=p[Math.floor(n*0.25)]||mediana*0.85;
+      var p75=p[Math.floor(n*0.75)]||mediana*1.15;
+      // P10/P90 como rango visible — elimina outliers extremos
+      // Con n<5 usamos IQR recortado (mas conservador con poca data)
+      var rMin, rMax;
+      if (n >= 5) {
+        rMin = p[Math.max(0, Math.floor(n*0.10))];
+        rMax = p[Math.min(n-1, Math.floor(n*0.90))];
+      } else {
+        var iqr = p75 - p25;
+        rMin = Math.max(p[0], p25 - 1.5*iqr);
+        rMax = Math.min(p[n-1], p75 + 1.5*iqr);
+      }
+      return {zona:g.zona,tipo:g.tipo,n,mediana:Math.round(mediana),
+              p25:Math.round(p25),p75:Math.round(p75),
+              min:Math.round(rMin||p25*0.85),
+              max:Math.round(rMax||p75*1.15)};
+    });
     poblarDropdownZonas();
   };
   </script>
