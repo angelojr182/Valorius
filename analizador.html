@@ -509,58 +509,9 @@
   // ─── CONFIGURACION ────────────────────────────────────────
   const ANALIZADOR_VERSION = 'FASE 2-D (2026-05-29 — mapa contexto de mercado)';
 
-  // ─── COORDENADAS APROXIMADAS POR ZONA (centroides) ───────
-  var GEO_DICT = {
-    'Aldea de Guasculile':                 [14.0560, -87.2250],
-    'Altos de la Granja':                  [14.1150, -87.2050],
-    'Anillo Periférico':                   [14.0970, -87.1870],
-    'Barrio Bella Vista':                  [14.0820, -87.2040],
-    'Barrio Buenos Aires':                 [14.0855, -87.2110],
-    'Barrio Guanacaste':                   [14.0810, -87.2095],
-    'Barrio La Leona':                     [14.0800, -87.2060],
-    'Boulevard Centroamerica':             [14.0825, -87.1490],
-    'Boulevard Fuerzas Armadas':           [14.0785, -87.2280],
-    'Bulevar Morazán':                     [14.1000, -87.1950],
-    'Colonia América':                     [14.0830, -87.2070],
-    'Colonia Guadalupe López Villanueva':  [14.0920, -87.2190],
-    'Colonia Guaymuras':                   [14.0790, -87.2165],
-    'Colonia La Era':                      [14.0875, -87.2240],
-    'Colonia La Pradera':                  [14.1005, -87.2105],
-    'Colonia La Sosa':                     [14.0840, -87.2200],
-    'Colonia Lara':                        [14.0840, -87.2160],
-    'Colonia Loma Linda Norte':            [14.0890, -87.2190],
-    'Colonia Lomas de Tiloarque':          [14.0945, -87.2265],
-    'Colonia Los Ángeles':                 [14.0810, -87.2155],
-    'Colonia Modelo':                      [14.0855, -87.2025],
-    'Colonia San José del Loarque':        [14.0930, -87.2310],
-    'Colonia Satélite':                    [14.0945, -87.2145],
-    'Colonia Tepeyac':                     [14.0790, -87.2130],
-    'El Hatillo':                          [14.1220, -87.2290],
-    'El Trapiche':                         [14.0890, -87.1660],
-    'La Esperanza':                        [14.1100, -87.1070],
-    'Las Uvas':                            [14.1060, -87.1820],
-    'Lomas del Guijarro':                  [14.0950, -87.1738],
-    'Lomas del Molino':                    [14.1010, -87.1720],
-    'Los Robles':                          [14.0870, -87.1700],
-    'Miraflores':                          [14.0875, -87.2220],
-    'Residencial Buena Vista':             [14.0990, -87.1990],
-    'Residencial Ciudad Nueva':            [14.0950, -87.2070],
-    'Residencial Concepción II':           [14.0770, -87.1720],
-    'Residencial El Sauce':                [14.0720, -87.1660],
-    'Residencial Hacienda Real':           [14.0840, -87.1780],
-    'Residencial Las Casitas':             [14.0875, -87.2350],
-    'Residencial Los Cerezos':             [14.1025, -87.1960],
-    'Residencial Mirador de los Hidalgos': [14.0675, -87.1810],
-    'Residencial Paseo de las Campanas':   [14.1020, -87.2010],
-    'Residencial Portal del Bosque 1':     [14.0730, -87.1690],
-    'Residencial Quinta Isabel':           [14.0995, -87.2150],
-    'Residencial San Juan':                [14.1050, -87.1920],
-    'Residencial Villa Elena':             [14.0800, -87.1760],
-    'Residencial Zarahemla II':            [14.0960, -87.1845],
-    'San Ignacio':                         [14.0910, -87.1820],
-    'Torocagua':                           [14.1180, -87.1350],
-    'Zambrano':                            [14.1300, -87.1120]
-  };
+  // ─── COORDENADAS POR ZONA — poblado desde core.dim_zone en init ──
+  // Clave: zone_id (UUID). Cargado en window.onload desde dim_zone?select=zone_id,lat,lng
+  var GEO_DICT = {};
   console.log('%c[Valorius] Analizador cargado — ' + ANALIZADOR_VERSION, 'color:#e2b05c;font-weight:bold');
   const DIAS_COMPARABLES = 100;
   const UMBRAL_ATIPICO   = 1.8;
@@ -1661,11 +1612,18 @@
     var results = await Promise.all([
       azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
       azFetch('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
-      azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto')
+      azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto'),
+      azFetch('/rest/v1/dim_zone?select=zone_id,zona,lat,lng&activo=eq.true')
     ]);
     var rows=results[0]||[];
     azColonias  = results[1]||[];
     azProyectos = (results[2]||[]).map(function(p){ return {proyecto_id:p.proyecto_id, proyecto:p.proyecto, zone_id:p.zone_id, colonia_id:p.colonia_id}; });
+    var azZonasGeo = results[3]||[];
+    azZonasGeo.forEach(function(z) {
+      if (z.lat !== null && z.lng !== null) {
+        GEO_DICT[z.zone_id] = [Number(z.lat), Number(z.lng)];
+      }
+    });
 
     var gruposColonia={}, gruposZona={};
     proyectoTipos = {};
@@ -1723,7 +1681,7 @@
     if (typeof L === 'undefined') { panel.style.display = 'none'; return; }
 
     var zonasMapa = comparablesZona.filter(function(z) {
-      return z.tipo === tipo && !!GEO_DICT[z.zona];
+      return z.tipo === tipo && GEO_DICT[z.zone_id] !== undefined;
     });
     if (zonasMapa.length === 0) { panel.style.display = 'none'; return; }
 
@@ -1760,7 +1718,7 @@
     var targetCircle = null;
 
     zonasMapa.forEach(function(z) {
-      var coords   = GEO_DICT[z.zona];
+      var coords   = GEO_DICT[z.zone_id];
       var isTarget = z.zone_id === zoneId;
       var color    = zoneColor(z.mediana);
       var r        = Math.max(9, Math.min(18, 9 + Math.min(z.n / 15, 1) * 9));
