@@ -1005,105 +1005,123 @@
     var g  = document.getElementById('curveNodes');
     g.innerHTML = '';
     var NS = 'http://www.w3.org/2000/svg';
-    var H=210, W=270, ML=15, REF_X=318, BOX_W=57, BOX_H=22;
+    // H: altura útil del área del gráfico (deja margen arriba/abajo para etiquetas)
+    var H=190, ML=15, W=270, REF_X=316, BOX_W=57, BOX_H=22;
 
-    // ── Escala de precios ─────────────────────────────────────
-    var pMin  = Math.min(min, tuPrecio) * 0.97;
-    var pMax  = Math.max(max, tuPrecio) * 1.03;
-    var pRng  = pMax - pMin || 1;
-    function toX(v){ return Math.round(ML + ((v-pMin)/pRng)*W); }
-    function toY(v){ return Math.min(Math.max(Math.round(H - ((v-pMin)/pRng)*H*0.78), 10), H-10); }
+    // ── Y por precio (alto precio = arriba = y pequeño) ──────
+    var pMin = Math.min(min, tuPrecio) * 0.96;
+    var pMax = Math.max(max, tuPrecio) * 1.04;
+    var pRng = pMax - pMin || 1;
+    function toY(v) { return Math.min(Math.max(Math.round(H - ((v-pMin)/pRng)*H*0.80), 14), H-14); }
 
-    // ── Escala de área → radio (3–9 px) ──────────────────────
-    var areas  = (items||[]).map(function(it){return it.area||0;}).filter(Boolean);
-    var aMin   = areas.length ? Math.min.apply(null,areas) : 50;
-    var aMax   = areas.length ? Math.max.apply(null,areas) : 500;
-    if(aMax<=aMin) aMax=aMin*2;
-    function toR(area){
-      if(!area) return 4;
-      return +(3 + Math.max(0,Math.min(1,(area-aMin)/(aMax-aMin)))*6).toFixed(1);
-    }
-
-    // ── Construir puntos: comparables ordenados + tu precio ──
-    var sorted = (items && items.length ? items.slice() : [
-      {pm2:Math.round(min), area:100},
+    // ── Construir lista ordenada por precio ───────────────────
+    var base = (items && items.length) ? items.slice() : [
+      {pm2:Math.round(min),              area:100},
       {pm2:Math.round(min+(max-min)*0.33), area:150},
       {pm2:Math.round(min+(max-min)*0.66), area:200},
-      {pm2:Math.round(max), area:250}
-    ]).sort(function(a,b){return a.pm2-b.pm2;});
-
-    var pts = sorted.map(function(it){return {pm2:it.pm2, area:it.area, isTarget:false};});
+      {pm2:Math.round(max),              area:250}
+    ];
+    base.sort(function(a,b){return a.pm2-b.pm2;});
+    var pts = base.map(function(it){return {pm2:it.pm2, area:it.area||0, isTarget:false};});
     var ti  = pts.findIndex(function(p){return p.pm2>tuPrecio;});
     if(ti===-1){pts.push({pm2:tuPrecio,area:0,isTarget:true}); ti=pts.length-1;}
     else pts.splice(ti,0,{pm2:tuPrecio,area:0,isTarget:true});
 
-    // ── Coordenadas ───────────────────────────────────────────
-    var coords = pts.map(function(p){return {x:toX(p.pm2),y:toY(p.pm2),pm2:p.pm2,area:p.area,isTarget:p.isTarget};});
-    var targetY = toY(tuPrecio);
+    // ── X por rango (distribución uniforme, sin agrupaciones) ─
+    var N = pts.length;
+    function rankX(i){ return Math.round(ML + (i/Math.max(N-1,1))*W); }
 
-    // ── Curva bezier ──────────────────────────────────────────
+    // ── Área → radio (3–8 px) ─────────────────────────────────
+    var areas = pts.filter(function(p){return !p.isTarget && p.area>0;}).map(function(p){return p.area;});
+    var aMin  = areas.length ? Math.min.apply(null,areas) : 50;
+    var aMax  = areas.length ? Math.max.apply(null,areas) : 500;
+    if(aMax<=aMin) aMax=aMin*2;
+    function toR(a){ return !a ? 4 : +(3+Math.max(0,Math.min(1,(a-aMin)/(aMax-aMin)))*5).toFixed(1); }
+
+    // ── Coordenadas finales ───────────────────────────────────
+    var coords = pts.map(function(p,i){
+      return {x:rankX(i), y:toY(p.pm2), pm2:p.pm2, area:p.area, isTarget:p.isTarget};
+    });
+    var targetY = toY(tuPrecio);
+    var targetX = coords[ti].x;
+
+    // ── Curva bezier suave ────────────────────────────────────
     var d='';
     coords.forEach(function(pt,i){
       if(i===0){d+='M '+pt.x+' '+pt.y; return;}
-      var pr=coords[i-1], cpx=(pr.x+pt.x)/2;
-      d+=' C '+cpx+' '+pr.y+','+cpx+' '+pt.y+','+pt.x+' '+pt.y;
+      var pr=coords[i-1], cx=(pr.x+pt.x)/2;
+      d+=' C '+cx+' '+pr.y+','+cx+' '+pt.y+','+pt.x+' '+pt.y;
     });
     document.getElementById('curvePath').setAttribute('d',d);
 
-    // ── Nodos + etiquetas ─────────────────────────────────────
-    coords.forEach(function(pt){
+    // ── Nodos y etiquetas ─────────────────────────────────────
+    coords.forEach(function(pt,i){
+      var SVG=NS;
       if(pt.isTarget){
-        var lt=document.createElementNS(NS,'text');
-        lt.setAttribute('x',pt.x); lt.setAttribute('y',Math.max(pt.y-10,10));
-        lt.setAttribute('text-anchor','middle'); lt.setAttribute('font-family','Inter,sans-serif');
+        // Etiqueta "tu precio" encima
+        var labelY = pt.y < 30 ? pt.y + 20 : Math.max(pt.y-11,10);
+        var anchor  = pt.y < 30 ? 'start' : 'middle';
+        var lt=document.createElementNS(SVG,'text');
+        lt.setAttribute('x',pt.x); lt.setAttribute('y',labelY);
+        lt.setAttribute('text-anchor',anchor); lt.setAttribute('font-family','Inter,sans-serif');
         lt.setAttribute('font-size','8'); lt.setAttribute('font-weight','600');
         lt.setAttribute('fill','rgba(226,176,92,0.85)'); lt.textContent='tu precio';
         g.appendChild(lt);
-        var c=document.createElementNS(NS,'circle');
+        // Círculo objetivo
+        var c=document.createElementNS(SVG,'circle');
         c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
         c.setAttribute('r','6'); c.setAttribute('class','chart-node-point active-target');
         g.appendChild(c);
-        var lb=document.createElementNS(NS,'text');
-        lb.setAttribute('x',pt.x); lb.setAttribute('y',Math.min(pt.y+18,H+8));
+        // Precio debajo
+        var priceY = pt.y < 30 ? Math.min(pt.y+35,H+8) : Math.min(pt.y+18,H+8);
+        var lb=document.createElementNS(SVG,'text');
+        lb.setAttribute('x',pt.x); lb.setAttribute('y',priceY);
         lb.setAttribute('text-anchor','middle'); lb.setAttribute('font-family','Inter,sans-serif');
-        lb.setAttribute('font-size','9'); lb.setAttribute('font-weight','700');
+        lb.setAttribute('font-size','8.5'); lb.setAttribute('font-weight','700');
         lb.setAttribute('fill','#e2b05c');
         lb.textContent='$'+Math.round(tuPrecio).toLocaleString()+'/m²';
         g.appendChild(lb);
       } else {
         var r=toR(pt.area);
-        if(pt.area>0){
-          var la=document.createElementNS(NS,'text');
-          la.setAttribute('x',pt.x); la.setAttribute('y',Math.min(pt.y+r+10,H+5));
+        // Área debajo del nodo (solo si hay espacio respecto al target)
+        var distTarget=Math.abs(pt.x - targetX);
+        if(pt.area>0 && distTarget>22){
+          var la=document.createElementNS(SVG,'text');
+          la.setAttribute('x',pt.x); la.setAttribute('y',Math.min(pt.y+r+10,H+4));
           la.setAttribute('text-anchor','middle'); la.setAttribute('font-family','Inter,sans-serif');
-          la.setAttribute('font-size','7.5'); la.setAttribute('fill','#475569');
+          la.setAttribute('font-size','7'); la.setAttribute('fill','#475569');
           la.textContent=Math.round(pt.area)+'m²';
           g.appendChild(la);
         }
-        var c=document.createElementNS(NS,'circle');
+        var c=document.createElementNS(SVG,'circle');
         c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
         c.setAttribute('r',r); c.setAttribute('class','chart-node-point');
         g.appendChild(c);
       }
     });
 
-    // ── Línea vertical de referencia + caja etiqueta ─────────
+    // ── Caja referencia + línea vertical ─────────────────────
     var rb=document.getElementById('refBox');
     rb.setAttribute('x',REF_X-BOX_W); rb.setAttribute('y',3);
-    rb.setAttribute('width',BOX_W);   rb.setAttribute('height',BOX_H);
+    rb.setAttribute('width',BOX_W);    rb.setAttribute('height',BOX_H);
     var rp=document.getElementById('refPrice');
     rp.setAttribute('x',REF_X-3); rp.setAttribute('y',12);
+    rp.setAttribute('text-anchor','end'); rp.setAttribute('font-size','9');
+    rp.setAttribute('font-weight','700'); rp.setAttribute('font-family','Inter,sans-serif');
+    rp.setAttribute('fill','#fff');
     rp.textContent='$'+Math.round(mediana).toLocaleString()+'/m²';
     var rw=document.getElementById('refWord');
     rw.setAttribute('x',REF_X-3); rw.setAttribute('y',22);
+    rw.setAttribute('text-anchor','end'); rw.setAttribute('font-size','7.5');
+    rw.setAttribute('font-family','Inter,sans-serif'); rw.setAttribute('fill','rgba(255,255,255,0.45)');
     var rl=document.getElementById('refLine');
     rl.setAttribute('x1',REF_X); rl.setAttribute('y1',BOX_H+5);
     rl.setAttribute('x2',REF_X); rl.setAttribute('y2',H-5);
 
-    // ── Línea horizontal al nivel de tu precio ────────────────
+    // ── Línea horizontal nivel de tu precio ──────────────────
     var tl=document.getElementById('targetLevelLine');
-    tl.setAttribute('x1',ML);     tl.setAttribute('y1',targetY);
-    tl.setAttribute('x2',REF_X);  tl.setAttribute('y2',targetY);
+    tl.setAttribute('x1',ML);    tl.setAttribute('y1',targetY);
+    tl.setAttribute('x2',REF_X); tl.setAttribute('y2',targetY);
   }
 
   // ─── PDF PREMIUM ──────────────────────────────────────────
