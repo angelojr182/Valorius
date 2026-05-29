@@ -518,8 +518,16 @@ body {
   border: 1px solid rgba(255,255,255,0.06);
   background: #06080f;
 }
-/* Fondo oscuro Leaflet */
-.map-ctx-container .leaflet-container { background: #0d1117 !important; }
+/* Fondo que coincide con el dashboard navy */
+.map-ctx-container .leaflet-container { background: #060f20 !important; }
+.map-ctx-container::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(4,10,26,0.62);
+  pointer-events: none;
+  z-index: 350;
+  border-radius: 10px;
+}
 
 /* Botones de zoom dorado */
 .map-ctx-container .leaflet-control-zoom {
