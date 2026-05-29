@@ -486,9 +486,9 @@
   <div id="mapContext" class="map-ctx-container"></div>
   <div class="map-ctx-footer">
     <div class="map-ctx-legend">
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#5b9cf6"></span>Precio por debajo de la media</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#34d399"></span>Precio por debajo de la media</span>
       <span class="map-leg-item"><span class="map-leg-dot" style="background:#c8963e"></span>Precio similar a las demás zonas</span>
-      <span class="map-leg-item"><span class="map-leg-dot" style="background:#c4785a"></span>Precio por encima de la media</span>
+      <span class="map-leg-item"><span class="map-leg-dot" style="background:#f87171"></span>Precio por encima de la media</span>
       <span class="map-leg-item map-leg-item-target"><span class="map-leg-dot map-leg-target"></span>Tu zona analizada</span>
     </div>
     <p class="map-ctx-nota">Los puntos representan zonas de referencia, no ubicaciones exactas de propiedades.</p>
@@ -1733,12 +1733,12 @@
     var targetZ = zonasMapa.find(function(z){ return z.zone_id === zoneId; });
     var targetMedian = targetZ ? targetZ.mediana : gMedian;
 
-    // Paleta refinada: azul / dorado / cobre
+    // Verde elegante / dorado / rojo suave
     function zoneColor(m) {
       var ratio = m / gMedian;
-      if (ratio < 0.90)  return '#5b9cf6';  // azul (por debajo)
-      if (ratio <= 1.15) return '#c8963e';  // dorado muted (en rango)
-      return '#c4785a';                      // cobre/terracota (por encima)
+      if (ratio < 0.90)  return '#34d399';  // esmeralda elegante
+      if (ratio <= 1.15) return '#c8963e';  // dorado muted
+      return '#f87171';                      // rojo suave/coral
     }
 
     panel.style.display = 'block';
@@ -1770,7 +1770,7 @@
       // Diferencia vs zona analizada
       var diffPct = targetMedian > 0
         ? Math.round(((z.mediana - targetMedian) / targetMedian) * 100) : 0;
-      var diffColor = diffPct > 0 ? '#c4785a' : (diffPct < 0 ? '#5b9cf6' : '#94a3b8');
+      var diffColor = diffPct > 0 ? '#f87171' : (diffPct < 0 ? '#34d399' : '#94a3b8');
       var diffHtml = isTarget
         ? '<span class="mcp-diff-tag mcp-diff-target">tu zona analizada</span>'
         : '<span class="mcp-diff-tag" style="color:' + diffColor + '">' + (diffPct >= 0 ? '+' : '') + diffPct + '% vs tu zona</span>';
