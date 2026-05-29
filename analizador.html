@@ -332,7 +332,10 @@
     </div>
     <p class="pos-text-desc" id="lblExplanation">Ingresa los datos y presiona Analizar para ver resultados.</p>
     <div class="slider-pill-wrap">
-      <div class="slider-pill-bar"><div id="sliderThumb" class="slider-pill-thumb"></div></div>
+      <div class="slider-pill-bar">
+        <div id="sliderBubble" class="slider-pill-bubble">--</div>
+        <div id="sliderThumb" class="slider-pill-thumb"></div>
+      </div>
       <div class="slider-pill-prices">
         <span id="lblSliderMin">--</span>
         <span id="lblSliderMed">--</span>
@@ -930,14 +933,17 @@
     }
 
     // ── SLIDER (alineado con IPR) ─────────────────────────────
-    var thumb = document.getElementById('sliderThumb');
-    var tPos  = 50;
+    var thumb  = document.getElementById('sliderThumb');
+    var bubble = document.getElementById('sliderBubble');
+    var tPos   = 50;
     if (!modoLimitado) {
       if      (iprInt.cat==='bajo')  { tPos=15; thumb.style.background='#10b981'; }
       else if (iprInt.cat==='sobre') { tPos=85; thumb.style.background='#f87171'; }
       else                           { tPos=50; thumb.style.background='#e2b05c'; }
     }
-    thumb.style.left = tPos + '%';
+    thumb.style.left  = tPos + '%';
+    bubble.style.left = tPos + '%';
+    bubble.textContent = '$' + Math.round(tuPM2).toLocaleString() + '/m²';
 
     // ── TEXTO POSICION ────────────────────────────────────────
     var expMap = {
