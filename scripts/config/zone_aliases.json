@@ -1,0 +1,843 @@
+{
+  "_meta": {
+    "descripcion": "Diccionario de normalización zona texto → zone_id para scraper Valorius",
+    "fuente": "core.dim_zone — generado 2026-05-30",
+    "reglas_confianza": {
+      "ALTA": "Construye fingerprint normal. Puede usarse para deduplicación.",
+      "MEDIA": "Sugiere zone_id en CSV como zone_id_sugerido. Estado = REVISAR. No usar para fingerprint.",
+      "BAJA": "No mapea. Estado = REVISAR. No construir fingerprint.",
+      "null": "No mapea. Estado = REVISAR. No construir fingerprint."
+    },
+    "normalizacion": "Claves en minúsculas, sin tildes, sin puntos, espacios simples"
+  },
+
+  "aldea de guasculile": {
+    "zone_id": "20083c6e-8ddb-4e7d-a7d4-86ecc4793fc6",
+    "zona_canonica": "Aldea de Guasculile",
+    "confianza": "ALTA"
+  },
+  "guasculile": {
+    "zone_id": "20083c6e-8ddb-4e7d-a7d4-86ecc4793fc6",
+    "zona_canonica": "Aldea de Guasculile",
+    "confianza": "ALTA"
+  },
+
+  "altos de la granja": {
+    "zone_id": "f1e5dd52-cb62-449c-a329-cb062a43884c",
+    "zona_canonica": "Altos de la Granja",
+    "confianza": "ALTA"
+  },
+  "altos granja": {
+    "zone_id": "f1e5dd52-cb62-449c-a329-cb062a43884c",
+    "zona_canonica": "Altos de la Granja",
+    "confianza": "ALTA"
+  },
+
+  "anillo periferico": {
+    "zone_id": "c577b26f-3041-483b-be3c-6d849d35eca7",
+    "zona_canonica": "Anillo Periférico",
+    "confianza": "ALTA"
+  },
+  "anillo": {
+    "zone_id": "c577b26f-3041-483b-be3c-6d849d35eca7",
+    "zona_canonica": "Anillo Periférico",
+    "confianza": "MEDIA",
+    "nota": "Alias corto — verificar contexto"
+  },
+  "periferico": {
+    "zone_id": "c577b26f-3041-483b-be3c-6d849d35eca7",
+    "zona_canonica": "Anillo Periférico",
+    "confianza": "MEDIA"
+  },
+  "zarahemla": {
+    "zone_id": "c577b26f-3041-483b-be3c-6d849d35eca7",
+    "zona_canonica": "Anillo Periférico",
+    "confianza": "MEDIA",
+    "nota": "Zarahemla II es zona inactiva — propiedades van a Anillo Periférico"
+  },
+  "zarahemla ii": {
+    "zone_id": "c577b26f-3041-483b-be3c-6d849d35eca7",
+    "zona_canonica": "Anillo Periférico",
+    "confianza": "MEDIA",
+    "nota": "Zarahemla II es zona inactiva — propiedades van a Anillo Periférico"
+  },
+  "residencial zarahemla ii": {
+    "zone_id": "c577b26f-3041-483b-be3c-6d849d35eca7",
+    "zona_canonica": "Anillo Periférico",
+    "confianza": "MEDIA",
+    "nota": "Zarahemla II es zona inactiva — propiedades van a Anillo Periférico"
+  },
+  "res zarahemla ii": {
+    "zone_id": "c577b26f-3041-483b-be3c-6d849d35eca7",
+    "zona_canonica": "Anillo Periférico",
+    "confianza": "MEDIA",
+    "nota": "Zarahemla II es zona inactiva — propiedades van a Anillo Periférico"
+  },
+
+  "barrio bella vista": {
+    "zone_id": "bbe4f9c4-e2e7-450e-a957-97fa9c8bb04f",
+    "zona_canonica": "Barrio Bella Vista",
+    "confianza": "ALTA"
+  },
+  "bella vista": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — puede ser Barrio Bella Vista u otro sector. Requiere revisión."
+  },
+
+  "barrio buenos aires": {
+    "zone_id": "22a4b83f-ea0d-472d-b4be-53b7fe702fe9",
+    "zona_canonica": "Barrio Buenos Aires",
+    "confianza": "ALTA"
+  },
+  "buenos aires": {
+    "zone_id": "22a4b83f-ea0d-472d-b4be-53b7fe702fe9",
+    "zona_canonica": "Barrio Buenos Aires",
+    "confianza": "MEDIA"
+  },
+
+  "barrio guanacaste": {
+    "zone_id": "f34d9881-844d-487b-84dc-3cbb5a351421",
+    "zona_canonica": "Barrio Guanacaste",
+    "confianza": "ALTA"
+  },
+  "guanacaste": {
+    "zone_id": "f34d9881-844d-487b-84dc-3cbb5a351421",
+    "zona_canonica": "Barrio Guanacaste",
+    "confianza": "ALTA"
+  },
+
+  "barrio la leona": {
+    "zone_id": "ca7bb1fa-6a38-4647-811d-068ddbdf210f",
+    "zona_canonica": "Barrio La Leona",
+    "confianza": "ALTA"
+  },
+  "la leona": {
+    "zone_id": "ca7bb1fa-6a38-4647-811d-068ddbdf210f",
+    "zona_canonica": "Barrio La Leona",
+    "confianza": "ALTA"
+  },
+
+  "boulevard centroamerica": {
+    "zone_id": "8ed4d462-5c32-456b-ab2f-06fab6275e90",
+    "zona_canonica": "Boulevard Centroamerica",
+    "confianza": "ALTA"
+  },
+  "bulevar centroamerica": {
+    "zone_id": "8ed4d462-5c32-456b-ab2f-06fab6275e90",
+    "zona_canonica": "Boulevard Centroamerica",
+    "confianza": "ALTA"
+  },
+  "blvd centroamerica": {
+    "zone_id": "8ed4d462-5c32-456b-ab2f-06fab6275e90",
+    "zona_canonica": "Boulevard Centroamerica",
+    "confianza": "ALTA"
+  },
+  "centroamerica": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — puede referirse a Boulevard Centroamerica u otra ubicación"
+  },
+
+  "boulevard fuerzas armadas": {
+    "zone_id": "672062c4-102d-45de-935e-515e39abfa14",
+    "zona_canonica": "Boulevard Fuerzas Armadas",
+    "confianza": "ALTA"
+  },
+  "bulevar fuerzas armadas": {
+    "zone_id": "672062c4-102d-45de-935e-515e39abfa14",
+    "zona_canonica": "Boulevard Fuerzas Armadas",
+    "confianza": "ALTA"
+  },
+  "fuerzas armadas": {
+    "zone_id": "672062c4-102d-45de-935e-515e39abfa14",
+    "zona_canonica": "Boulevard Fuerzas Armadas",
+    "confianza": "ALTA"
+  },
+  "blvd fuerzas armadas": {
+    "zone_id": "672062c4-102d-45de-935e-515e39abfa14",
+    "zona_canonica": "Boulevard Fuerzas Armadas",
+    "confianza": "ALTA"
+  },
+
+  "bulevar morazan": {
+    "zone_id": "7fd29b38-d38f-4e8d-8007-976ef5d1bc71",
+    "zona_canonica": "Bulevar Morazán",
+    "confianza": "ALTA"
+  },
+  "boulevard morazan": {
+    "zone_id": "7fd29b38-d38f-4e8d-8007-976ef5d1bc71",
+    "zona_canonica": "Bulevar Morazán",
+    "confianza": "ALTA"
+  },
+  "blvd morazan": {
+    "zone_id": "7fd29b38-d38f-4e8d-8007-976ef5d1bc71",
+    "zona_canonica": "Bulevar Morazán",
+    "confianza": "ALTA"
+  },
+  "morazan": {
+    "zone_id": "7fd29b38-d38f-4e8d-8007-976ef5d1bc71",
+    "zona_canonica": "Bulevar Morazán",
+    "confianza": "MEDIA",
+    "nota": "Alias corto — verificar que no sea otra ubicación con 'Morazán'"
+  },
+
+  "colonia america": {
+    "zone_id": "208c243f-078e-489e-947c-01d52c5d40c5",
+    "zona_canonica": "Colonia América",
+    "confianza": "ALTA"
+  },
+  "col america": {
+    "zone_id": "208c243f-078e-489e-947c-01d52c5d40c5",
+    "zona_canonica": "Colonia América",
+    "confianza": "ALTA"
+  },
+
+  "colonia guadalupe lopez villanueva": {
+    "zone_id": "1c67efcb-0693-4fd4-abd0-54db40ed67c4",
+    "zona_canonica": "Colonia Guadalupe López Villanueva",
+    "confianza": "ALTA"
+  },
+  "guadalupe lopez villanueva": {
+    "zone_id": "1c67efcb-0693-4fd4-abd0-54db40ed67c4",
+    "zona_canonica": "Colonia Guadalupe López Villanueva",
+    "confianza": "ALTA"
+  },
+  "col guadalupe": {
+    "zone_id": "1c67efcb-0693-4fd4-abd0-54db40ed67c4",
+    "zona_canonica": "Colonia Guadalupe López Villanueva",
+    "confianza": "MEDIA"
+  },
+
+  "colonia guaymuras": {
+    "zone_id": "ce304592-1abf-48e3-b0fb-872ae474c86f",
+    "zona_canonica": "Colonia Guaymuras",
+    "confianza": "ALTA"
+  },
+  "col guaymuras": {
+    "zone_id": "ce304592-1abf-48e3-b0fb-872ae474c86f",
+    "zona_canonica": "Colonia Guaymuras",
+    "confianza": "ALTA"
+  },
+  "guaymuras": {
+    "zone_id": "ce304592-1abf-48e3-b0fb-872ae474c86f",
+    "zona_canonica": "Colonia Guaymuras",
+    "confianza": "ALTA"
+  },
+
+  "colonia la era": {
+    "zone_id": "cfd26db6-ac7a-4d0b-88d4-5bb30d6512f4",
+    "zona_canonica": "Colonia La Era",
+    "confianza": "ALTA"
+  },
+  "col la era": {
+    "zone_id": "cfd26db6-ac7a-4d0b-88d4-5bb30d6512f4",
+    "zona_canonica": "Colonia La Era",
+    "confianza": "ALTA"
+  },
+  "la era": {
+    "zone_id": "cfd26db6-ac7a-4d0b-88d4-5bb30d6512f4",
+    "zona_canonica": "Colonia La Era",
+    "confianza": "ALTA"
+  },
+
+  "colonia la pradera": {
+    "zone_id": "d86a3239-a45a-4cad-96ca-9126b8624815",
+    "zona_canonica": "Colonia La Pradera",
+    "confianza": "ALTA"
+  },
+  "col la pradera": {
+    "zone_id": "d86a3239-a45a-4cad-96ca-9126b8624815",
+    "zona_canonica": "Colonia La Pradera",
+    "confianza": "ALTA"
+  },
+  "la pradera": {
+    "zone_id": "d86a3239-a45a-4cad-96ca-9126b8624815",
+    "zona_canonica": "Colonia La Pradera",
+    "confianza": "ALTA"
+  },
+
+  "colonia la sosa": {
+    "zone_id": "c284d277-39d2-4915-bd0c-73f7104332e2",
+    "zona_canonica": "Colonia La Sosa",
+    "confianza": "ALTA"
+  },
+  "col la sosa": {
+    "zone_id": "c284d277-39d2-4915-bd0c-73f7104332e2",
+    "zona_canonica": "Colonia La Sosa",
+    "confianza": "ALTA"
+  },
+  "la sosa": {
+    "zone_id": "c284d277-39d2-4915-bd0c-73f7104332e2",
+    "zona_canonica": "Colonia La Sosa",
+    "confianza": "ALTA"
+  },
+
+  "colonia lara": {
+    "zone_id": "7f0e2113-d19b-4290-8e27-16b80a9776e5",
+    "zona_canonica": "Colonia Lara",
+    "confianza": "ALTA"
+  },
+  "col lara": {
+    "zone_id": "7f0e2113-d19b-4290-8e27-16b80a9776e5",
+    "zona_canonica": "Colonia Lara",
+    "confianza": "ALTA"
+  },
+  "lara": {
+    "zone_id": "7f0e2113-d19b-4290-8e27-16b80a9776e5",
+    "zona_canonica": "Colonia Lara",
+    "confianza": "MEDIA",
+    "nota": "Puede aparecer como apellido o nombre de edificio en texto libre. Exigir 'Colonia Lara' para ALTA."
+  },
+
+  "colonia loma linda norte": {
+    "zone_id": "0fd3ac13-3a9d-492c-8b3e-556b3e902145",
+    "zona_canonica": "Colonia Loma Linda Norte",
+    "confianza": "ALTA"
+  },
+  "loma linda norte": {
+    "zone_id": "0fd3ac13-3a9d-492c-8b3e-556b3e902145",
+    "zona_canonica": "Colonia Loma Linda Norte",
+    "confianza": "ALTA"
+  },
+  "col loma linda norte": {
+    "zone_id": "0fd3ac13-3a9d-492c-8b3e-556b3e902145",
+    "zona_canonica": "Colonia Loma Linda Norte",
+    "confianza": "ALTA"
+  },
+  "loma linda": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — puede ser Loma Linda Norte u otra sección. Especificar."
+  },
+
+  "colonia lomas de tiloarque": {
+    "zone_id": "f6278593-c5a1-4618-a8c7-cc68038dfeb2",
+    "zona_canonica": "Colonia Lomas de Tiloarque",
+    "confianza": "ALTA"
+  },
+  "lomas de tiloarque": {
+    "zone_id": "f6278593-c5a1-4618-a8c7-cc68038dfeb2",
+    "zona_canonica": "Colonia Lomas de Tiloarque",
+    "confianza": "ALTA"
+  },
+  "tiloarque": {
+    "zone_id": "f6278593-c5a1-4618-a8c7-cc68038dfeb2",
+    "zona_canonica": "Colonia Lomas de Tiloarque",
+    "confianza": "ALTA"
+  },
+
+  "colonia los angeles": {
+    "zone_id": "ff7b572e-b220-418c-9031-ae0aa01c4daf",
+    "zona_canonica": "Colonia Los Ángeles",
+    "confianza": "ALTA"
+  },
+  "col los angeles": {
+    "zone_id": "ff7b572e-b220-418c-9031-ae0aa01c4daf",
+    "zona_canonica": "Colonia Los Ángeles",
+    "confianza": "ALTA"
+  },
+  "los angeles": {
+    "zone_id": "ff7b572e-b220-418c-9031-ae0aa01c4daf",
+    "zona_canonica": "Colonia Los Ángeles",
+    "confianza": "MEDIA",
+    "nota": "Verificar — puede referirse a Colonia Los Ángeles o Res. Mirador de Los Ángeles (proyecto)"
+  },
+
+  "colonia modelo": {
+    "zone_id": "860b90f9-c281-455f-a181-e1c654ca4110",
+    "zona_canonica": "Colonia Modelo",
+    "confianza": "ALTA"
+  },
+  "col modelo": {
+    "zone_id": "860b90f9-c281-455f-a181-e1c654ca4110",
+    "zona_canonica": "Colonia Modelo",
+    "confianza": "ALTA"
+  },
+
+  "colonia san jose del loarque": {
+    "zone_id": "0b3bd9e0-37a8-4834-a1d1-75951f5a02ac",
+    "zona_canonica": "Colonia San José del Loarque",
+    "confianza": "ALTA"
+  },
+  "san jose del loarque": {
+    "zone_id": "0b3bd9e0-37a8-4834-a1d1-75951f5a02ac",
+    "zona_canonica": "Colonia San José del Loarque",
+    "confianza": "ALTA"
+  },
+  "loarque": {
+    "zone_id": "0b3bd9e0-37a8-4834-a1d1-75951f5a02ac",
+    "zona_canonica": "Colonia San José del Loarque",
+    "confianza": "MEDIA",
+    "nota": "Alias corto — puede referirse a zona más amplia. Exigir 'San José del Loarque' para ALTA."
+  },
+
+  "colonia satelite": {
+    "zone_id": "c554b5d4-124c-4e78-ada1-cfec9ea446eb",
+    "zona_canonica": "Colonia Satélite",
+    "confianza": "ALTA"
+  },
+  "col satelite": {
+    "zone_id": "c554b5d4-124c-4e78-ada1-cfec9ea446eb",
+    "zona_canonica": "Colonia Satélite",
+    "confianza": "ALTA"
+  },
+  "satelite": {
+    "zone_id": "c554b5d4-124c-4e78-ada1-cfec9ea446eb",
+    "zona_canonica": "Colonia Satélite",
+    "confianza": "ALTA"
+  },
+
+  "colonia tepeyac": {
+    "zone_id": "6cea85c7-84c7-4ffc-ae45-f401d80ef6ab",
+    "zona_canonica": "Colonia Tepeyac",
+    "confianza": "ALTA"
+  },
+  "col tepeyac": {
+    "zone_id": "6cea85c7-84c7-4ffc-ae45-f401d80ef6ab",
+    "zona_canonica": "Colonia Tepeyac",
+    "confianza": "ALTA"
+  },
+  "tepeyac": {
+    "zone_id": "6cea85c7-84c7-4ffc-ae45-f401d80ef6ab",
+    "zona_canonica": "Colonia Tepeyac",
+    "confianza": "ALTA"
+  },
+
+  "el hatillo": {
+    "zone_id": "432dd604-58fc-414c-9d67-fd18ed4ba835",
+    "zona_canonica": "El Hatillo",
+    "confianza": "ALTA"
+  },
+  "hatillo": {
+    "zone_id": "432dd604-58fc-414c-9d67-fd18ed4ba835",
+    "zona_canonica": "El Hatillo",
+    "confianza": "ALTA"
+  },
+
+  "el trapiche": {
+    "zone_id": "6ffdc66c-a15b-498c-a60d-cadc4346f89a",
+    "zona_canonica": "El Trapiche",
+    "confianza": "ALTA"
+  },
+  "trapiche": {
+    "zone_id": "6ffdc66c-a15b-498c-a60d-cadc4346f89a",
+    "zona_canonica": "El Trapiche",
+    "confianza": "ALTA"
+  },
+  "colonia el trapiche": {
+    "zone_id": "6ffdc66c-a15b-498c-a60d-cadc4346f89a",
+    "zona_canonica": "El Trapiche",
+    "confianza": "ALTA"
+  },
+  "col el trapiche": {
+    "zone_id": "6ffdc66c-a15b-498c-a60d-cadc4346f89a",
+    "zona_canonica": "El Trapiche",
+    "confianza": "ALTA"
+  },
+
+  "la esperanza": {
+    "zone_id": "9e004954-e5e1-475f-9f16-088bceaee359",
+    "zona_canonica": "La Esperanza",
+    "confianza": "ALTA"
+  },
+
+  "las uvas": {
+    "zone_id": "3df25638-0d68-4726-b411-928fb7335ad5",
+    "zona_canonica": "Las Uvas",
+    "confianza": "ALTA"
+  },
+  "uvas": {
+    "zone_id": "3df25638-0d68-4726-b411-928fb7335ad5",
+    "zona_canonica": "Las Uvas",
+    "confianza": "ALTA"
+  },
+
+  "lomas del guijarro": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "ALTA"
+  },
+  "lomas guijarro": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "ALTA"
+  },
+  "colonia lomas del guijarro": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "ALTA"
+  },
+  "col lomas del guijarro": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "ALTA"
+  },
+  "lomas del guijarro norte": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "ALTA",
+    "nota": "Norte es subzona — se mapea a la zona principal"
+  },
+  "lomas del guijarro sur": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "ALTA",
+    "nota": "Sur es subzona — se mapea a la zona principal"
+  },
+  "lomas norte": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — podría ser Lomas del Guijarro Norte u otra zona. Especificar."
+  },
+  "lomas sur": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — podría ser Lomas del Guijarro Sur u otra zona. Especificar."
+  },
+  "lomas": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — puede ser Lomas del Guijarro, Lomas del Molino o Lomas de Tiloarque. No mapear."
+  },
+
+  "lomas del molino": {
+    "zone_id": "7a41ace6-454f-4e68-a456-69a13bd61186",
+    "zona_canonica": "Lomas del Molino",
+    "confianza": "ALTA"
+  },
+  "lomas molino": {
+    "zone_id": "7a41ace6-454f-4e68-a456-69a13bd61186",
+    "zona_canonica": "Lomas del Molino",
+    "confianza": "ALTA"
+  },
+  "col lomas del molino": {
+    "zone_id": "7a41ace6-454f-4e68-a456-69a13bd61186",
+    "zona_canonica": "Lomas del Molino",
+    "confianza": "ALTA"
+  },
+
+  "los robles": {
+    "zone_id": "8d6639c9-6de7-4766-94c8-954160d6f796",
+    "zona_canonica": "Los Robles",
+    "confianza": "ALTA"
+  },
+  "robles": {
+    "zone_id": "8d6639c9-6de7-4766-94c8-954160d6f796",
+    "zona_canonica": "Los Robles",
+    "confianza": "ALTA"
+  },
+  "roble oeste": {
+    "zone_id": "8d6639c9-6de7-4766-94c8-954160d6f796",
+    "zona_canonica": "Los Robles",
+    "confianza": "ALTA",
+    "nota": "Nombre anterior de la zona — renombrada a Los Robles"
+  },
+
+  "miraflores": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "ALTA"
+  },
+  "colonia miraflores": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "ALTA"
+  },
+  "col miraflores": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "ALTA"
+  },
+  "miraflores sur": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "ALTA",
+    "nota": "Sur es subcolonia — se mapea a la zona principal"
+  },
+
+  "residencial buena vista": {
+    "zone_id": "976e27bf-0f0b-4c4f-a1af-455237d494a1",
+    "zona_canonica": "Residencial Buena Vista",
+    "confianza": "ALTA"
+  },
+  "res buena vista": {
+    "zone_id": "976e27bf-0f0b-4c4f-a1af-455237d494a1",
+    "zona_canonica": "Residencial Buena Vista",
+    "confianza": "ALTA"
+  },
+  "buena vista": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — puede ser Residencial Buena Vista o Barrio Bella Vista. Especificar."
+  },
+
+  "residencial ciudad nueva": {
+    "zone_id": "768480af-b7f2-420b-9557-d69e8b0832bf",
+    "zona_canonica": "Residencial Ciudad Nueva",
+    "confianza": "ALTA"
+  },
+  "res ciudad nueva": {
+    "zone_id": "768480af-b7f2-420b-9557-d69e8b0832bf",
+    "zona_canonica": "Residencial Ciudad Nueva",
+    "confianza": "ALTA"
+  },
+  "ciudad nueva": {
+    "zone_id": "768480af-b7f2-420b-9557-d69e8b0832bf",
+    "zona_canonica": "Residencial Ciudad Nueva",
+    "confianza": "ALTA"
+  },
+
+  "residencial concepcion ii": {
+    "zone_id": "c1a85e8f-5350-454a-b4cd-1a1308ac83e1",
+    "zona_canonica": "Residencial Concepción II",
+    "confianza": "ALTA"
+  },
+  "res concepcion ii": {
+    "zone_id": "c1a85e8f-5350-454a-b4cd-1a1308ac83e1",
+    "zona_canonica": "Residencial Concepción II",
+    "confianza": "ALTA"
+  },
+  "concepcion ii": {
+    "zone_id": "c1a85e8f-5350-454a-b4cd-1a1308ac83e1",
+    "zona_canonica": "Residencial Concepción II",
+    "confianza": "ALTA"
+  },
+
+  "residencial el sauce": {
+    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
+    "zona_canonica": "Residencial El Sauce",
+    "confianza": "ALTA"
+  },
+  "res el sauce": {
+    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
+    "zona_canonica": "Residencial El Sauce",
+    "confianza": "ALTA"
+  },
+  "el sauce": {
+    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
+    "zona_canonica": "Residencial El Sauce",
+    "confianza": "ALTA"
+  },
+  "villa los nopales": {
+    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
+    "zona_canonica": "Residencial El Sauce",
+    "confianza": "ALTA",
+    "nota": "Villa dentro de Residencial El Sauce"
+  },
+  "villa cipreses": {
+    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
+    "zona_canonica": "Residencial El Sauce",
+    "confianza": "ALTA",
+    "nota": "Villa dentro de Residencial El Sauce"
+  },
+  "villa napoleon": {
+    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
+    "zona_canonica": "Residencial El Sauce",
+    "confianza": "ALTA",
+    "nota": "Villa dentro de Residencial El Sauce"
+  },
+  "villa las palmeras": {
+    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
+    "zona_canonica": "Residencial El Sauce",
+    "confianza": "ALTA",
+    "nota": "Villa dentro de Residencial El Sauce"
+  },
+
+  "residencial hacienda real": {
+    "zone_id": "9ea495bb-9e3c-422b-be2a-f31be3d53526",
+    "zona_canonica": "Residencial Hacienda Real",
+    "confianza": "ALTA"
+  },
+  "res hacienda real": {
+    "zone_id": "9ea495bb-9e3c-422b-be2a-f31be3d53526",
+    "zona_canonica": "Residencial Hacienda Real",
+    "confianza": "ALTA"
+  },
+  "hacienda real": {
+    "zone_id": "9ea495bb-9e3c-422b-be2a-f31be3d53526",
+    "zona_canonica": "Residencial Hacienda Real",
+    "confianza": "ALTA"
+  },
+
+  "residencial las casitas": {
+    "zone_id": "063cd486-1a14-481b-baf2-78c18b4a5068",
+    "zona_canonica": "Residencial Las Casitas",
+    "confianza": "ALTA"
+  },
+  "res las casitas": {
+    "zone_id": "063cd486-1a14-481b-baf2-78c18b4a5068",
+    "zona_canonica": "Residencial Las Casitas",
+    "confianza": "ALTA"
+  },
+  "las casitas": {
+    "zone_id": "063cd486-1a14-481b-baf2-78c18b4a5068",
+    "zona_canonica": "Residencial Las Casitas",
+    "confianza": "ALTA"
+  },
+
+  "residencial los cerezos": {
+    "zone_id": "a658defc-22ec-4440-a569-60a4ca7f7c3f",
+    "zona_canonica": "Residencial Los Cerezos",
+    "confianza": "ALTA"
+  },
+  "res los cerezos": {
+    "zone_id": "a658defc-22ec-4440-a569-60a4ca7f7c3f",
+    "zona_canonica": "Residencial Los Cerezos",
+    "confianza": "ALTA"
+  },
+  "los cerezos": {
+    "zone_id": "a658defc-22ec-4440-a569-60a4ca7f7c3f",
+    "zona_canonica": "Residencial Los Cerezos",
+    "confianza": "ALTA"
+  },
+
+  "residencial mirador de los hidalgos": {
+    "zone_id": "b9b567f1-6413-4a6e-9f0e-c6f6280f0450",
+    "zona_canonica": "Residencial Mirador de los Hidalgos",
+    "confianza": "ALTA"
+  },
+  "res mirador de los hidalgos": {
+    "zone_id": "b9b567f1-6413-4a6e-9f0e-c6f6280f0450",
+    "zona_canonica": "Residencial Mirador de los Hidalgos",
+    "confianza": "ALTA"
+  },
+  "mirador de los hidalgos": {
+    "zone_id": "b9b567f1-6413-4a6e-9f0e-c6f6280f0450",
+    "zona_canonica": "Residencial Mirador de los Hidalgos",
+    "confianza": "ALTA"
+  },
+  "los hidalgos": {
+    "zone_id": "b9b567f1-6413-4a6e-9f0e-c6f6280f0450",
+    "zona_canonica": "Residencial Mirador de los Hidalgos",
+    "confianza": "ALTA"
+  },
+  "hidalgos": {
+    "zone_id": "b9b567f1-6413-4a6e-9f0e-c6f6280f0450",
+    "zona_canonica": "Residencial Mirador de los Hidalgos",
+    "confianza": "ALTA"
+  },
+
+  "residencial paseo de las campanas": {
+    "zone_id": "45db5a2a-2f5d-47a2-9232-d3b8abf25930",
+    "zona_canonica": "Residencial Paseo de las Campanas",
+    "confianza": "ALTA"
+  },
+  "res paseo de las campanas": {
+    "zone_id": "45db5a2a-2f5d-47a2-9232-d3b8abf25930",
+    "zona_canonica": "Residencial Paseo de las Campanas",
+    "confianza": "ALTA"
+  },
+  "paseo de las campanas": {
+    "zone_id": "45db5a2a-2f5d-47a2-9232-d3b8abf25930",
+    "zona_canonica": "Residencial Paseo de las Campanas",
+    "confianza": "ALTA"
+  },
+  "las campanas": {
+    "zone_id": "45db5a2a-2f5d-47a2-9232-d3b8abf25930",
+    "zona_canonica": "Residencial Paseo de las Campanas",
+    "confianza": "MEDIA"
+  },
+
+  "residencial portal del bosque 1": {
+    "zone_id": "b77619bc-b0d5-4ed2-a3e9-c65eaa9f5b66",
+    "zona_canonica": "Residencial Portal del Bosque 1",
+    "confianza": "ALTA"
+  },
+  "res portal del bosque 1": {
+    "zone_id": "b77619bc-b0d5-4ed2-a3e9-c65eaa9f5b66",
+    "zona_canonica": "Residencial Portal del Bosque 1",
+    "confianza": "ALTA"
+  },
+  "portal del bosque 1": {
+    "zone_id": "b77619bc-b0d5-4ed2-a3e9-c65eaa9f5b66",
+    "zona_canonica": "Residencial Portal del Bosque 1",
+    "confianza": "ALTA"
+  },
+  "portal bosque 1": {
+    "zone_id": "b77619bc-b0d5-4ed2-a3e9-c65eaa9f5b66",
+    "zona_canonica": "Residencial Portal del Bosque 1",
+    "confianza": "ALTA"
+  },
+  "portal del bosque": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — existe Portal del Bosque 1 y Portal del Bosque 2 (inactivo). Especificar número."
+  },
+
+  "residencial quinta isabel": {
+    "zone_id": "5b02fd93-bff4-428f-9a93-70cc759a1929",
+    "zona_canonica": "Residencial Quinta Isabel",
+    "confianza": "ALTA"
+  },
+  "res quinta isabel": {
+    "zone_id": "5b02fd93-bff4-428f-9a93-70cc759a1929",
+    "zona_canonica": "Residencial Quinta Isabel",
+    "confianza": "ALTA"
+  },
+  "quinta isabel": {
+    "zone_id": "5b02fd93-bff4-428f-9a93-70cc759a1929",
+    "zona_canonica": "Residencial Quinta Isabel",
+    "confianza": "ALTA"
+  },
+
+  "residencial san juan": {
+    "zone_id": "83743355-33cd-42ea-bc68-f1d869538c21",
+    "zona_canonica": "Residencial San Juan",
+    "confianza": "ALTA"
+  },
+  "res san juan": {
+    "zone_id": "83743355-33cd-42ea-bc68-f1d869538c21",
+    "zona_canonica": "Residencial San Juan",
+    "confianza": "ALTA"
+  },
+  "san juan": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Ambiguo — San Juan es nombre muy común. Requiere prefijo Residencial para mapear."
+  },
+
+  "residencial villa elena": {
+    "zone_id": "ab73c240-311e-4b1f-a081-15cccb0c6f7b",
+    "zona_canonica": "Residencial Villa Elena",
+    "confianza": "ALTA"
+  },
+  "res villa elena": {
+    "zone_id": "ab73c240-311e-4b1f-a081-15cccb0c6f7b",
+    "zona_canonica": "Residencial Villa Elena",
+    "confianza": "ALTA"
+  },
+  "villa elena": {
+    "zone_id": "ab73c240-311e-4b1f-a081-15cccb0c6f7b",
+    "zona_canonica": "Residencial Villa Elena",
+    "confianza": "ALTA"
+  },
+
+  "san ignacio": {
+    "zone_id": "3924ec4a-bd5e-4871-8dc3-3d1e3d78d887",
+    "zona_canonica": "San Ignacio",
+    "confianza": "ALTA"
+  },
+  "residencial san ignacio": {
+    "zone_id": "3924ec4a-bd5e-4871-8dc3-3d1e3d78d887",
+    "zona_canonica": "San Ignacio",
+    "confianza": "ALTA"
+  },
+  "res san ignacio": {
+    "zone_id": "3924ec4a-bd5e-4871-8dc3-3d1e3d78d887",
+    "zona_canonica": "San Ignacio",
+    "confianza": "ALTA"
+  },
+
+  "torocagua": {
+    "zone_id": "fdd06173-ad0c-42e6-acf6-b85e9e2e6dc9",
+    "zona_canonica": "Torocagua",
+    "confianza": "ALTA"
+  },
+
+  "zambrano": {
+    "zone_id": "66062aa9-b8a7-4a08-ac4a-7e9ec9aba1fc",
+    "zona_canonica": "Zambrano",
+    "confianza": "ALTA"
+  }
+}

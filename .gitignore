@@ -1,5 +1,9 @@
 # Variables de entorno
 .env
+scripts/.env
+
+# Outputs del scraper (CSV generados — no versionar)
+outputs/
 
 # Archivos temporales del scraper / ingesta
 files/tmp_*
