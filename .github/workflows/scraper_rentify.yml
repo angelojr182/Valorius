@@ -21,7 +21,7 @@ jobs:
         run: pip install -r scripts/requirements.txt
 
       - name: Instalar Playwright (Chromium)
-        run: playwright install chromium --with-deps
+        run: python -m playwright install chromium --with-deps
 
       - name: Correr scraper
         env:

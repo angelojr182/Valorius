@@ -15,9 +15,9 @@ from datetime import date
 from pathlib import Path
 from collections import Counter
 
+import httpx
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
-from supabase import create_client
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -182,22 +182,39 @@ def build_fingerprint(zone_id, colonia_norm, tipo, habitaciones, banos, area_m2)
 # SUPABASE — SOLO LECTURA
 # ─────────────────────────────────────────────────────────────────────────────
 
-def load_existing_data(sb) -> tuple[set, set]:
+def supabase_get(path: str, params: dict = None) -> list:
+    """Hace un GET al API REST de Supabase (schema core). Solo lectura."""
+    headers = {
+        "apikey":        SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Accept-Profile": "core",
+    }
+    resp = httpx.get(
+        f"{SUPABASE_URL}/rest/v1/{path}",
+        headers=headers,
+        params=params,
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def load_existing_data() -> tuple[set, dict]:
     """Carga URLs y fingerprints existentes para dedup en memoria."""
     print("Cargando datos existentes de Supabase (solo lectura)...")
 
-    resp = sb.schema("core").from_("listing").select("url").execute()
-    existing_urls = {r["url"] for r in resp.data if r.get("url")}
+    # URLs existentes
+    rows_urls = supabase_get("listing", {"select": "url"})
+    existing_urls = {r["url"] for r in rows_urls if r.get("url")}
     print(f"  {len(existing_urls)} URLs existentes")
 
-    resp2 = (
-        sb.schema("core")
-        .from_("listing")
-        .select("listing_id, area_construccion, property(zone_id, colonia, habitaciones, banos)")
-        .execute()
+    # Fingerprints existentes
+    rows_fp = supabase_get(
+        "listing",
+        {"select": "listing_id,area_construccion,property(zone_id,colonia,habitaciones,banos)"}
     )
-    existing_fps = {}  # fp → listing_id
-    for row in resp2.data:
+    existing_fps = {}
+    for row in rows_fp:
         prop = row.get("property") or {}
         fp = build_fingerprint(
             zone_id      = prop.get("zone_id"),
@@ -573,8 +590,7 @@ def main():
     alias_count = sum(1 for k in aliases if not k.startswith("_"))
     print(f"Diccionario cargado: {alias_count} aliases\n")
 
-    sb = create_client(SUPABASE_URL, SUPABASE_KEY)
-    existing_urls, existing_fps = load_existing_data(sb)
+    existing_urls, existing_fps = load_existing_data()
 
     results  = []
     errores  = []
