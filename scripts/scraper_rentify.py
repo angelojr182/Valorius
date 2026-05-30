@@ -62,6 +62,7 @@ CSV_COLUMNS = [
     "estado_revision",
     "alertas",
     "match_motivo",
+    "match_listing_id",
     "fingerprint_status",
     "fuente",
     "url",
@@ -192,10 +193,10 @@ def load_existing_data(sb) -> tuple[set, set]:
     resp2 = (
         sb.schema("core")
         .from_("listing")
-        .select("area_construccion, property(zone_id, colonia, habitaciones, banos)")
+        .select("listing_id, area_construccion, property(zone_id, colonia, habitaciones, banos)")
         .execute()
     )
-    existing_fps = set()
+    existing_fps = {}  # fp → listing_id
     for row in resp2.data:
         prop = row.get("property") or {}
         fp = build_fingerprint(
@@ -207,7 +208,7 @@ def load_existing_data(sb) -> tuple[set, set]:
             area_m2      = row.get("area_construccion"),
         )
         if fp:
-            existing_fps.add(fp)
+            existing_fps[fp] = row.get("listing_id", "")
     print(f"  {len(existing_fps)} fingerprints existentes")
 
     return existing_urls, existing_fps
@@ -338,8 +339,9 @@ def extract_property(page, url: str) -> dict | None:
         except ValueError:
             pass
 
-    if not precio_usd or not (PRECIO_MIN <= precio_usd <= PRECIO_MAX):
-        return None
+    # Precio fuera de rango → pasa al CSV con alerta, no se descarta
+    if precio_usd and not (PRECIO_MIN <= precio_usd <= PRECIO_MAX):
+        precio_usd = None
 
     # Área
     area_m2 = None
@@ -352,13 +354,14 @@ def extract_property(page, url: str) -> dict | None:
         except ValueError:
             pass
 
-    if not area_m2 or not (AREA_MIN <= area_m2 <= AREA_MAX):
-        return None
+    # Área fuera de rango → pasa al CSV con alerta
+    if area_m2 and not (AREA_MIN <= area_m2 <= AREA_MAX):
+        area_m2 = None
 
-    # Precio/m²
-    precio_m2 = round(precio_usd / area_m2)
-    if not (PM2_MIN <= precio_m2 <= PM2_MAX):
-        return None
+    # Precio/m² — solo calcular si ambos datos existen
+    precio_m2 = None
+    if precio_usd and area_m2:
+        precio_m2 = round(precio_usd / area_m2)
 
     # Habitaciones
     habitaciones = None
@@ -465,35 +468,38 @@ def process_listing(raw: dict, aliases: dict, existing_urls: set, existing_fps: 
         alertas.append("POSIBLE_PREVENTA")
 
     # Estado y motivo
+    match_listing_id = ""
     if url in existing_urls:
-        estado      = "DUPLICADO_URL"
-        match_motivo = "URL ya existe en Supabase"
-        fp_status   = "N/A"
+        estado        = "DUPLICADO_URL"
+        match_motivo  = "URL ya existe en Supabase"
+        fp_status     = "N/A"
     elif not zone_id or confianza == "BAJA":
-        estado      = "REVISAR"
-        match_motivo = zona_motivo
-        fp_status   = "SIN_ZONA"
+        estado        = "REVISAR"
+        match_motivo  = zona_motivo
+        fp_status     = "SIN_ZONA"
     elif confianza == "MEDIA":
-        estado      = "REVISAR"
-        match_motivo = f"Zona con confianza MEDIA: {zona_canonica or 'desconocida'}"
-        fp_status   = "SIN_FINGERPRINT"
+        estado        = "REVISAR"
+        match_motivo  = f"Zona con confianza MEDIA: {zona_canonica or 'desconocida'}"
+        fp_status     = "SIN_FINGERPRINT"
     elif fingerprint and fingerprint in existing_fps:
-        estado      = "PROBABLE_DUPLICADO"
-        match_motivo = f"Fingerprint coincide con propiedad existente en {zona_canonica}"
-        fp_status   = "MATCH"
+        estado        = "PROBABLE_DUPLICADO"
+        match_listing_id = existing_fps[fingerprint]
+        match_motivo  = f"Fingerprint coincide con listing {match_listing_id} en {zona_canonica}"
+        fp_status     = "MATCH"
     elif not fingerprint:
-        estado      = "REVISAR"
-        match_motivo = "Datos insuficientes para construir fingerprint"
-        fp_status   = "INCOMPLETO"
+        estado        = "REVISAR"
+        match_motivo  = "Datos insuficientes para construir fingerprint"
+        fp_status     = "INCOMPLETO"
     else:
-        estado      = "NUEVO"
-        match_motivo = ""
-        fp_status   = "OK"
+        estado        = "NUEVO"
+        match_motivo  = ""
+        fp_status     = "OK"
 
     return {
         "estado_revision":       estado,
         "alertas":               "|".join(alertas),
         "match_motivo":          match_motivo,
+        "match_listing_id":      match_listing_id,
         "fingerprint_status":    fp_status,
         "fuente":                "Rentify",
         "url":                   url,
