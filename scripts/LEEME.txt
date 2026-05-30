@@ -1,0 +1,137 @@
+════════════════════════════════════════════════════════════════
+  VALORIUS MARKET INTELLIGENCE — Scraper de Ingesta
+  Carpeta: scripts/
+════════════════════════════════════════════════════════════════
+
+PROPOSITO
+─────────────────────────────────────────────────────────────────
+Este scraper extrae propiedades de portales inmobiliarios y genera
+un CSV revisable. NO inserta nada en Supabase automáticamente.
+El objetivo es reemplazar Apify con infraestructura propia sin costo.
+
+Flujo completo:
+  Portal (Rentify) → scraper → CSV revisable → tú apruebas → importador
+
+════════════════════════════════════════════════════════════════
+  ARCHIVOS
+════════════════════════════════════════════════════════════════
+
+scraper_rentify.py
+  El script principal. Hace todo el trabajo:
+  1. Carga el diccionario de zonas (zone_aliases.json)
+  2. Consulta Supabase en solo lectura para cargar URLs y
+     fingerprints existentes (para detección de duplicados)
+  3. Abre Rentify con Playwright (browser headless)
+  4. Recorre todas las páginas de resultados y recopila URLs
+  5. Entra a cada propiedad y extrae: precio, área, habitaciones,
+     baños, estacionamientos, ubicación, proyecto
+  6. Normaliza la ubicación y resuelve el zone_id
+  7. Calcula el fingerprint de cada propiedad
+  8. Compara contra datos existentes para detectar duplicados
+  9. Genera el CSV final en outputs/rentify_YYYY-MM-DD.csv
+
+requirements.txt
+  Librerías Python necesarias para correr el scraper:
+  - playwright   → browser headless (Chrome) para scraping
+  - httpx        → cliente HTTP para consultas a Supabase
+  - python-dotenv → leer credenciales desde el archivo .env
+
+.env  [NO está en GitHub — es local]
+  Credenciales de Supabase. Nunca subir a GitHub.
+  Contiene:
+    SUPABASE_URL  → URL del proyecto Supabase
+    SUPABASE_KEY  → anon key (solo lectura)
+
+.env.example  [Sí está en GitHub]
+  Plantilla del archivo .env. Muestra qué variables se necesitan
+  sin exponer los valores reales.
+
+setup.ps1
+  Script de instalación. Ejecutar UNA SOLA VEZ al configurar
+  el entorno por primera vez. Instala las librerías y descarga
+  el browser de Playwright.
+  Uso: .\scripts\setup.ps1
+
+run.ps1
+  Atajo para correr el scraper. Ejecutar cada vez que se quiera
+  hacer una extracción. Abre el explorador de archivos en outputs/
+  al terminar para que puedas ver el CSV generado.
+  Uso: .\scripts\run.ps1
+
+config/zone_aliases.json
+  Diccionario de normalización de zonas. Convierte el texto crudo
+  del portal ("Lomas Guijarro", "Col. Lara", "Bulevar Morazán")
+  en el zone_id correspondiente de la base de datos.
+
+  Cada entrada tiene:
+    zone_id       → UUID de la zona en core.dim_zone
+    zona_canonica → nombre oficial de la zona
+    confianza     → ALTA / MEDIA / BAJA
+
+  Reglas de confianza:
+    ALTA  → construye fingerprint y aplica dedup fuerte
+    MEDIA → sugiere zone_id en CSV pero manda a REVISAR
+    BAJA  → no mapea, manda a REVISAR sin fingerprint
+
+════════════════════════════════════════════════════════════════
+  OUTPUTS (carpeta outputs/)
+════════════════════════════════════════════════════════════════
+
+rentify_YYYY-MM-DD.csv
+  El resultado de cada corrida. Contiene una fila por propiedad
+  encontrada en Rentify con estos estados:
+
+  NUEVO            → propiedad nueva, no existe en Supabase
+  DUPLICADO_URL    → la URL ya existe en Supabase (mismo anuncio)
+  PROBABLE_DUPLICADO → mismo fingerprint que propiedad existente
+                       (mismo anuncio con URL diferente)
+  REVISAR          → zona ambigua, datos incompletos o
+                     confianza MEDIA en la zona
+  RECHAZADO        → descartado por filtros (no es venta, etc.)
+
+  Columnas clave del CSV:
+    estado_revision      → qué hacer con este registro
+    alertas              → SIN_AREA, PRECIO_BAJO, ZONA_NO_MAPEADA, etc.
+    match_motivo         → por qué se asignó ese estado
+    match_listing_id     → listing_id existente en caso de duplicado
+    zone_id_sugerido     → UUID de zona detectada
+    zona_match_confianza → ALTA / MEDIA / BAJA
+    fingerprint_base     → hash de la propiedad para dedup
+
+════════════════════════════════════════════════════════════════
+  COMANDOS DE USO
+════════════════════════════════════════════════════════════════
+
+Primera vez (instalación):
+  cd C:\Users\angelo\Desktop\Valorius_Dashboard_V2
+  .\scripts\setup.ps1
+
+Correr el scraper:
+  cd C:\Users\angelo\Desktop\Valorius_Dashboard_V2
+  python scripts\scraper_rentify.py
+    o bien:
+  .\scripts\run.ps1
+
+════════════════════════════════════════════════════════════════
+  NOTA SOBRE GITHUB ACTIONS
+════════════════════════════════════════════════════════════════
+
+El archivo .github/workflows/scraper_rentify.yml existe para
+correr el scraper en GitHub (gratis, sin PC encendida). Sin embargo,
+Rentify usa Cloudflare que bloquea las IPs de GitHub Actions.
+
+Por eso el scraper de Rentify se corre localmente desde esta PC.
+GitHub Actions queda disponible para portales sin Cloudflare
+(CS Bienes Raíces, Tréboles, etc.) que se agreguen en el futuro.
+
+════════════════════════════════════════════════════════════════
+  REGLAS INAMOVIBLES
+════════════════════════════════════════════════════════════════
+
+  ✗ NUNCA insertar automáticamente en Supabase
+  ✗ NUNCA crear zonas o colonias automáticamente
+  ✗ NUNCA subir el archivo .env a GitHub
+  ✓ SIEMPRE revisar el CSV antes de aprobar registros
+  ✓ SIEMPRE verificar zona y colonia antes de insertar
+
+════════════════════════════════════════════════════════════════
