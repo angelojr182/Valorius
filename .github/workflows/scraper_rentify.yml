@@ -33,5 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rentify-csv-${{ github.run_id }}
-          path: outputs/rentify_*.csv
+          path: |
+            outputs/rentify_*.csv
+            outputs/debug/
           retention-days: 30
