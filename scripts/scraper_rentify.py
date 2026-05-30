@@ -228,13 +228,18 @@ def collect_property_urls(browser) -> set:
         page = browser.new_page()
         try:
             page.goto(search_url, timeout=30_000)
-            page.wait_for_load_state("networkidle", timeout=20_000)
+            # domcontentloaded es más rápido y confiable que networkidle
+            page.wait_for_load_state("domcontentloaded", timeout=15_000)
+            page.wait_for_timeout(3_000)  # espera extra para JS
 
-            # DEBUG: guardar screenshot y título en primera página
+            # DEBUG siempre en página 1
             if i == 1:
                 debug_dir = OUTPUTS_DIR / "debug"
                 debug_dir.mkdir(exist_ok=True)
-                page.screenshot(path=str(debug_dir / "page1_screenshot.png"), full_page=True)
+                try:
+                    page.screenshot(path=str(debug_dir / "page1_screenshot.png"), full_page=True)
+                except Exception:
+                    pass
                 page_title = page.title()
                 page_url   = page.url
                 all_links  = page.eval_on_selector_all("a", "els => els.map(e => e.href)")
@@ -243,9 +248,9 @@ def collect_property_urls(browser) -> set:
                 print(f"  [DEBUG] URL final: {page_url}")
                 print(f"  [DEBUG] Total links en página: {len(all_links)}")
                 print(f"  [DEBUG] Links /propiedad/: {len(propiedad_links)}")
-                with open(debug_dir / "page1_links.txt", "w") as f:
+                with open(debug_dir / "page1_links.txt", "w", encoding="utf-8") as f:
                     f.write(f"Título: {page_title}\nURL: {page_url}\n\n")
-                    f.write("\n".join(all_links[:50]))
+                    f.write("\n".join(all_links[:100]))
 
             links = page.eval_on_selector_all(
                 "a[href*='/propiedad/']",
@@ -260,6 +265,15 @@ def collect_property_urls(browser) -> set:
             print(f"  Página {i}: {len(links)} encontradas | +{len(urls)-prev} nuevas | total: {len(urls)}")
         except Exception as e:
             print(f"  Página {i}: error — {e}")
+            # en error también tomamos screenshot de debug
+            if i == 1:
+                debug_dir = OUTPUTS_DIR / "debug"
+                debug_dir.mkdir(exist_ok=True)
+                try:
+                    page.screenshot(path=str(debug_dir / "page1_error_screenshot.png"), full_page=True)
+                    print(f"  [DEBUG] Screenshot de error guardado")
+                except Exception:
+                    pass
             break
         finally:
             page.close()
@@ -279,7 +293,8 @@ def extract_property(page, url: str) -> dict | None:
     """
     try:
         page.goto(url, timeout=30_000)
-        page.wait_for_load_state("networkidle", timeout=20_000)
+        page.wait_for_load_state("domcontentloaded", timeout=15_000)
+        page.wait_for_timeout(2_000)
     except Exception as e:
         return {"_error": str(e), "url": url}
 
