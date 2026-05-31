@@ -99,18 +99,42 @@ rentify_YYYY-MM-DD.csv
     fingerprint_base     → hash de la propiedad para dedup
 
 ════════════════════════════════════════════════════════════════
-  COMANDOS DE USO
+  COMO EJECUTAR EL SCRAPER (paso a paso)
 ════════════════════════════════════════════════════════════════
 
-Primera vez (instalación):
+IMPORTANTE: El scraper debe correrse desde tu propia terminal
+para poder ver el display en vivo con colores y barra de progreso.
+Claude Code no puede mostrar el display en tu pantalla.
+
+─── Abrir la terminal en VS Code ───────────────────────────────
+  Presiona:  Ctrl + `  (tecla backtick, arriba izquierda del teclado)
+  Se abre un panel de terminal integrado en la parte inferior.
+
+─── Primera vez (instalación única) ────────────────────────────
   cd C:\Users\angelo\Desktop\Valorius_Dashboard_V2
   .\scripts\setup.ps1
 
-Correr el scraper:
-  cd C:\Users\angelo\Desktop\Valorius_Dashboard_V2
-  python scripts\scraper_rentify.py
-    o bien:
-  .\scripts\run.ps1
+─── Correr el scraper ──────────────────────────────────────────
+  Opción A (recomendada — abre el CSV al terminar):
+    cd C:\Users\angelo\Desktop\Valorius_Dashboard_V2
+    .\scripts\run.ps1
+
+  Opción B (directa):
+    cd C:\Users\angelo\Desktop\Valorius_Dashboard_V2
+    python scripts\scraper_rentify.py
+
+─── Lo que verás en pantalla ───────────────────────────────────
+  Un panel en tiempo real con:
+    - Barra de progreso (X/38 propiedades procesadas)
+    - URL actual siendo procesada
+    - Tabla de resultados: NUEVO / DUPLICADO / REVISAR
+    - Alertas detectadas: SIN_AREA, ZONA_NO_MAPEADA, etc.
+    - Tiempo transcurrido y errores
+
+─── Al terminar ────────────────────────────────────────────────
+  El CSV se guarda en:
+    outputs\rentify_YYYY-MM-DD.csv
+  Ábrelo en Excel para revisar y aprobar los registros.
 
 ════════════════════════════════════════════════════════════════
   NOTA SOBRE GITHUB ACTIONS
