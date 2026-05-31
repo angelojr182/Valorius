@@ -305,6 +305,15 @@ def extract_property(page, url: str) -> dict | None:
         except Exception:
             pass
 
+    # Cortar antes de la sección de "Listings similares" / "Propiedades relacionadas"
+    for marcador in ["listing similar", "listings similar", "propiedades similar",
+                     "propiedades relacionada", "tambien te puede", "también te puede",
+                     "otras propiedades", "propiedades en venta"]:
+        idx = txt.lower().find(marcador)
+        if idx > 500:
+            txt = txt[:idx]
+            break
+
     txt_lower    = txt.lower()
     titulo_lower = titulo.lower()
 
