@@ -839,5 +839,155 @@
     "zone_id": "66062aa9-b8a7-4a08-ac4a-7e9ec9aba1fc",
     "zona_canonica": "Zambrano",
     "confianza": "ALTA"
+  },
+
+  "_seccion_nuevos_2026-05-31": "── Aliases agregados tras análisis CSV apartamentos y casas ──",
+
+  "ecovivienda": {
+    "zone_id": "cfd26db6-ac7a-4d0b-88d4-5bb30d6512f4",
+    "zona_canonica": "Colonia La Era",
+    "confianza": "ALTA",
+    "nota": "Proyecto Ecovivienda (CONDOMINIO) — está en dim_proyecto"
+  },
+  "ecovivienda i etapa": {
+    "zone_id": "cfd26db6-ac7a-4d0b-88d4-5bb30d6512f4",
+    "zona_canonica": "Colonia La Era",
+    "confianza": "ALTA",
+    "nota": "Proyecto Ecovivienda — primera etapa"
+  },
+  "residencial roble oeste": {
+    "zone_id": "8d6639c9-6de7-4766-94c8-954160d6f796",
+    "zona_canonica": "Los Robles",
+    "confianza": "ALTA",
+    "nota": "Nombre anterior de Los Robles — aún usado por Rentify"
+  },
+  "roble oeste": {
+    "zone_id": "8d6639c9-6de7-4766-94c8-954160d6f796",
+    "zona_canonica": "Los Robles",
+    "confianza": "ALTA",
+    "nota": "Nombre anterior de Los Robles"
+  },
+  "colonia san ignacio": {
+    "zone_id": "3924ec4a-bd5e-4871-8dc3-3d1e3d78d887",
+    "zona_canonica": "San Ignacio",
+    "confianza": "ALTA"
+  },
+  "costa proceres": {
+    "zone_id": "7f0e2113-d19b-4290-8e27-16b80a9776e5",
+    "zona_canonica": "Colonia Lara",
+    "confianza": "ALTA",
+    "nota": "Torre Costa Próceres — está en dim_proyecto con zone_id Colonia Lara"
+  },
+  "torre costa proceres": {
+    "zone_id": "7f0e2113-d19b-4290-8e27-16b80a9776e5",
+    "zona_canonica": "Colonia Lara",
+    "confianza": "ALTA",
+    "nota": "Proyecto en Colonia Lara — está en dim_proyecto"
+  },
+
+  "torre astria": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "MEDIA",
+    "nota": "No está en dim_proyecto — zona probable pero no confirmada. Revisar antes de insertar."
+  },
+  "astria": {
+    "zone_id": "18e45e8c-1143-487e-aad3-5efd1af5b763",
+    "zona_canonica": "Lomas del Guijarro",
+    "confianza": "MEDIA",
+    "nota": "Torre Astria — zona probable pero no confirmada en catálogo"
+  },
+  "torre aria": {
+    "zone_id": "3924ec4a-bd5e-4871-8dc3-3d1e3d78d887",
+    "zona_canonica": "San Ignacio",
+    "confianza": "MEDIA",
+    "nota": "No está en dim_proyecto — zona probable San Ignacio. Verificar antes de insertar."
+  },
+  "torre vista 1432": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "MEDIA",
+    "nota": "No está en dim_proyecto — zona probable Miraflores. Verificar."
+  },
+  "vista 1432": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "MEDIA",
+    "nota": "Torre Vista 1432 — zona probable Miraflores"
+  },
+  "boulevard miraflores": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "MEDIA",
+    "nota": "Alias vial — revisar antes de insertar"
+  },
+  "cipreses san ignacio": {
+    "zone_id": "3924ec4a-bd5e-4871-8dc3-3d1e3d78d887",
+    "zona_canonica": "San Ignacio",
+    "confianza": "MEDIA",
+    "nota": "Puede referirse a Torre Cipreses o sector general de San Ignacio"
+  },
+  "residencial el trapiche": {
+    "zone_id": "6ffdc66c-a15b-498c-a60d-cadc4346f89a",
+    "zona_canonica": "El Trapiche",
+    "confianza": "MEDIA",
+    "nota": "Revisar — en casas Rentify puede mezclar ubicación con propiedad de página"
+  },
+  "residencial altos del trapiche": {
+    "zone_id": "6ffdc66c-a15b-498c-a60d-cadc4346f89a",
+    "zona_canonica": "El Trapiche",
+    "confianza": "MEDIA",
+    "nota": "PRECAUCIÓN: alias apareció asociado a títulos de Ojojona, Valle de Ángeles y Cerro Grande por bug del extractor de ubicación. No usar para fingerprint hasta corregir extractor."
+  },
+
+  "colonia tres caminos": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "No existe en catálogo Valorius — revisar si crear zona o colonia nueva"
+  },
+  "tres caminos": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "No mapear automático — zona no catalogada"
+  },
+  "colonia lomas del mayab": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Zona no catalogada aún en Valorius"
+  },
+  "lomas del mayab": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Zona no catalogada aún"
+  },
+  "colonia la reforma": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Zona no catalogada aún en Valorius"
+  },
+  "altos de miramontes": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Zona no catalogada aún en Valorius"
+  },
+  "colonia rio grande": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Zona no catalogada aún en Valorius"
+  },
+  "residencial agua dulce ii etapa": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Zona no catalogada aún en Valorius"
+  },
+  "agua dulce": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Zona no catalogada — puede ser Residencial Agua Dulce u otro"
+  },
+  "frente a casa campo": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Referencia geográfica, no zona canónica. No mapear."
   }
 }
