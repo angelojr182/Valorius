@@ -281,8 +281,8 @@ def extract_property(page, url: str) -> dict | None:
     except Exception as e:
         return {"_error": str(e), "url": url}
 
-    if "/renta-de-" in url and "venta" not in url:
-        return None
+    # Rentify ya filtra status[]=a-la-venta y type[]=casas-bienes-raices en la URL.
+    # No aplicamos filtros internos de tipo ni estado — confiamos en el portal.
 
     titulo = ""
     try:
@@ -306,19 +306,6 @@ def extract_property(page, url: str) -> dict | None:
 
     txt_lower    = txt.lower()
     titulo_lower = titulo.lower()
-
-    # Filtro venta
-    es_venta = (
-        "venta" in url.lower()
-        or "venta" in titulo_lower
-        or "a la venta" in txt_lower
-        or "en venta" in txt_lower
-    )
-    if not es_venta:
-        return None
-
-    # Sin filtro interno de tipo — Rentify ya filtró por casas-bienes-raices en la URL.
-    # Townhouses, villas, dúplex, chalets, etc. son todos válidos.
 
     # Precio
     precio_usd   = None
