@@ -402,11 +402,36 @@ def extract_property(page, url: str) -> dict | None:
         except ValueError:
             pass
 
-    # Ubicación
+    # Ubicación — estrategia en capas para evitar capturar propiedades relacionadas
     ubicacion_raw = ""
-    m = re.search(r"([^\n,]{3,60}),\s*Tegucigalpa", txt, re.IGNORECASE)
-    if m:
-        ubicacion_raw = m.group(1).strip()
+
+    # 1. Extraer del slug de la URL (más confiable — codificado por Rentify)
+    slug = url.rstrip("/").split("/")[-1]
+    slug_clean = re.sub(r"^(venta|renta|compra|alquiler)-de-", "", slug)
+    slug_clean = re.sub(r"^(amplia|amplio|hermosa|hermoso|moderna|moderno|nueva|nuevo|exclusiv[ao])-", "", slug_clean)
+    slug_clean = re.sub(r"^(casa|casas|townhouse|villa|duplex|residencia)-", "", slug_clean)
+    m_slug = re.search(r"\ben-(.+)$", slug_clean)
+    if m_slug:
+        ubicacion_raw = m_slug.group(1).replace("-", " ").strip()
+
+    # 2. Selectores HTML específicos de Rentify (antes del bloque de relacionadas)
+    if not ubicacion_raw:
+        for sel in [".property-location", ".rh_prop_location", ".property-address",
+                    ".location", "[class*='location']", ".property-meta .address"]:
+            try:
+                loc = page.locator(sel).first.inner_text(timeout=2000).strip()
+                if loc and len(loc) < 80:
+                    ubicacion_raw = loc
+                    break
+            except Exception:
+                pass
+
+    # 3. Fallback: regex solo en los primeros 800 caracteres del texto (antes de relacionadas)
+    if not ubicacion_raw:
+        txt_head = txt[:800]
+        m = re.search(r"([^\n,]{3,60}),\s*Tegucigalpa", txt_head, re.IGNORECASE)
+        if m:
+            ubicacion_raw = m.group(1).strip()
 
     # Proyecto
     proyecto_texto = None
