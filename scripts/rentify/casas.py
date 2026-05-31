@@ -317,15 +317,8 @@ def extract_property(page, url: str) -> dict | None:
     if not es_venta:
         return None
 
-    # Filtro casa
-    es_casa = (
-        "casa" in titulo_lower
-        or "casa" in txt_lower
-        or "residencia" in titulo_lower
-        or "chalet" in titulo_lower
-    )
-    if not es_casa:
-        return None
+    # Sin filtro interno de tipo — Rentify ya filtró por casas-bienes-raices en la URL.
+    # Townhouses, villas, dúplex, chalets, etc. son todos válidos.
 
     # Precio
     precio_usd   = None
