@@ -989,5 +989,56 @@
     "zone_id": null,
     "confianza": "BAJA",
     "nota": "Referencia geográfica, no zona canónica. No mapear."
+  },
+
+  "_seccion_nuevos_2026-05-31b": "── Aliases agregados tras segunda corrida casas ──",
+
+  "col san ignacio": {
+    "zone_id": "3924ec4a-bd5e-4871-8dc3-3d1e3d78d887",
+    "zona_canonica": "San Ignacio",
+    "confianza": "ALTA"
+  },
+  "col miraflores": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "ALTA"
+  },
+  "col miraflores sur": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "ALTA",
+    "nota": "Miraflores Sur es colonia dentro de la zona Miraflores"
+  },
+  "miraflores sur": {
+    "zone_id": "b61262d0-7710-4da4-b01b-65efedf376a2",
+    "zona_canonica": "Miraflores",
+    "confianza": "ALTA",
+    "nota": "Colonia dentro de la zona Miraflores"
+  },
+  "residencial las uvas": {
+    "zone_id": "3df25638-0d68-4726-b411-928fb7335ad5",
+    "zona_canonica": "Las Uvas",
+    "confianza": "ALTA"
+  },
+  "res roble oeste": {
+    "zone_id": "8d6639c9-6de7-4766-94c8-954160d6f796",
+    "zona_canonica": "Los Robles",
+    "confianza": "ALTA",
+    "nota": "Nombre anterior de Los Robles — variante corta"
+  },
+  "col rio grande": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Variante de Colonia Río Grande — zona no catalogada aún"
+  },
+  "col palmira": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Colonia Palmira fue eliminada de dim_zone (era colonia, no zona). No mapear."
+  },
+  "res agua dulce": {
+    "zone_id": null,
+    "confianza": "BAJA",
+    "nota": "Variante de Residencial Agua Dulce — zona no catalogada"
   }
 }

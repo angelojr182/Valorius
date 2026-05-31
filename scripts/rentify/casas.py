@@ -405,14 +405,11 @@ def extract_property(page, url: str) -> dict | None:
     # Ubicación — estrategia en capas para evitar capturar propiedades relacionadas
     ubicacion_raw = ""
 
-    # 1. Extraer del slug de la URL (más confiable — codificado por Rentify)
+    # 1. Extraer del slug de la URL — toma el ÚLTIMO segmento tras "-en-"
     slug = url.rstrip("/").split("/")[-1]
-    slug_clean = re.sub(r"^(venta|renta|compra|alquiler)-de-", "", slug)
-    slug_clean = re.sub(r"^(amplia|amplio|hermosa|hermoso|moderna|moderno|nueva|nuevo|exclusiv[ao])-", "", slug_clean)
-    slug_clean = re.sub(r"^(casa|casas|townhouse|villa|duplex|residencia)-", "", slug_clean)
-    m_slug = re.search(r"\ben-(.+)$", slug_clean)
-    if m_slug:
-        ubicacion_raw = m_slug.group(1).replace("-", " ").strip()
+    slug_parts = slug.split("-en-")
+    if len(slug_parts) > 1:
+        ubicacion_raw = slug_parts[-1].replace("-", " ").strip()
 
     # 2. Selectores HTML específicos de Rentify (antes del bloque de relacionadas)
     if not ubicacion_raw:
