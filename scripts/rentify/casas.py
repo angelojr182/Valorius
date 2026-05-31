@@ -20,10 +20,11 @@ from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from rich.live import Live
 
-# Módulo compartido — un nivel arriba
+# Módulos compartidos — un nivel arriba
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from display import ScraperDisplay, console
+from shared.excel import csv_to_excel
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -581,6 +582,9 @@ def main():
 
     ui.resumen()
     console.print(f"\n  [bold green]CSV generado:[/] {OUTPUT_CSV}")
+
+    xlsx_path = csv_to_excel(OUTPUT_CSV)
+    console.print(f"  [bold green]Excel generado:[/] {xlsx_path}")
 
 
 if __name__ == "__main__":
