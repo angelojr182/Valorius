@@ -22,6 +22,14 @@ files/revision_export.csv
 .DS_Store
 Thumbs.db
 
+# Playwright MCP (screenshots y logs temporales)
+.playwright-mcp/
+
+# Python cache
+scripts/__pycache__/
+__pycache__/
+*.pyc
+
 # Archivos de configuración de scraper (contienen URLs privadas)
 Configuracion scraping Rentify.txt
 COnfiguracion verificada CSBienesraices.txt
