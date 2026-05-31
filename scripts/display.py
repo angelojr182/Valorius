@@ -8,7 +8,13 @@ import time
 from collections import Counter
 from datetime import datetime
 
+import sys
+import io
 from rich.console import Console
+
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
@@ -16,7 +22,7 @@ from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, T
 from rich.table import Table
 from rich.text import Text
 
-console = Console()
+console = Console(legacy_windows=False)
 
 
 class ScraperDisplay:
