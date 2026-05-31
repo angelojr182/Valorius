@@ -18,6 +18,8 @@ from collections import Counter
 import httpx
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
+from rich.live import Live
+from display import ScraperDisplay, console
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -580,54 +582,46 @@ def process_listing(raw: dict, aliases: dict, existing_urls: set, existing_fps: 
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main():
-    print("=" * 65)
-    print("  Valorius Scraper — Rentify.hn")
-    print(f"  Fecha  : {HOY}")
-    print(f"  Output : {OUTPUT_CSV}")
-    print("=" * 65)
-
     aliases = load_aliases()
-    alias_count = sum(1 for k in aliases if not k.startswith("_"))
-    print(f"Diccionario cargado: {alias_count} aliases\n")
-
     existing_urls, existing_fps = load_existing_data()
 
-    results  = []
-    errores  = []
-    descartados = 0
+    results = []
+    ui = ScraperDisplay(nombre="Rentify", fuente="rentify.hn")
 
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=True)
+    with Live(ui._render(), console=console, refresh_per_second=4, screen=False) as live:
+        ui._live = live
 
-        property_urls = collect_property_urls(browser)
-        total = len(property_urls)
-        print(f"\nTotal URLs a procesar: {total}\n")
+        ui.fase("Recopilando URLs de propiedades...")
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True)
+            property_urls = collect_property_urls(browser)
+            ui.set_total(len(property_urls))
 
-        page = browser.new_page()
-        for i, url in enumerate(sorted(property_urls), start=1):
-            print(f"[{i:3}/{total}] {url}")
-            raw = extract_property(page, url)
+            ui.fase("Extrayendo propiedades...")
+            page = browser.new_page()
+            for url in sorted(property_urls):
+                ui.set_url_actual(url)
+                raw = extract_property(page, url)
 
-            if raw is None:
-                descartados += 1
-                print("         → descartado (filtro)")
-                continue
-            if "_error" in raw:
-                errores.append(url)
-                print(f"         → error: {raw['_error']}")
-                continue
+                if raw is None:
+                    ui.descartar()
+                    ui.avanzar()
+                    continue
+                if "_error" in raw:
+                    ui.error()
+                    ui.avanzar()
+                    continue
 
-            processed = process_listing(raw, aliases, existing_urls, existing_fps)
-            results.append(processed)
-            zona_label = processed["zona_canonica_sugerida"] or "SIN_ZONA"
-            print(
-                f"         → {processed['estado_revision']}"
-                f" | {zona_label} ({processed['zona_match_confianza']})"
-                f" | ${processed.get('precio_m2', 'N/A')}/m²"
-            )
+                processed = process_listing(raw, aliases, existing_urls, existing_fps)
+                results.append(processed)
+                alertas = [a for a in processed["alertas"].split("|") if a]
+                ui.registrar(processed["estado_revision"], alertas)
+                ui.avanzar()
 
-        page.close()
-        browser.close()
+            page.close()
+            browser.close()
+
+        ui.fase(f"Escribiendo CSV... ({len(results)} filas)")
 
     # Escribir CSV
     with open(OUTPUT_CSV, "w", newline="", encoding="utf-8-sig") as f:
@@ -635,27 +629,8 @@ def main():
         writer.writeheader()
         writer.writerows(results)
 
-    # Resumen final
-    print("\n" + "=" * 65)
-    print(f"  CSV generado : {OUTPUT_CSV}")
-    print(f"  Procesados   : {len(results)}")
-    print(f"  Descartados  : {descartados} (filtros de extracción)")
-    print(f"  Errores      : {len(errores)}")
-    print()
-    estados = Counter(r["estado_revision"] for r in results)
-    for estado, n in sorted(estados.items()):
-        print(f"    {estado:<22} {n}")
-    print()
-    confianzas = Counter(r["zona_match_confianza"] for r in results)
-    print("  Confianza zona:")
-    for c, n in sorted(confianzas.items()):
-        print(f"    {c:<22} {n}")
-    print("=" * 65)
-
-    if errores:
-        print(f"\nURLs con error ({len(errores)}):")
-        for u in errores:
-            print(f"  {u}")
+    ui.resumen()
+    console.print(f"\n  [bold green]CSV generado:[/] {OUTPUT_CSV}")
 
 
 if __name__ == "__main__":
