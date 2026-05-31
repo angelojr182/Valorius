@@ -29,13 +29,13 @@ from display import ScraperDisplay, console
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────────────────────────────────────
 
+SCRIPT_DIR   = Path(__file__).parent          # scripts/rentify/
+SCRIPTS_DIR  = SCRIPT_DIR.parent             # scripts/
+
 load_dotenv(SCRIPTS_DIR / ".env")
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]  # anon key — solo lectura
-
-SCRIPT_DIR   = Path(__file__).parent          # scripts/rentify/
-SCRIPTS_DIR  = SCRIPT_DIR.parent             # scripts/
 OUTPUTS_DIR  = SCRIPTS_DIR.parent / "outputs"
 ALIASES_PATH = SCRIPTS_DIR / "config" / "zone_aliases.json"
 OUTPUTS_DIR.mkdir(exist_ok=True)
