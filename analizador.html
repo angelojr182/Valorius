@@ -190,38 +190,179 @@
 <!-- FORMULARIO -->
 <section class="panel">
   <div class="panel-title">Datos de la propiedad</div>
+
+  <!-- Introducción siempre visible — funciona en móvil sin interacción -->
+  <div style="background:rgba(226,176,92,0.08);border:1px solid rgba(226,176,92,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#94a3b8;line-height:1.6;">
+    Ingresa los datos de la propiedad que quieres analizar. El sistema la comparará contra propiedades similares en el mercado de Tegucigalpa y te dirá si el precio está bien, alto o bajo.
+  </div>
+
+  <style>
+    .btn-limpiar { background:transparent;border:1px solid rgba(100,116,139,0.4);color:#94a3b8;
+      padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all 0.2s; }
+    .btn-limpiar:hover { border-color:rgba(148,163,184,0.7);color:#cbd5e1;background:rgba(255,255,255,0.03); }
+
+    /* ── Estructura de pasos: pregunta activa (2/3) + resumen vivo (1/3) ──
+       Mismo grid de 3 columnas que .cards-resultados para que el panel
+       resumen quede del mismo ancho y alineado con "Métricas de referencia". */
+    .form-wizard { max-width:100%; }
+    /* Romper el padding del panel (18px) para igualar el ancho de .cards-resultados */
+    .wiz-cols { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; align-items:start;
+      margin-left:-18px; margin-right:-18px; }
+    .wiz-main { grid-column: 1 / 3; }
+    .wiz-summary { grid-column: 3 / 4; }
+    .wiz-main { background:rgba(255,255,255,0.02);border:1px solid rgba(100,116,139,0.18);
+      border-radius:12px;padding:20px 22px;display:flex;flex-direction:column; }
+    .form-steps { display:flex;flex-direction:column; }
+    .paso { transition: all 0.35s ease; }
+    .paso:not(.activo) { display:none; }
+    .paso-inner { padding:0; }
+    /* Eyebrow de guía: "Paso · Ingresa ..." */
+    .paso-numero { display:block;font-size:10px;letter-spacing:0.07em;text-transform:uppercase;
+      color:#e2b05c;font-weight:700;margin-bottom:7px; }
+    .wiz-main .form-label { font-size:16px;text-transform:none;letter-spacing:0;color:#f1f5f9;
+      margin-bottom:12px;display:block;font-weight:600;line-height:1.35; }
+    .hint-campo { font-size:10px;color:#475569;margin-top:6px;padding:5px 8px;background:rgba(255,255,255,0.03);
+      border-left:2px solid rgba(100,116,139,0.3);border-radius:0 4px 4px 0;line-height:1.5;display:block; }
+
+    /* Navegación: Atrás · Limpiar · Siguiente/Analizar (compactos, separados) */
+    .card-nav { display:flex; gap:10px; align-items:center; margin-top:18px; padding-top:16px;
+      border-top:1px solid rgba(100,116,139,0.15); }
+    .card-btn { background:rgba(255,255,255,0.05);border:1px solid rgba(100,116,139,0.4);color:#cbd5e1;
+      padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all 0.2s; }
+    .card-btn:hover { border-color:rgba(226,176,92,0.5);color:#e2b05c; }
+    .card-btn.primary { background:rgba(226,176,92,0.15);border-color:rgba(226,176,92,0.5);color:#e2b05c; }
+    .card-btn.primary:not(:disabled):hover { background:rgba(226,176,92,0.25); }
+    .card-btn:disabled { opacity:0.35;cursor:not-allowed; }
+
+    /* Panel resumen lateral */
+    .wiz-summary { display:flex;flex-direction:column;background:rgba(255,255,255,0.025);
+      border:1px solid rgba(100,116,139,0.2);border-radius:12px;padding:16px 16px; }
+    .ws-head { display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px; }
+    .ws-titulo { font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#94a3b8;font-weight:700;line-height:1.4; }
+    .ws-count { font-size:11px;color:#e2b05c;font-weight:700;white-space:nowrap;flex-shrink:0; }
+    .ws-bar { height:4px;background:rgba(100,116,139,0.2);border-radius:3px;overflow:hidden;margin-bottom:14px; }
+    .ws-bar-fill { height:100%;background:linear-gradient(90deg,#e2b05c,#f0c674);border-radius:3px;transition:width 0.4s ease; }
+    .ws-row { display:flex;align-items:center;gap:9px;padding:8px 7px;border-radius:8px;cursor:pointer;
+      transition:all 0.18s;margin-bottom:1px; }
+    .ws-row:hover { background:rgba(226,176,92,0.06); }
+    .ws-row.activa { background:rgba(226,176,92,0.1);box-shadow:inset 0 0 0 1px rgba(226,176,92,0.25); }
+    .ws-row.bloqueada { opacity:0.38;cursor:default; }
+    .ws-row.bloqueada:hover { background:transparent; }
+    .ws-icon { width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;flex-shrink:0;background:rgba(100,116,139,0.2);color:#64748b; }
+    .ws-row.hecha .ws-icon { background:rgba(34,197,94,0.18);color:#4ade80; }
+    .ws-row.activa .ws-icon { background:rgba(226,176,92,0.25);color:#e2b05c; }
+    .ws-texto { flex:1;min-width:0; }
+    .ws-label { font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.04em; }
+    .ws-opcional { color:#475569;text-transform:none;font-style:italic; }
+    .ws-valor { font-size:12.5px;color:#e2e8f0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .ws-valor.vacio { color:#475569;font-weight:400;font-style:italic; }
+    .ws-edit { font-size:11px;color:#64748b;flex-shrink:0; }
+    .ws-listo { margin-top:12px;padding:10px 12px;background:rgba(34,197,94,0.12);
+      border:1px solid rgba(34,197,94,0.32);border-radius:8px;color:#4ade80;font-size:11.5px;
+      font-weight:600;line-height:1.4;text-align:center; }
+
+    @media (max-width: 760px) {
+      .wiz-cols { grid-template-columns: 1fr; gap:14px; }
+      .wiz-main, .wiz-summary { grid-column: auto; }
+      .wiz-summary { order:-1; padding:12px 14px; }
+      .wiz-main { padding:18px; }
+      .ws-row { padding:7px 6px; }
+    }
+  </style>
+
   <form id="formAnalisis" onsubmit="event.preventDefault(); window.intentarAnalisis();">
-    <div class="formulario-grid">
-      <div class="form-group-horizontal">
-        <label class="form-label">Tipo de Inmueble</label>
-        <select id="selTipo" class="form-input" onchange="window.onTipoChange()">
-          <option value="APARTAMENTO">Apartamento</option>
-          <option value="CASA">Casa</option>
-        </select>
+    <div class="form-wizard" id="formWizard">
+
+      <div class="wiz-cols">
+       <div class="wiz-main">
+        <div class="form-steps" id="formSteps">
+
+      <!-- PASO 1: Tipo -->
+      <div class="paso activo" id="pasoPaso1" data-step="1">
+        <div class="paso-inner">
+          <div class="paso-numero">Paso 1 · Elige el tipo</div>
+          <label class="form-label">¿Qué tipo de propiedad es?</label>
+          <select id="selTipo" class="form-input" onchange="window.onTipoChange()" style="margin-top:6px;width:100%;">
+            <option value="">Selecciona una opción</option>
+            <option value="APARTAMENTO">Apartamento</option>
+            <option value="CASA">Casa</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group-horizontal">
-        <label class="form-label">Zona</label>
-        <select id="selZona" class="form-input" onchange="window.onZonaChange()">
-          <option value="">Selecciona una zona</option>
-        </select>
+
+      <!-- PASO 2: Zona -->
+      <div class="paso oculto" id="pasoPaso2" data-step="2">
+        <div class="paso-inner">
+          <div class="paso-numero">Paso 2 · Elige la zona</div>
+          <label class="form-label">¿En qué zona está ubicada?</label>
+          <select id="selZona" class="form-input" onchange="window.onZonaChange()" style="margin-top:6px;width:100%;">
+            <option value="">Selecciona una zona</option>
+          </select>
+          <span class="hint-campo">Ej: Lomas del Guijarro, Anillo Periférico</span>
+        </div>
       </div>
-      <div class="form-group-horizontal">
-        <label class="form-label">Colonia <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-        <select id="selColonia" class="form-input" onchange="window.onColoniaChange()"><option value="">Todas las colonias</option></select>
+
+      <!-- PASO 3: Colonia + Proyecto -->
+      <div class="paso oculto" id="pasoPaso3" data-step="3">
+        <div class="paso-inner">
+          <div class="paso-numero">Paso 3 · Colonia o proyecto (opcional)</div>
+          <div id="grupoColonia">
+            <label class="form-label">Colonia específica</label>
+            <select id="selColonia" class="form-input" onchange="window.onColoniaChange()" style="margin-top:6px;"><option value="">Toda la zona</option></select>
+            <span class="hint-campo" id="hintColonia">Si no sabes la colonia exacta, déjalo en "Toda la zona"</span>
+          </div>
+          <div style="margin-top:12px;" id="grupoProyecto">
+            <label class="form-label">Proyecto o edificio <span style="color:#475569;font-size:9px;">(opcional)</span></label>
+            <select id="selProyecto" class="form-input" onchange="window.onProyectoChange()" style="margin-top:6px;"><option value="">Todos</option></select>
+            <div id="proyectoColoniaHint" style="font-size:10px;color:#64748b;margin-top:4px;"></div>
+          </div>
+        </div>
       </div>
-      <div class="form-group-horizontal">
-        <label class="form-label">Proyecto <span style="color:#475569;font-size:9px;">(opcional)</span></label>
-        <select id="selProyecto" class="form-input" onchange="window.onProyectoChange()"><option value="">Todos</option></select>
-        <div id="proyectoColoniaHint" style="font-size:10px;color:#64748b;margin-top:4px;"></div>
+
+      <!-- PASO 4: Área -->
+      <div class="paso oculto" id="pasoPaso4" data-step="4">
+        <div class="paso-inner">
+          <div class="paso-numero" id="numeroPaso4">Paso 4 · Ingresa el tamaño</div>
+          <label class="form-label">¿Cuántos metros cuadrados tiene?</label>
+          <input type="number" id="inpArea" class="form-input" placeholder="Ingresa el tamaño en m² · ej: 85" style="margin-top:6px;width:100%;" required oninput="window.onAreaInput()" onchange="window.onAreaChange()" />
+          <span class="hint-campo">Metros cuadrados de construcción — no incluyas el terreno</span>
+        </div>
       </div>
-      <div class="form-group-horizontal">
-        <label class="form-label">Area de construccion (M2)</label>
-        <input type="number" id="inpArea" class="form-input" placeholder="Ej: 85" style="text-align:center;" required />
+
+      <!-- PASO 5: Precio -->
+      <div class="paso oculto" id="pasoPaso5" data-step="5">
+        <div class="paso-inner">
+          <div class="paso-numero" id="numeroPaso5">Paso 5 · Precio a analizar</div>
+          <label class="form-label">¿Qué precio deseas analizar?</label>
+          <div style="display:flex;gap:6px;align-items:stretch;margin-top:6px;">
+            <input type="text" id="inpPrecio" class="form-input" placeholder="Ingresa el precio a analizar · ej: 180,000" style="flex:1;" required oninput="window.verificarBotonAnalizar()" />
+            <button type="button" id="btnMoneda" onclick="window.toggleMoneda()"
+              style="background:rgba(226,176,92,0.15);border:1px solid rgba(226,176,92,0.4);color:#e2b05c;
+                     padding:8px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;
+                     white-space:nowrap;min-width:52px;flex-shrink:0;touch-action:manipulation;">USD</button>
+          </div>
+          <span class="hint-campo" id="hintMoneda">En dólares (USD) — toca el botón para ingresar en Lempiras</span>
+        </div>
       </div>
-      <div class="form-group-horizontal">
-        <label class="form-label">Precio solicitado (USD)</label>
-        <input type="text" id="inpPrecio" class="form-input" placeholder="Ej: 180000" style="text-align:center;" required />
+
+      </div><!-- /form-steps -->
+
+      <!-- Navegación: Atrás · Limpiar · Siguiente/Analizar -->
+      <div class="card-nav" id="cardNav">
+        <button type="button" class="card-btn" id="cardPrev" onclick="window.wizCardPrev()">‹ Atrás</button>
+        <div style="margin-left:auto;display:flex;gap:10px;">
+          <button type="button" class="btn-limpiar" id="btnLimpiar" onclick="window.limpiarFormulario()">Limpiar</button>
+          <button type="button" class="card-btn primary" id="cardNext" onclick="window.wizCardNext()">Siguiente ›</button>
+        </div>
       </div>
+
+       </div><!-- /wiz-main -->
+
+       <!-- Panel resumen lateral (modo integrado) -->
+       <aside class="wiz-summary" id="wizSummary"></aside>
+      </div><!-- /wiz-cols -->
+
     </div>
 
     <div class="coverage-badge" id="coverageBadge"></div>
@@ -266,9 +407,6 @@
       </div>
     </div>
 
-    <div style="margin-top:12px;">
-      <button type="submit" id="btnAnalizar" class="btn-gold" style="width:100%;">Analizar propiedad</button>
-    </div>
   </form>
 </section>
 
@@ -726,6 +864,12 @@
     document.getElementById('alertaAtipica').style.display = 'none';
     document.getElementById('proyectoColoniaHint').textContent = '';
     pendienteAtipico = false;
+    var zoneId = document.getElementById('selZona').value;
+    window.verificarBotonAnalizar();
+    if (!zoneId) { wizRender(); return; }
+    // Ir al paso 3 (colonia) si aplica; si no, directo al área
+    var paso3Visible = document.getElementById('pasoPaso3').dataset.vacio !== '1';
+    wizGoto(paso3Visible ? 3 : 4);
   };
   window.onColoniaChange = function() {
     filtrarProyectos();
@@ -734,6 +878,8 @@
       document.getElementById('selProyecto').value = '';
       document.getElementById('proyectoColoniaHint').textContent = '';
     }
+    window.verificarBotonAnalizar();
+    if (!autoColoniaSet) wizGoto(4); // tras elegir colonia, avanzar al área
   };
   window.onProyectoChange = function() {
     var proyectoId = document.getElementById('selProyecto').value;
@@ -753,8 +899,252 @@
     } else {
       hint.textContent = '';
     }
+    wizGoto(4); // proyecto elegido → avanzar al área
   };
-  window.onTipoChange = function() { poblarDropdownZonas(); actualizarBadge(); };
+
+  // ════════════════════════════════════════════════════════════
+  //  CONTROLADOR DE WIZARD (3 modos: accordion / chips / card)
+  // ════════════════════════════════════════════════════════════
+  var wizActive = 1;
+
+  function pasoVisible(n) {
+    if (n === 3) return document.getElementById('pasoPaso3').dataset.vacio !== '1';
+    return true;
+  }
+  function pasoTieneValor(n) {
+    if (n === 1) return !!document.getElementById('selTipo').value;
+    if (n === 2) return !!document.getElementById('selZona').value;
+    if (n === 3) return true; // opcional — siempre "ok"
+    if (n === 4) return (parseFloat(document.getElementById('inpArea').value) || 0) > 0;
+    if (n === 5) return (parseFloat(document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'')) || 0) > 0;
+    return false;
+  }
+  function pasoAlcanzable(n) {
+    for (var i = 1; i < n; i++) { if (pasoVisible(i) && !pasoTieneValor(i)) return false; }
+    return true;
+  }
+  function nextVisible(n) { var i = n+1; while (i <= 5 && !pasoVisible(i)) i++; return i <= 5 ? i : null; }
+  function prevVisible(n) { var i = n-1; while (i >= 1 && !pasoVisible(i)) i--; return i >= 1 ? i : null; }
+
+  // Devuelve {label, valor, lleno} de cada paso para el panel resumen
+  function valorPaso(n) {
+    if (n === 1) {
+      var t = document.getElementById('selTipo');
+      return { label:'Tipo de propiedad', valor: t.value ? t.options[t.selectedIndex].text : 'Sin elegir', lleno: !!t.value };
+    }
+    if (n === 2) {
+      var z = document.getElementById('selZona');
+      return { label:'Zona', valor: z.value ? z.options[z.selectedIndex].text.split(' (')[0].split(' — ')[0] : 'Sin elegir', lleno: !!z.value };
+    }
+    if (n === 3) {
+      var c = document.getElementById('selColonia'), p = document.getElementById('selProyecto');
+      var v = c.value ? c.options[c.selectedIndex].text.split(' (')[0] : 'Toda la zona';
+      if (p.value) v = p.options[p.selectedIndex].text.split(' (')[0];
+      return { label:'Colonia / Proyecto', valor:v, lleno: !!(c.value || p.value) };
+    }
+    if (n === 4) {
+      var a = parseFloat(document.getElementById('inpArea').value) || 0;
+      return { label:'Tamaño', valor: a > 0 ? a + ' m²' : 'Sin ingresar', lleno: a > 0 };
+    }
+    var pr = parseFloat(document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'')) || 0;
+    var simb = monedaActual === 'LPS' ? 'L ' : '$';
+    return { label:'Precio a analizar', valor: pr > 0 ? simb + pr.toLocaleString('en-US') : 'Sin ingresar', lleno: pr > 0 };
+  }
+
+  // Construye el panel resumen lateral (modo integrado)
+  function buildSummary() {
+    var cont = document.getElementById('wizSummary');
+    if (!cont) return;
+    // Progreso sobre datos obligatorios (tipo, zona, tamaño, precio)
+    var oblig  = [1, 2, 4, 5];
+    var hechos = oblig.filter(function(n){ return valorPaso(n).lleno; }).length;
+    var pct    = Math.round(hechos / oblig.length * 100);
+    var html = '<div class="ws-head"><div class="ws-titulo">Tu avance para el análisis</div>'
+             + '<div class="ws-count">'+hechos+' de '+oblig.length+'</div></div>'
+             + '<div class="ws-bar"><div class="ws-bar-fill" style="width:'+pct+'%"></div></div>';
+    for (var n = 1; n <= 5; n++) {
+      if (!pasoVisible(n)) continue;
+      var v = valorPaso(n);
+      var opcional = (n === 3);
+      var alcanzable = pasoAlcanzable(n);
+      var cls = 'ws-row';
+      if (n === wizActive) cls += ' activa';
+      else if (v.lleno && !opcional) cls += ' hecha';
+      else if (v.lleno && opcional)  cls += ' hecha';
+      if (!alcanzable && n !== wizActive) cls += ' bloqueada';
+      var icon = v.lleno ? '✓' : String(n);
+      var onclick = (alcanzable ? 'onclick="window.wizGoto('+n+')"' : '');
+      html += '<div class="'+cls+'" '+onclick+'>'
+            +   '<div class="ws-icon">'+icon+'</div>'
+            +   '<div class="ws-texto"><div class="ws-label">'+v.label+(opcional?' <span class="ws-opcional">· opcional</span>':'')+'</div>'
+            +     '<div class="ws-valor'+(v.lleno?'':' vacio')+'">'+v.valor+'</div></div>'
+            +   (alcanzable ? '<div class="ws-edit">'+(n===wizActive?'':'✎')+'</div>' : '')
+            + '</div>';
+    }
+    if (hechos === oblig.length) {
+      html += '<div class="ws-listo">✓ Ya puedes proceder con el análisis</div>';
+    }
+    cont.innerHTML = html;
+  }
+
+  window.wizRender = function() {
+    for (var n = 1; n <= 5; n++) {
+      var el = document.getElementById('pasoPaso'+n);
+      el.classList.remove('activo','respondido','pendiente','oculto');
+      if (!pasoVisible(n)) { el.classList.add('oculto'); continue; }
+      if (!pasoAlcanzable(n) && n !== wizActive) { el.classList.add('oculto'); continue; }
+      if (n === wizActive)            el.classList.add('activo');
+      else if (pasoTieneValor(n))     el.classList.add('respondido');
+      else                            el.classList.add('pendiente');
+    }
+    // Botón Atrás
+    document.getElementById('cardPrev').disabled = !prevVisible(wizActive);
+    // Botón principal: avanza ("Siguiente") o ejecuta ("Analizar propiedad") en el último paso
+    var btnNext = document.getElementById('cardNext');
+    var nx = nextVisible(wizActive);
+    if (nx) {
+      btnNext.textContent = 'Siguiente ›';
+      btnNext.dataset.modo = 'next';
+      btnNext.disabled = !pasoTieneValor(wizActive); // habilita cuando el paso actual tiene valor
+    } else {
+      var completo = [1,2,4,5].every(function(n){ return valorPaso(n).lleno; });
+      btnNext.textContent = 'Analizar propiedad';
+      btnNext.dataset.modo = 'analizar';
+      btnNext.disabled = !completo;
+    }
+    // Panel resumen lateral
+    buildSummary();
+  };
+
+  window.wizGoto = function(n) {
+    if (!pasoAlcanzable(n)) return;
+    wizActive = n;
+    wizRender();
+    var el = document.getElementById('pasoPaso'+n);
+    setTimeout(function(){ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 80);
+  };
+
+  window.wizCardNext = function() {
+    var nx = nextVisible(wizActive);
+    if (nx) { wizGoto(nx); return; }
+    // Último paso completo → ejecutar el análisis
+    if (!document.getElementById('cardNext').disabled) window.intentarAnalisis();
+  };
+  window.wizCardPrev = function() { var pv = prevVisible(wizActive); if (pv) wizGoto(pv); };
+
+  window.onAreaInput = function() {
+    window.verificarBotonAnalizar();
+    wizRender(); // revela paso 5 como alcanzable y refresca el resumen sin robar foco
+  };
+  window.onAreaChange = function() {
+    if ((parseFloat(document.getElementById('inpArea').value) || 0) > 0) wizGoto(5);
+  };
+
+  window.onTipoChange = function() {
+    var tipo = document.getElementById('selTipo').value;
+    // Resetear pasos siguientes
+    document.getElementById('selZona').value = '';
+    document.getElementById('selColonia').innerHTML = '<option value="">Toda la zona</option>';
+    document.getElementById('selProyecto').innerHTML = '<option value="">Todos</option>';
+    document.getElementById('inpArea').value = '';
+    document.getElementById('inpPrecio').value = '';
+    document.getElementById('pasoPaso3').dataset.vacio = '';
+    window.verificarBotonAnalizar();
+    if (!tipo) { wizActive = 1; wizRender(); return; }
+    poblarDropdownZonas();
+    actualizarBadge();
+    wizGoto(2);
+  };
+
+  // ─── TOGGLE MONEDA (prototipo UX) ────────────────────────────
+  var monedaActual = 'USD';
+  var tasaLPS      = 26.58; // se puede actualizar desde exchange_rate
+
+  window.toggleMoneda = function() {
+    var btn   = document.getElementById('btnMoneda');
+    var inp   = document.getElementById('inpPrecio');
+    var hint  = document.getElementById('hintMoneda');
+    if (monedaActual === 'USD') {
+      monedaActual = 'LPS';
+      btn.textContent = 'LPS';
+      btn.style.color = '#38bdf8';
+      btn.style.borderColor = 'rgba(56,189,248,0.4)';
+      btn.style.background  = 'rgba(56,189,248,0.1)';
+      inp.placeholder = 'Ej: 4,785,000';
+      hint.textContent = 'En Lempiras (L) — el sistema convierte automáticamente usando la tasa del día';
+    } else {
+      monedaActual = 'USD';
+      btn.textContent = 'USD';
+      btn.style.color = '#e2b05c';
+      btn.style.borderColor = 'rgba(226,176,92,0.4)';
+      btn.style.background  = 'rgba(226,176,92,0.15)';
+      inp.placeholder = 'Ej: 180,000';
+      hint.textContent = 'En dólares (USD) — toca el botón para ingresar en Lempiras';
+    }
+    inp.value = '';
+    inp.focus();
+  };
+
+  // ─── VISIBILIDAD INTELIGENTE DEL PASO 3 (colonia + proyecto) ──
+  // Decide qué mostrar: oculta colonia si repite el nombre de la zona o no hay datos,
+  // oculta proyecto si no hay proyectos, y oculta todo el paso 3 si ambos están vacíos.
+  var _poblarColoniasOrig = poblarDropdownColonias;
+  poblarDropdownColonias = function() {
+    _poblarColoniasOrig();
+    var selZona    = document.getElementById('selZona');
+    var selColonia = document.getElementById('selColonia');
+    var selProy    = document.getElementById('selProyecto');
+    var hintCol    = document.getElementById('hintColonia');
+    var zonaNombre = selZona.options[selZona.selectedIndex] ? selZona.options[selZona.selectedIndex].text.split(' (')[0].split(' — ')[0].trim() : '';
+
+    // ── Colonia ──
+    var colReales = Array.from(selColonia.options).filter(function(o){ return o.value !== ''; });
+    var colRepiten = colReales.length > 0 && colReales.every(function(o){
+      return o.text.split(' (')[0].toLowerCase() === zonaNombre.toLowerCase();
+    });
+    var mostrarColonia = colReales.length > 0 && !colRepiten;
+    document.getElementById('grupoColonia').style.display = mostrarColonia ? '' : 'none';
+    if (mostrarColonia) {
+      hintCol.textContent = colReales.length === 1
+        ? 'Solo hay una colonia registrada en esta zona'
+        : 'Si no sabes la colonia exacta, déjalo en "Toda la zona"';
+    }
+
+    // ── Proyecto ── (filtrarProyectos ya corrió dentro de _poblarColoniasOrig)
+    var proyReales = Array.from(selProy.options).filter(function(o){ return o.value !== ''; });
+    var mostrarProyecto = proyReales.length > 0;
+    document.getElementById('grupoProyecto').style.display = mostrarProyecto ? '' : 'none';
+
+    // ── Paso 3 completo ── ocultar si ni colonia ni proyecto aportan algo
+    var paso3 = document.getElementById('pasoPaso3');
+    if (!mostrarColonia && !mostrarProyecto) {
+      paso3.classList.remove('activo');
+      paso3.dataset.vacio = '1';
+    } else {
+      paso3.dataset.vacio = '';
+    }
+  };
+
+  // Refresca el estado del botón principal (Siguiente / Analizar) y el resumen
+  window.verificarBotonAnalizar = function() { wizRender(); };
+
+  // ─── LIMPIAR FORMULARIO ──────────────────────────────────────
+  window.limpiarFormulario = function() {
+    document.getElementById('selTipo').value = '';
+    document.getElementById('selZona').innerHTML = '<option value="">Selecciona una zona</option>';
+    document.getElementById('selColonia').innerHTML = '<option value="">Toda la zona</option>';
+    document.getElementById('selProyecto').innerHTML = '<option value="">Todos</option>';
+    document.getElementById('inpArea').value = '';
+    document.getElementById('inpPrecio').value = '';
+    document.getElementById('proyectoColoniaHint').textContent = '';
+    document.getElementById('pasoPaso3').dataset.vacio = '';
+    if (monedaActual === 'LPS') window.toggleMoneda(); // volver a USD
+    document.getElementById('alertaSanity').style.display  = 'none';
+    document.getElementById('alertaAtipica').style.display = 'none';
+    wizActive = 1;
+    wizRender();
+    window.scrollTo({top:0, behavior:'smooth'});
+  };
 
   // ─── RANGOS SANITY ────────────────────────────────────────
   var RANGOS_AREA = { 'CASA':{min:45,max:1200}, 'APARTAMENTO':{min:25,max:600} };
@@ -778,14 +1168,15 @@
     var area      = parseFloat(document.getElementById('inpArea').value) || 0;
     var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
     var precio    = parseFloat(raw) || 0;
+    if (monedaActual === 'LPS' && precio > 0) precio = precio / tasaLPS;
 
     document.getElementById('alertaSanity').style.display   = 'none';
     document.getElementById('alertaAtipica').style.display  = 'none';
 
     if (!tipo)   return alert('Selecciona el tipo de inmueble.');
     if (!zoneId) return alert('Selecciona una zona.');
-    if (!area)   return alert('Ingresa el area de construccion en m2.');
-    if (!precio) return alert('Ingresa el precio solicitado en dolares.');
+    if (!area)   return alert('Ingresa el área de construcción en m².');
+    if (!precio) return alert('Ingresa el precio solicitado.');
 
     // Sanity check
     var rangos = RANGOS_AREA[tipo] || {min:25,max:1200};
@@ -843,11 +1234,11 @@
 
   // ─── RENDER ───────────────────────────────────────────────
   function ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res) {
-    var btn = document.getElementById('btnAnalizar');
+    var btn = document.getElementById('cardNext');
     btn.disabled = true; btn.textContent = 'Analizando...';
     try { renderAnalisis(zoneId, coloniaId, tipo, area, precio, res); }
     catch(e) { console.error(e); alert('No fue posible completar el analisis. Intenta de nuevo.'); }
-    finally  { btn.disabled = false; btn.textContent = 'Analizar propiedad'; }
+    finally  { wizRender(); }
   }
 
   function renderAnalisis(zoneId, coloniaId, tipo, area, precio, res) {
@@ -1697,6 +2088,8 @@
     comparablesZona     = computeStats(gruposZona);
     todosLosComparables = comparablesZona;
     poblarDropdownZonas();
+    wizActive = 1;
+    if (window.wizRender) wizRender(); // estado inicial del wizard
   };
 
   // ─── MAPA DE CONTEXTO DE MERCADO ─────────────────────────
