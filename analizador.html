@@ -55,6 +55,25 @@
       to   { opacity:1; transform:translateY(0); }
     }
 
+    /* Burbuja de datos por punto (Comparacion con propiedades similares) */
+    .chart-node-point { cursor:pointer; transition:stroke 0.15s; }
+    .chart-node-point:hover { stroke:#e2b05c; stroke-width:2; }
+    .punto-bubble {
+      position:absolute; z-index:50; width:178px; pointer-events:none;
+      background:linear-gradient(180deg, rgba(18,30,58,0.98), rgba(10,20,42,0.98));
+      border:1px solid rgba(226,176,92,0.5); border-radius:10px; padding:10px 12px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.55), 0 0 0 1px rgba(226,176,92,0.08);
+      animation: coachIn 0.25s ease both;
+    }
+    .pb-tit { font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:#e2b05c; font-weight:700; margin-bottom:5px; }
+    .pb-pm2 { font-size:18px; font-weight:800; color:#fff; line-height:1; margin-bottom:8px; }
+    .pb-row { display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:11px; color:#94a3b8; padding:2px 0; }
+    .pb-row b { color:#e2e8f0; font-weight:600; }
+    .pb-diff { margin-top:7px; padding-top:6px; border-top:1px solid rgba(100,116,139,0.25);
+      font-size:11.5px; font-weight:700; text-align:center; color:#94a3b8; }
+    .pb-diff.pb-up   { color:#f87171; }
+    .pb-diff.pb-down { color:#34d399; }
+
     /* Leyenda de rangos (Posicion en el mercado) */
     .rangos-legend { margin:14px auto 4px; max-width:320px; display:flex; flex-direction:column; gap:5px; }
     .rl-titulo { font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:#64748b;
@@ -565,7 +584,7 @@
         <span id="lblMaxVal">--</span>
       </div>
     </div>
-    <div class="line-chart-area">
+    <div class="line-chart-area" style="position:relative;">
       <svg class="chart-svg-curve" viewBox="0 0 325 220">
         <rect id="refBox" x="0" y="0" width="0" height="0" rx="3"
               fill="rgba(12,25,52,0.95)" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
@@ -576,6 +595,7 @@
         <path id="curvePath" class="chart-curve-path" d="M 15 110 L 285 110"/>
         <g id="curveNodes"></g>
       </svg>
+      <div class="punto-bubble" id="puntoBubble" style="display:none;"></div>
     </div>
     <div class="explain-box-wrapper">
       <div class="explain-box-label">Lo que esto significa</div>
@@ -1547,7 +1567,7 @@
       warnTxt = 'Tu precio esta ' + Math.abs(Math.round(desv)) + '% ' + dirW + ' del precio de referencia de la zona, todavia dentro del rango habitual de propiedades similares en ' + zonaLabel + '.';
     }
     document.getElementById('lblWarning').textContent = warnTxt;
-    document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zonaLabel + ' · ' + tipo + '.';
+    document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zonaLabel + ' · ' + tipo + '. Toca un punto para ver sus datos.';
 
     // ── FOOTER ────────────────────────────────────────────────
     document.getElementById('lblMetodologia').textContent = modoLimitado
@@ -1579,9 +1599,61 @@
     if (window.mostrarPistaAyuda) setTimeout(window.mostrarPistaAyuda, 600);
   }
 
+  // ── Burbuja de datos al tocar un punto del grafico ──────────
+  window.mostrarPuntoBubble = function(data, circleEl) {
+    var area   = document.querySelector('.line-chart-area');
+    var bubble = document.getElementById('puntoBubble');
+    if (!area || !bubble) return;
+    var html;
+    if (data.isTarget) {
+      var tArea  = (lastData && lastData.area)   ? lastData.area   : data.area;
+      var tTotal = (lastData && lastData.precio) ? Math.round(lastData.precio) : 0;
+      html = '<div class="pb-tit">Tu propiedad</div>'
+           + '<div class="pb-pm2">$' + Math.round(data.pm2).toLocaleString() + '/m²</div>'
+           + (tArea  ? '<div class="pb-row"><span>Tamaño</span><b>' + Math.round(tArea) + ' m²</b></div>' : '')
+           + (tTotal ? '<div class="pb-row"><span>Precio total</span><b>$' + tTotal.toLocaleString() + '</b></div>' : '')
+           + '<div class="pb-diff">Este es el precio que estas analizando</div>';
+    } else {
+      var ref  = (lastData && lastData.tuPM2) ? lastData.tuPM2 : data.pm2;
+      var diff = ref ? Math.round(((data.pm2 - ref) / ref) * 100) : 0;
+      var diffTxt = diff === 0 ? 'igual a tu precio'
+                  : (diff > 0 ? '+' + diff + '% mas cara que la tuya' : Math.abs(diff) + '% mas barata que la tuya');
+      var diffCls = diff > 0 ? 'pb-up' : diff < 0 ? 'pb-down' : '';
+      html = '<div class="pb-tit">Propiedad similar</div>'
+           + '<div class="pb-pm2">$' + Math.round(data.pm2).toLocaleString() + '/m²</div>'
+           + (data.area    ? '<div class="pb-row"><span>Tamaño</span><b>' + Math.round(data.area) + ' m²</b></div>' : '')
+           + (data.total   ? '<div class="pb-row"><span>Precio total</span><b>$' + Math.round(data.total).toLocaleString() + '</b></div>' : '')
+           + (data.colonia ? '<div class="pb-row"><span>Colonia</span><b>' + data.colonia + '</b></div>' : '')
+           + '<div class="pb-diff ' + diffCls + '">' + diffTxt + '</div>';
+    }
+    bubble.innerHTML = html;
+    bubble.style.display = 'block';
+    // Posicionar respecto al circulo, dentro del area del grafico
+    var cr = circleEl.getBoundingClientRect();
+    var ar = area.getBoundingClientRect();
+    var bw = bubble.offsetWidth, bh = bubble.offsetHeight;
+    var cx = cr.left - ar.left + cr.width / 2;
+    var cy = cr.top  - ar.top;
+    var left = Math.min(Math.max(cx - bw / 2, 2), ar.width - bw - 2);
+    var top  = cy - bh - 10;
+    if (top < 0) top = cy + cr.height + 10; // si no cabe arriba, va abajo
+    bubble.style.left = left + 'px';
+    bubble.style.top  = top + 'px';
+  };
+  window.ocultarPuntoBubble = function() {
+    var b = document.getElementById('puntoBubble');
+    if (b) b.style.display = 'none';
+  };
+  // Cerrar al tocar fuera de un punto
+  document.addEventListener('click', function(e){
+    if (e.target && e.target.classList && e.target.classList.contains('chart-node-point')) return;
+    window.ocultarPuntoBubble();
+  });
+
   function renderChart(min, mediana, max, tuPrecio, items) {
     var g  = document.getElementById('curveNodes');
     g.innerHTML = '';
+    window.ocultarPuntoBubble();
     var NS = 'http://www.w3.org/2000/svg';
     // H: altura útil del área del gráfico (deja margen arriba/abajo para etiquetas)
     var H=190, ML=15, W=270, REF_X=316, BOX_W=57, BOX_H=22;
@@ -1600,7 +1672,7 @@
       {pm2:Math.round(max),              area:250}
     ];
     base.sort(function(a,b){return a.pm2-b.pm2;});
-    var pts = base.map(function(it){return {pm2:it.pm2, area:it.area||0, isTarget:false};});
+    var pts = base.map(function(it){return {pm2:it.pm2, area:it.area||0, total:it.total||0, colonia:it.colonia||'', isTarget:false};});
     var ti  = pts.findIndex(function(p){return p.pm2>tuPrecio;});
     if(ti===-1){pts.push({pm2:tuPrecio,area:0,isTarget:true}); ti=pts.length-1;}
     else pts.splice(ti,0,{pm2:tuPrecio,area:0,isTarget:true});
@@ -1618,7 +1690,7 @@
 
     // ── Coordenadas finales ───────────────────────────────────
     var coords = pts.map(function(p,i){
-      return {x:rankX(i), y:toY(p.pm2), pm2:p.pm2, area:p.area, isTarget:p.isTarget};
+      return {x:rankX(i), y:toY(p.pm2), pm2:p.pm2, area:p.area, total:p.total, colonia:p.colonia, isTarget:p.isTarget};
     });
     var targetY = toY(tuPrecio);
     var targetX = coords[ti].x;
@@ -1650,6 +1722,8 @@
         var c=document.createElementNS(SVG,'circle');
         c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
         c.setAttribute('r','6'); c.setAttribute('class','chart-node-point active-target');
+        c.style.cursor='pointer';
+        (function(d,el){ el.addEventListener('click', function(e){ e.stopPropagation(); window.mostrarPuntoBubble(d, el); }); })(pt, c);
         g.appendChild(c);
         // Precio debajo
         var priceY = pt.y<30 ? Math.min(pt.y+35,H+8) : Math.min(pt.y+18,H+8);
@@ -1677,6 +1751,8 @@
         var c=document.createElementNS(SVG,'circle');
         c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
         c.setAttribute('r',r); c.setAttribute('class','chart-node-point');
+        c.style.cursor='pointer';
+        (function(d,el){ el.addEventListener('click', function(e){ e.stopPropagation(); window.mostrarPuntoBubble(d, el); }); })(pt, c);
         g.appendChild(c);
       }
     });
@@ -2220,13 +2296,13 @@
       var kz=zoneId+'||'+tipo;
       if(!gruposZona[kz]) gruposZona[kz]={zone_id:zoneId, zona:zonaNombre, tipo, precios:[], items:[]};
       gruposZona[kz].precios.push(pm2);
-      gruposZona[kz].items.push({pm2:Math.round(pm2), area:r.area_construccion||0});
+      gruposZona[kz].items.push({pm2:Math.round(pm2), area:r.area_construccion||0, total:Math.round(pUSD), colonia:colNombre||''});
       // Colonia aggregate
       if(!coloniaId) return;
       var kc=zoneId+'||'+coloniaId+'||'+tipo;
       if(!gruposColonia[kc]) gruposColonia[kc]={zone_id:zoneId, colonia_id:coloniaId, zona:zonaNombre, colonia:colNombre, tipo, precios:[], items:[]};
       gruposColonia[kc].precios.push(pm2);
-      gruposColonia[kc].items.push({pm2:Math.round(pm2), area:r.area_construccion||0});
+      gruposColonia[kc].items.push({pm2:Math.round(pm2), area:r.area_construccion||0, total:Math.round(pUSD), colonia:colNombre||''});
     });
 
     function computeStats(grupos){
