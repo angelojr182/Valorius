@@ -461,7 +461,7 @@
       <span class="info-icon" data-tip="posicion">ⓘ</span>
       <div class="info-tooltip" id="tip-posicion">
         <div class="info-tooltip-title">Posicion en el mercado</div>
-        <div class="info-tooltip-body">El "precio tipico" es la mediana por m² de propiedades similares activas en la zona. El circulo muestra que tanto se aleja tu precio de esa referencia: <b>+</b> cuando esta por encima (mas caro) y <b>−</b> cuando esta por debajo (mas barato). El color indica si es oportunidad (verde) o sobreprecio (rojo).</div>
+        <div class="info-tooltip-body">El "precio de referencia" es la mediana por m² de propiedades similares activas en la zona. El circulo muestra que tanto se aleja tu precio de esa referencia: <b>+</b> cuando esta por encima (mas caro) y <b>−</b> cuando esta por debajo (mas barato). El color indica si es oportunidad (verde) o sobreprecio (rojo).</div>
       </div>
     </div>
     <div class="gauge-container">
@@ -1358,12 +1358,18 @@
     } else {
       document.getElementById('vrdTitulo').textContent = iprInt.label;
       var absDesv = Math.abs(Math.round(desv));
-      var descMap = {
-        bajo:  absDesv + '% por debajo del precio de referencia de propiedades similares en ' + zonaLabel + '. Puede representar una oportunidad, pero conviene validar las condiciones de la propiedad.',
-        rango: 'El precio se encuentra dentro del rango observado de propiedades similares en ' + zonaLabel + '. Condiciones alineadas al mercado observable.',
-        sobre: absDesv + '% por encima del precio de referencia de propiedades similares en ' + zonaLabel + '. Existe margen para negociar o explorar alternativas en la misma zona.'
-      };
-      document.getElementById('vrdDescripcion').textContent = descMap[iprInt.cat] || '';
+      var dirV = desv > 0 ? 'por encima' : 'por debajo';
+      var descV;
+      if (absDesv === 0) {
+        descV = 'Tu precio coincide con el precio de referencia de propiedades similares en ' + zonaLabel + '.';
+      } else if (iprInt.cat === 'rango') {
+        descV = 'Tu precio esta ' + absDesv + '% ' + dirV + ' del precio de referencia de propiedades similares en ' + zonaLabel + ', todavia dentro del rango habitual del mercado.';
+      } else if (iprInt.cat === 'bajo') {
+        descV = 'Tu precio esta ' + absDesv + '% por debajo del precio de referencia de propiedades similares en ' + zonaLabel + '. Puede representar una oportunidad, pero conviene validar las condiciones de la propiedad.';
+      } else { // sobre
+        descV = 'Tu precio esta ' + absDesv + '% por encima del precio de referencia de propiedades similares en ' + zonaLabel + '. Existe margen para negociar o explorar alternativas en la misma zona.';
+      }
+      document.getElementById('vrdDescripcion').textContent = descV;
     }
 
     // ── IAO ───────────────────────────────────────────────────
@@ -1376,28 +1382,33 @@
     // ── RESUMEN RAPIDO ────────────────────────────────────────
     var resumen = document.getElementById('resumenRapido');
     resumen.style.display = 'block';
-    var resTexto = modoLimitado
-      ? 'Esta zona cuenta con pocas propiedades similares registradas. Los valores mostrados son orientativos. Se recomienda complementar con inspeccion directa del mercado.'
-      : iprInt.cat === 'bajo'
-        ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por debajo del precio de referencia de la zona. Si las condiciones de la propiedad son buenas, puede ser un punto de entrada favorable.'
-        : iprInt.cat === 'sobre'
-          ? 'El precio solicitado esta ' + Math.abs(Math.round(desv)) + '% por encima del precio de referencia de la zona. Hay margen para negociar: propiedades similares se ofrecen a $' + Math.round(mediana).toLocaleString() + '/m2.'
-          : 'El precio esta alineado con propiedades similares en ' + zonaLabel + '. Rango observado: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
+    var resTexto;
+    if (modoLimitado) {
+      resTexto = 'Esta zona cuenta con pocas propiedades similares registradas. Los valores mostrados son orientativos. Se recomienda complementar con inspeccion directa del mercado.';
+    } else if (Math.round(desv) === 0) {
+      resTexto = 'Tu precio coincide con el precio de referencia de la zona ($' + Math.round(mediana).toLocaleString() + '/m2). Esta en linea con propiedades similares.';
+    } else if (iprInt.cat === 'bajo') {
+      resTexto = 'Tu precio esta ' + Math.abs(Math.round(desv)) + '% por debajo del precio de referencia de la zona. Si las condiciones de la propiedad son buenas, puede ser un punto de entrada favorable.';
+    } else if (iprInt.cat === 'sobre') {
+      resTexto = 'Tu precio esta ' + Math.abs(Math.round(desv)) + '% por encima del precio de referencia de la zona. Hay margen para negociar: propiedades similares se ofrecen a $' + Math.round(mediana).toLocaleString() + '/m2.';
+    } else { // rango con direccion
+      resTexto = 'Tu precio esta ' + Math.abs(Math.round(desv)) + '% ' + (desv > 0 ? 'por encima' : 'por debajo') + ' del precio de referencia de la zona ($' + Math.round(mediana).toLocaleString() + '/m2), dentro del rango habitual de propiedades similares.';
+    }
     document.getElementById('resumenTexto').textContent = resTexto;
 
-    // ── GAUGE (signo LITERAL vs el precio tipico de la zona) ─
-    // El "precio tipico" = mediana de propiedades similares en la zona.
-    //   por ENCIMA del tipico → +X%  (mas caro)   · color naranja/rojo
-    //   por DEBAJO del tipico → -X%  (mas barato)  · color verde
-    //   exactamente en el tipico → 0%
+    // ── GAUGE (signo LITERAL vs el precio de referencia de la zona) ─
+    // El "precio de referencia" = mediana de propiedades similares en la zona.
+    //   por ENCIMA de la referencia → +X%  (mas caro)   · color naranja/rojo
+    //   por DEBAJO de la referencia → -X%  (mas barato)  · color verde
+    //   exactamente en la referencia → 0%
     // Signo literal, aplica tambien dentro del rango: +1% = 1% mas caro, -1% = 1% mas barato.
     var gaugeColor   = iprInt.cat==='bajo' ? '#10b981' : iprInt.cat==='sobre' ? '#ef4444' : '#fbbf24';
     var absDesvR  = Math.round(Math.abs(desv));
     var esNeutral = absDesvR === 0;
     var signoComp = esNeutral ? '' : (desv > 0 ? '+' : '-');
-    var gaugeLabelTx = esNeutral ? 'en el precio tipico de la zona'
-                     : desv > 0  ? 'sobre el precio tipico de la zona'
-                     :             'bajo el precio tipico de la zona';
+    var gaugeLabelTx = esNeutral ? 'en el precio de referencia'
+                     : desv > 0  ? 'sobre el precio de referencia'
+                     :             'bajo el precio de referencia';
     document.getElementById('lblGaugeVal').textContent  = esNeutral
       ? (modoLimitado ? '~0%' : '0%')
       : (modoLimitado ? '~' : '') + signoComp + absDesvR + '%';
@@ -1445,13 +1456,13 @@
     if (modoLimitado) {
       expTxt = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.';
     } else if (esNeutral) {
-      expTxt = 'Tu precio coincide con el precio tipico de ' + tipo.toLowerCase() + 's similares en ' + zonaLabel + '.';
+      expTxt = 'Tu precio coincide con el precio de referencia de ' + tipo.toLowerCase() + 's similares en ' + zonaLabel + '.';
     } else if (iprInt.cat === 'rango') {
-      expTxt = 'Tu precio esta ' + absDesvR + '% ' + dir + ' del precio tipico de la zona, todavia dentro del rango normal del mercado en ' + zonaLabel + '.';
+      expTxt = 'Tu precio esta ' + absDesvR + '% ' + dir + ' del precio de referencia de la zona, todavia dentro del rango normal del mercado en ' + zonaLabel + '.';
     } else if (iprInt.cat === 'bajo') {
-      expTxt = 'Tu precio esta ' + absDesvR + '% por debajo del precio tipico de la zona. Suele indicar una oportunidad, pero conviene revisar el estado de la propiedad.';
+      expTxt = 'Tu precio esta ' + absDesvR + '% por debajo del precio de referencia de la zona. Suele indicar una oportunidad, pero conviene revisar el estado de la propiedad.';
     } else { // sobre
-      expTxt = 'Tu precio esta ' + absDesvR + '% por encima del precio tipico de la zona. Esta mas caro que propiedades similares; hay margen para negociar.';
+      expTxt = 'Tu precio esta ' + absDesvR + '% por encima del precio de referencia de la zona. Esta mas caro que propiedades similares; hay margen para negociar.';
     }
     document.getElementById('lblExplanation').textContent = expTxt;
 
@@ -1481,13 +1492,20 @@
     var tp = ((tuPM2-min)/(max-min+1))*100;
     tt.style.left = Math.min(Math.max(tp,5),92) + '%';
 
-    var warningMap = {
-      bajo:  'El precio observado se encuentra por debajo del rango de propiedades similares activas en ' + zonaLabel + '. Puede representar una oportunidad. Se recomienda validar las condiciones fisicas del inmueble antes de proceder.',
-      rango: 'El precio observado se encuentra cercano al de otras propiedades similares activas en ' + zonaLabel + '. Condiciones alineadas con el mercado observable.',
-      sobre: 'El precio observado se encuentra por encima del rango de propiedades similares en ' + zonaLabel + '. Propiedades comparables se ofrecen a precios menores. Existe margen de negociacion.',
-      ref:   'La zona cuenta con pocas propiedades similares registradas. Los datos mostrados son orientativos. Se recomienda complementar con informacion directa del mercado.'
-    };
-    document.getElementById('lblWarning').textContent = warningMap[iprInt.cat];
+    var dirW = desv > 0 ? 'por encima' : 'por debajo';
+    var warnTxt;
+    if (modoLimitado) {
+      warnTxt = 'La zona cuenta con pocas propiedades similares registradas. Los datos mostrados son orientativos. Se recomienda complementar con informacion directa del mercado.';
+    } else if (Math.round(desv) === 0) {
+      warnTxt = 'Tu precio coincide con el de otras propiedades similares activas en ' + zonaLabel + '. Esta justo en el precio de referencia de la zona.';
+    } else if (iprInt.cat === 'bajo') {
+      warnTxt = 'Tu precio esta por debajo del precio de referencia de propiedades similares activas en ' + zonaLabel + '. Puede representar una oportunidad. Se recomienda validar las condiciones fisicas del inmueble antes de proceder.';
+    } else if (iprInt.cat === 'sobre') {
+      warnTxt = 'Tu precio esta por encima del precio de referencia de propiedades similares en ' + zonaLabel + '. Propiedades comparables se ofrecen a precios menores. Existe margen de negociacion.';
+    } else { // rango con direccion
+      warnTxt = 'Tu precio esta ' + Math.abs(Math.round(desv)) + '% ' + dirW + ' del precio de referencia de la zona, todavia dentro del rango habitual de propiedades similares en ' + zonaLabel + '.';
+    }
+    document.getElementById('lblWarning').textContent = warnTxt;
     document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zonaLabel + ' · ' + tipo + '.';
 
     // ── FOOTER ────────────────────────────────────────────────
@@ -1766,14 +1784,22 @@
       pdf.setFontSize(20); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
       pdf.text(d.iprInt.label,M+8,y+20);
       pdf.setFontSize(26); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
-      pdf.text((d.modoLimitado?'~':'')+d.signo+Math.round(d.desv)+'%',W-M-5,y+22,{align:'right'});
+      var pdfDesvTxt = Math.round(d.desv)===0 ? '0%' : (d.signo+Math.round(d.desv)+'%');
+      pdf.text((d.modoLimitado?'~':'')+pdfDesvTxt,W-M-5,y+22,{align:'right'});
       pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
       pdf.text('vs precio de referencia',W-M-5,y+28,{align:'right'});
-      var concTxt=d.modoLimitado
-        ?'Zona con pocas propiedades similares registradas ('+d.n+'). Los datos son orientativos.'
-        :d.iprInt.cat==='bajo'?'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por debajo de propiedades similares activas en '+d.zonaLabel+'. Puede representar un punto de entrada favorable.'
-        :d.iprInt.cat==='sobre'?'El precio observado se encuentra '+Math.abs(Math.round(d.desv))+'% por encima de propiedades similares activas en '+d.zonaLabel+'. Existe margen para negociar.'
-        :'El precio observado se encuentra dentro del rango de propiedades similares activas en '+d.zonaLabel+'. Condiciones alineadas con el mercado observable.';
+      var concTxt;
+      if (d.modoLimitado) {
+        concTxt='Zona con pocas propiedades similares registradas ('+d.n+'). Los datos son orientativos.';
+      } else if (Math.round(d.desv)===0) {
+        concTxt='Tu precio coincide con el precio de referencia de propiedades similares activas en '+d.zonaLabel+'.';
+      } else if (d.iprInt.cat==='bajo') {
+        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% por debajo del precio de referencia de propiedades similares activas en '+d.zonaLabel+'. Puede representar un punto de entrada favorable.';
+      } else if (d.iprInt.cat==='sobre') {
+        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% por encima del precio de referencia de propiedades similares activas en '+d.zonaLabel+'. Existe margen para negociar.';
+      } else { // rango
+        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% '+(d.desv>0?'por encima':'por debajo')+' del precio de referencia de propiedades similares activas en '+d.zonaLabel+', todavia dentro del rango habitual del mercado.';
+      }
       sub(concTxt,M+8,y+34,white,8,W-2*M-16);
       y+=51;
 
@@ -1808,11 +1834,18 @@
       // Bloque 4 — Interpretacion (24mm)
       card(M,y,W-2*M,24,deep); accent(M,y,24,iprColor);
       lbl('Lo que esto significa',M+8,y+7);
-      var interp=d.modoLimitado
-        ?'La zona cuenta con pocas propiedades similares. Se recomienda complementar con informacion directa del mercado antes de tomar decisiones.'
-        :d.iprInt.cat==='bajo'?'El precio esta por debajo del rango usual para esta zona. Si las condiciones fisicas son adecuadas, puede representar una oportunidad. Validar estado antes de proceder.'
-        :d.iprInt.cat==='sobre'?'El precio esta por encima del rango usual. Propiedades similares se ofrecen a $'+Math.round(d.mediana).toLocaleString()+'/m2. Hay margen para negociar.'
-        :'El precio esta alineado con propiedades similares activas en '+d.zonaLabel+'. Las condiciones son consistentes con el mercado observable.';
+      var interp;
+      if (d.modoLimitado) {
+        interp='La zona cuenta con pocas propiedades similares. Se recomienda complementar con informacion directa del mercado antes de tomar decisiones.';
+      } else if (Math.round(d.desv)===0) {
+        interp='Tu precio coincide con el precio de referencia de la zona. Esta en linea con propiedades similares activas.';
+      } else if (d.iprInt.cat==='bajo') {
+        interp='Tu precio esta por debajo del precio de referencia usual para esta zona. Si las condiciones fisicas son adecuadas, puede representar una oportunidad. Validar estado antes de proceder.';
+      } else if (d.iprInt.cat==='sobre') {
+        interp='Tu precio esta por encima del precio de referencia usual. Propiedades similares se ofrecen a $'+Math.round(d.mediana).toLocaleString()+'/m2. Hay margen para negociar.';
+      } else { // rango
+        interp='Tu precio esta '+Math.abs(Math.round(d.desv))+'% '+(d.desv>0?'por encima':'por debajo')+' del precio de referencia de la zona, dentro del rango habitual de propiedades similares activas en '+d.zonaLabel+'.';
+      }
       sub(interp,M+8,y+14,white,8,W-2*M-16);
       y+=30;
 
