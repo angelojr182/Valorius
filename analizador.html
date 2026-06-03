@@ -550,18 +550,6 @@
         <span class="rl-val" id="rlSobre">--</span>
       </div>
     </div>
-    <div class="slider-pill-wrap">
-      <div class="slider-pill-bar">
-        <div id="sliderBubble" class="slider-pill-bubble">--</div>
-        <div id="sliderThumb" class="slider-pill-thumb"></div>
-      </div>
-      <div class="slider-pill-prices">
-        <span id="lblSliderMin">--</span>
-        <span id="lblSliderMed">--</span>
-        <span id="lblSliderMax">--</span>
-      </div>
-      <div class="slider-pill-labels"><span>Bajo mercado</span><span>En rango</span><span>Sobre mercado</span></div>
-    </div>
   </section>
 
   <!-- COMPARACION CON PROPIEDADES SIMILARES -->
@@ -1487,19 +1475,6 @@
       document.getElementById('gaugeBulb').style.filter = 'drop-shadow(0 0 6px ' + gaugeColor + ')';
     }
 
-    // ── SLIDER (alineado con IPR) ─────────────────────────────
-    var thumb  = document.getElementById('sliderThumb');
-    var bubble = document.getElementById('sliderBubble');
-    var tPos   = 50;
-    if (!modoLimitado) {
-      if      (iprInt.cat==='bajo')  { tPos=15; thumb.style.background='#10b981'; }
-      else if (iprInt.cat==='sobre') { tPos=85; thumb.style.background='#f87171'; }
-      else                           { tPos=50; thumb.style.background='#e2b05c'; }
-    }
-    thumb.style.left  = tPos + '%';
-    bubble.style.left = tPos + '%';
-    bubble.textContent = '$' + Math.round(tuPM2).toLocaleString() + '/m²';
-
     // ── TEXTO POSICION (explicito, en lenguaje claro) ─────────
     var dir = desv > 0 ? 'por encima' : 'por debajo';
     var expTxt;
@@ -1534,9 +1509,6 @@
     document.getElementById('lblMinVal').textContent = '$' + Math.round(min).toLocaleString();
     document.getElementById('lblMedVal').textContent = '$' + Math.round(mediana).toLocaleString();
     document.getElementById('lblMaxVal').textContent = '$' + Math.round(max).toLocaleString();
-    document.getElementById('lblSliderMin').textContent = '$' + Math.round(min).toLocaleString() + '/m²';
-    document.getElementById('lblSliderMed').textContent = '$' + Math.round(mediana).toLocaleString();
-    document.getElementById('lblSliderMax').textContent = '$' + Math.round(max).toLocaleString() + '/m²';
 
     // ── Leyenda de rangos: precio que define cada zona (umbrales 0.85x / 1.15x mediana)
     var uBajo  = Math.round(mediana * 0.85);
