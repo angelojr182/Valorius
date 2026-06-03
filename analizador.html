@@ -14,15 +14,46 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* ── Tooltips ⓘ ─────────────────────────────────────── */
-    .info-wrap { position:relative; display:inline-flex; align-items:center; gap:4px; }
+    .info-wrap { position:relative; display:inline-flex; align-items:center; gap:5px; }
+    /* Chip de ayuda: dorado tenue para que se lea como interactivo (no decoracion) */
     .info-icon {
       display:inline-flex; align-items:center; justify-content:center;
-      width:14px; height:14px; border-radius:50%;
-      border:1px solid rgba(148,163,184,0.4); color:#64748b;
-      font-size:9px; font-weight:700; cursor:help; flex-shrink:0;
+      width:16px; height:16px; border-radius:50%;
+      border:1px solid rgba(226,176,92,0.5); background:rgba(226,176,92,0.12);
+      color:#e2b05c; font-size:10px; font-weight:700; cursor:pointer; flex-shrink:0;
       transition:all 0.2s; font-style:normal; line-height:1;
     }
-    .info-icon:hover { border-color:#e2b05c; color:#e2b05c; }
+    .info-icon:hover, .info-icon:active { border-color:#e2b05c; background:rgba(226,176,92,0.24); }
+    /* Pulso de descubrimiento (una sola vez, finito) */
+    @keyframes infoPulse {
+      0%   { box-shadow:0 0 0 0 rgba(226,176,92,0.5); }
+      70%  { box-shadow:0 0 0 8px rgba(226,176,92,0); }
+      100% { box-shadow:0 0 0 0 rgba(226,176,92,0); }
+    }
+    .info-icon.pulsar { animation: infoPulse 1.5s ease-out 3; }
+    /* Coachmark de primera visita */
+    .tip-coach {
+      position:absolute; top:calc(100% + 10px); left:0; z-index:10000;
+      background:#0a1428; border:1px solid rgba(226,176,92,0.45);
+      border-radius:10px; padding:10px 32px 10px 14px; width:230px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.55);
+      font-size:11.5px; color:#cbd5e1; line-height:1.5;
+      animation: coachIn 0.45s cubic-bezier(0.2,0.8,0.2,1) both;
+    }
+    .tip-coach b { color:#e2b05c; }
+    .tip-coach::after {
+      content:''; position:absolute; bottom:100%; left:16px;
+      border:6px solid transparent; border-bottom-color:rgba(226,176,92,0.45);
+    }
+    .tip-coach .coach-x {
+      position:absolute; top:6px; right:8px; cursor:pointer;
+      color:#64748b; font-size:14px; line-height:1; padding:2px;
+    }
+    .tip-coach .coach-x:hover { color:#e2b05c; }
+    @keyframes coachIn {
+      from { opacity:0; transform:translateY(-6px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
     .info-tooltip {
       position:absolute; bottom:calc(100% + 8px); left:50%;
       transform:translateX(-50%);
@@ -702,23 +733,58 @@
 
   // ─── TOOLTIPS ────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
+    function toggleTip(tip) {
+      var vis = tip.classList.contains('visible');
+      document.querySelectorAll('.info-tooltip').forEach(function(t) { t.classList.remove('visible'); });
+      if (!vis) tip.classList.add('visible');
+    }
     document.querySelectorAll('.info-icon').forEach(function(icon) {
       var tipId = 'tip-' + icon.getAttribute('data-tip');
       var tip   = document.getElementById(tipId);
       if (!tip) return;
+      // Desktop: hover muestra; click alterna (por si el usuario hace clic)
       icon.addEventListener('mouseenter', function() { tip.classList.add('visible'); });
       icon.addEventListener('mouseleave', function() { tip.classList.remove('visible'); });
-      icon.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        var vis = tip.classList.contains('visible');
-        document.querySelectorAll('.info-tooltip').forEach(function(t) { t.classList.remove('visible'); });
-        if (!vis) tip.classList.add('visible');
-      });
+      icon.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); toggleTip(tip); marcarAyudaVista(); });
+      // Movil: tap alterna
+      icon.addEventListener('touchstart', function(e) { e.preventDefault(); toggleTip(tip); marcarAyudaVista(); });
     });
     document.addEventListener('touchstart', function(e) {
       if (!e.target.classList.contains('info-icon'))
         document.querySelectorAll('.info-tooltip').forEach(function(t) { t.classList.remove('visible'); });
     });
+    document.addEventListener('click', function(e) {
+      if (!e.target.classList.contains('info-icon'))
+        document.querySelectorAll('.info-tooltip').forEach(function(t) { t.classList.remove('visible'); });
+    });
+
+    // ── Descubrimiento de ayuda (una sola vez, al ver resultados) ──
+    function marcarAyudaVista() {
+      try { localStorage.setItem('valorius_info_hint', '1'); } catch(e) {}
+      var c = document.querySelector('.tip-coach');
+      if (c && c.parentNode) c.parentNode.removeChild(c);
+      document.querySelectorAll('.info-icon.pulsar').forEach(function(ic){ ic.classList.remove('pulsar'); });
+    }
+    window.marcarAyudaVista = marcarAyudaVista;
+
+    // Se llama tras el primer análisis (cuando los ⓘ ya son visibles y relevantes)
+    window.mostrarPistaAyuda = function() {
+      var yaVisto = false;
+      try { yaVisto = !!localStorage.getItem('valorius_info_hint'); } catch(e) {}
+      if (yaVisto) return;
+      var primero = document.querySelector('.panel-title.info-wrap .info-icon');
+      if (!primero) return;
+      // Pulso finito en todos los iconos
+      document.querySelectorAll('.info-icon').forEach(function(ic){ ic.classList.add('pulsar'); });
+      // Coachmark junto al primer icono de resultados
+      if (document.querySelector('.tip-coach')) return;
+      var coach = document.createElement('div');
+      coach.className = 'tip-coach';
+      coach.innerHTML = '<span class="coach-x" aria-label="Cerrar">✕</span>💡 Toca los <b>ⓘ</b> para entender qué significa cada dato del análisis.';
+      primero.parentNode.appendChild(coach);
+      coach.querySelector('.coach-x').addEventListener('click', function(e){ e.stopPropagation(); marcarAyudaVista(); });
+      setTimeout(function(){ marcarAyudaVista(); }, 8000);
+    };
   });
 
   // ─── FETCH ────────────────────────────────────────────────
@@ -1444,6 +1510,9 @@
     // PDF habilitado
     var btnPDF = document.getElementById('btnExportPDF');
     btnPDF.disabled=false; btnPDF.style.opacity='1'; btnPDF.style.cursor='pointer';
+
+    // Pista de ayuda la primera vez que el usuario ve resultados (ⓘ ya visibles)
+    if (window.mostrarPistaAyuda) setTimeout(window.mostrarPistaAyuda, 600);
   }
 
   function renderChart(min, mediana, max, tuPrecio, items) {
