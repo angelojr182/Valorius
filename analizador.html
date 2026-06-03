@@ -461,7 +461,7 @@
       <span class="info-icon" data-tip="posicion">ⓘ</span>
       <div class="info-tooltip" id="tip-posicion">
         <div class="info-tooltip-title">Posicion en el mercado</div>
-        <div class="info-tooltip-body">El "precio de mercado" es el precio tipico (la mediana) por m² de propiedades similares activas en la zona. El circulo muestra que tanto se aleja el precio de esa referencia: <b>+</b> cuando esta por debajo (oportunidad) y <b>−</b> cuando esta por encima (hacia sobreprecio). Aunque caiga dentro del rango normal, el signo indica hacia donde se inclina.</div>
+        <div class="info-tooltip-body">El "precio tipico" es la mediana por m² de propiedades similares activas en la zona. El circulo muestra que tanto se aleja tu precio de esa referencia: <b>+</b> cuando esta por encima (mas caro) y <b>−</b> cuando esta por debajo (mas barato). El color indica si es oportunidad (verde) o sobreprecio (rojo).</div>
       </div>
     </div>
     <div class="gauge-container">
@@ -1385,21 +1385,19 @@
           : 'El precio esta alineado con propiedades similares en ' + zonaLabel + '. Rango observado: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
     document.getElementById('resumenTexto').textContent = resTexto;
 
-    // ── GAUGE (perspectiva del comprador · signo segun direccion vs el precio de mercado) ─
-    // El "precio de mercado" = mediana de propiedades similares en la zona.
-    //   por DEBAJO de la mediana → +X%  (oportunidad)        · arco verde→azul
-    //   por ENCIMA de la mediana → -X%  (hacia sobreprecio)  · arco naranja→rojo
-    //   exactamente en la mediana → 0%  (en el precio de mercado)
-    // El signo es direccional y aplica TAMBIEN dentro del rango: aunque sea 1% hacia
-    // arriba, muestra -1% (va hacia el sobreprecio); 1% hacia abajo, +1% (oportunidad).
+    // ── GAUGE (signo LITERAL vs el precio tipico de la zona) ─
+    // El "precio tipico" = mediana de propiedades similares en la zona.
+    //   por ENCIMA del tipico → +X%  (mas caro)   · color naranja/rojo
+    //   por DEBAJO del tipico → -X%  (mas barato)  · color verde
+    //   exactamente en el tipico → 0%
+    // Signo literal, aplica tambien dentro del rango: +1% = 1% mas caro, -1% = 1% mas barato.
     var gaugeColor   = iprInt.cat==='bajo' ? '#10b981' : iprInt.cat==='sobre' ? '#ef4444' : '#fbbf24';
     var absDesvR  = Math.round(Math.abs(desv));
     var esNeutral = absDesvR === 0;
-    var signoComp = esNeutral ? '' : (desv > 0 ? '-' : '+');
-    var gaugeLabelTx = esNeutral             ? 'en el precio de mercado'
-                     : iprInt.cat==='bajo'   ? 'bajo el precio de mercado'
-                     : iprInt.cat==='sobre'  ? 'sobre el precio de mercado'
-                     : 'dentro del rango del mercado';
+    var signoComp = esNeutral ? '' : (desv > 0 ? '+' : '-');
+    var gaugeLabelTx = esNeutral ? 'en el precio tipico de la zona'
+                     : desv > 0  ? 'sobre el precio tipico de la zona'
+                     :             'bajo el precio tipico de la zona';
     document.getElementById('lblGaugeVal').textContent  = esNeutral
       ? (modoLimitado ? '~0%' : '0%')
       : (modoLimitado ? '~' : '') + signoComp + absDesvR + '%';
@@ -1441,14 +1439,21 @@
     bubble.style.left = tPos + '%';
     bubble.textContent = '$' + Math.round(tuPM2).toLocaleString() + '/m²';
 
-    // ── TEXTO POSICION ────────────────────────────────────────
-    var expMap = {
-      bajo:  'El precio esta por debajo del rango observado para ' + tipo.toLowerCase() + 's en ' + zonaLabel + '. Referencia: ' + n + ' propiedades similares.',
-      rango: 'El precio esta dentro del rango observado para ' + tipo.toLowerCase() + 's en ' + zonaLabel + '. Referencia: ' + n + ' propiedades similares.',
-      sobre: 'El precio esta por encima del rango observado para ' + tipo.toLowerCase() + 's en ' + zonaLabel + '. Referencia: ' + n + ' propiedades similares.',
-      ref:   'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.'
-    };
-    document.getElementById('lblExplanation').textContent = expMap[iprInt.cat];
+    // ── TEXTO POSICION (explicito, en lenguaje claro) ─────────
+    var dir = desv > 0 ? 'por encima' : 'por debajo';
+    var expTxt;
+    if (modoLimitado) {
+      expTxt = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.';
+    } else if (esNeutral) {
+      expTxt = 'Tu precio coincide con el precio tipico de ' + tipo.toLowerCase() + 's similares en ' + zonaLabel + '.';
+    } else if (iprInt.cat === 'rango') {
+      expTxt = 'Tu precio esta ' + absDesvR + '% ' + dir + ' del precio tipico de la zona, todavia dentro del rango normal del mercado en ' + zonaLabel + '.';
+    } else if (iprInt.cat === 'bajo') {
+      expTxt = 'Tu precio esta ' + absDesvR + '% por debajo del precio tipico de la zona. Suele indicar una oportunidad, pero conviene revisar el estado de la propiedad.';
+    } else { // sobre
+      expTxt = 'Tu precio esta ' + absDesvR + '% por encima del precio tipico de la zona. Esta mas caro que propiedades similares; hay margen para negociar.';
+    }
+    document.getElementById('lblExplanation').textContent = expTxt;
 
     // ── METRICAS ───────────────────────────────────────────────
     document.getElementById('lblTuPrecio').textContent = '$' + tuPM2.toLocaleString();
