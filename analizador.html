@@ -55,6 +55,10 @@
       to   { opacity:1; transform:translateY(0); }
     }
 
+    /* Microinteraccion: entrada suave de los resultados al analizar */
+    @keyframes resultIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .anim-in { animation: resultIn 0.45s cubic-bezier(0.2,0.8,0.2,1) both; }
+
     /* Burbuja de datos por punto (Comparacion con propiedades similares) */
     .chart-node-point { cursor:pointer; transition:stroke 0.15s; }
     .chart-node-point:hover { stroke:#e2b05c; stroke-width:2; }
@@ -1566,6 +1570,17 @@
 
     // Pista de ayuda la primera vez que el usuario ve resultados (ⓘ ya visibles)
     if (window.mostrarPistaAyuda) setTimeout(window.mostrarPistaAyuda, 600);
+
+    // Microinteraccion: entrada suave del veredicto + tarjetas, con leve stagger
+    var animEls = [document.getElementById('veredictoPanel')]
+      .concat(Array.prototype.slice.call(document.querySelectorAll('.cards-resultados > .card-resultado')));
+    animEls.forEach(function(el, i){
+      if (!el) return;
+      el.classList.remove('anim-in');
+      void el.offsetWidth; // reinicia la animacion
+      el.style.animationDelay = (i * 70) + 'ms';
+      el.classList.add('anim-in');
+    });
   }
 
   // ── Burbuja de datos al tocar un punto del grafico ──────────
@@ -1588,11 +1603,15 @@
       var diffTxt = diff === 0 ? 'igual a tu precio'
                   : (diff > 0 ? '+' + diff + '% mas cara que la tuya' : Math.abs(diff) + '% mas barata que la tuya');
       var diffCls = diff > 0 ? 'pb-up' : diff < 0 ? 'pb-down' : '';
+      var habBan = [];
+      if (data.hab != null)   habBan.push(data.hab + ' hab');
+      if (data.banos != null) habBan.push((+data.banos % 1 === 0 ? +data.banos : data.banos) + ' baños');
       html = '<div class="pb-tit">Propiedad similar</div>'
            + '<div class="pb-pm2">$' + Math.round(data.pm2).toLocaleString() + '/m²</div>'
-           + (data.area    ? '<div class="pb-row"><span>Tamaño</span><b>' + Math.round(data.area) + ' m²</b></div>' : '')
-           + (data.total   ? '<div class="pb-row"><span>Precio total</span><b>$' + Math.round(data.total).toLocaleString() + '</b></div>' : '')
-           + (data.colonia ? '<div class="pb-row"><span>Colonia</span><b>' + data.colonia + '</b></div>' : '')
+           + (data.area     ? '<div class="pb-row"><span>Tamaño</span><b>' + Math.round(data.area) + ' m²</b></div>' : '')
+           + (habBan.length ? '<div class="pb-row"><span>Distribución</span><b>' + habBan.join(' · ') + '</b></div>' : '')
+           + (data.total    ? '<div class="pb-row"><span>Precio total</span><b>$' + Math.round(data.total).toLocaleString() + '</b></div>' : '')
+           + (data.colonia  ? '<div class="pb-row"><span>Colonia</span><b>' + data.colonia + '</b></div>' : '')
            + '<div class="pb-diff ' + diffCls + '">' + diffTxt + '</div>';
     }
     bubble.innerHTML = html;
@@ -1641,7 +1660,7 @@
       {pm2:Math.round(max),              area:250}
     ];
     base.sort(function(a,b){return a.pm2-b.pm2;});
-    var pts = base.map(function(it){return {pm2:it.pm2, area:it.area||0, total:it.total||0, colonia:it.colonia||'', isTarget:false};});
+    var pts = base.map(function(it){return {pm2:it.pm2, area:it.area||0, total:it.total||0, colonia:it.colonia||'', hab:it.hab, banos:it.banos, isTarget:false};});
     var ti  = pts.findIndex(function(p){return p.pm2>tuPrecio;});
     if(ti===-1){pts.push({pm2:tuPrecio,area:0,isTarget:true}); ti=pts.length-1;}
     else pts.splice(ti,0,{pm2:tuPrecio,area:0,isTarget:true});
@@ -1659,7 +1678,7 @@
 
     // ── Coordenadas finales ───────────────────────────────────
     var coords = pts.map(function(p,i){
-      return {x:rankX(i), y:toY(p.pm2), pm2:p.pm2, area:p.area, total:p.total, colonia:p.colonia, isTarget:p.isTarget};
+      return {x:rankX(i), y:toY(p.pm2), pm2:p.pm2, area:p.area, total:p.total, colonia:p.colonia, hab:p.hab, banos:p.banos, isTarget:p.isTarget};
     });
     var targetY = toY(tuPrecio);
     var targetX = coords[ti].x;
@@ -1674,7 +1693,19 @@
     document.getElementById('curvePath').setAttribute('d',d);
 
     // ── Nodos y etiquetas ─────────────────────────────────────
-    var compIdx=0; // índice solo de comparables (para stagger)
+    var compIdx=0;      // índice solo de comparables (para stagger)
+    var lastLabelX=-100; // X de la última etiqueta m² dibujada (evita solapamiento)
+    // Área de toque ampliada (círculo transparente encima) para que sea fácil
+    // tocar los puntos con el dedo en móvil. El bubble se posiciona en el círculo visible.
+    function addHit(d, visEl){
+      var hit=document.createElementNS(NS,'circle');
+      hit.setAttribute('cx',d.x); hit.setAttribute('cy',d.y);
+      hit.setAttribute('r', Math.max((d.isTarget?6:toR(d.area))+7, 13));
+      hit.setAttribute('fill','transparent');
+      hit.style.cursor='pointer';
+      hit.addEventListener('click', function(e){ e.stopPropagation(); window.mostrarPuntoBubble(d, visEl); });
+      g.appendChild(hit);
+    }
     coords.forEach(function(pt,i){
       var SVG=NS;
       if(pt.isTarget){
@@ -1691,9 +1722,8 @@
         var c=document.createElementNS(SVG,'circle');
         c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
         c.setAttribute('r','6'); c.setAttribute('class','chart-node-point active-target');
-        c.style.cursor='pointer';
-        (function(d,el){ el.addEventListener('click', function(e){ e.stopPropagation(); window.mostrarPuntoBubble(d, el); }); })(pt, c);
         g.appendChild(c);
+        addHit(pt, c);
         // Precio debajo
         var priceY = pt.y<30 ? Math.min(pt.y+35,H+8) : Math.min(pt.y+18,H+8);
         var lb=document.createElementNS(SVG,'text');
@@ -1705,8 +1735,9 @@
         g.appendChild(lb);
       } else {
         var r=toR(pt.area);
-        // Etiqueta m²: alterna arriba/abajo (stagger) para evitar solapamiento
-        if(pt.area>0){
+        // Etiqueta m²: solo si hay espacio horizontal suficiente (evita solapamiento),
+        // y alterna arriba/abajo. El detalle completo se ve al tocar el punto.
+        if(pt.area>0 && (pt.x - lastLabelX) >= 30){
           var arriba=(compIdx%2===0);
           var laY=arriba ? Math.max(pt.y-r-6,6) : Math.min(pt.y+r+10,H+4);
           var la=document.createElementNS(SVG,'text');
@@ -1715,14 +1746,14 @@
           la.setAttribute('font-size','7'); la.setAttribute('fill','#475569');
           la.textContent=Math.round(pt.area)+'m²';
           g.appendChild(la);
+          lastLabelX = pt.x;
         }
         compIdx++;
         var c=document.createElementNS(SVG,'circle');
         c.setAttribute('cx',pt.x); c.setAttribute('cy',pt.y);
         c.setAttribute('r',r); c.setAttribute('class','chart-node-point');
-        c.style.cursor='pointer';
-        (function(d,el){ el.addEventListener('click', function(e){ e.stopPropagation(); window.mostrarPuntoBubble(d, el); }); })(pt, c);
         g.appendChild(c);
+        addHit(pt, c);
       }
     });
 
@@ -2227,7 +2258,7 @@
     var fecha=new Date(); fecha.setDate(fecha.getDate()-DIAS_COMPARABLES);
     var fechaISO=fecha.toISOString().split('T')[0];
     var results = await Promise.all([
-      azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
+      azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,habitaciones,banos,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
       azFetch('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
       azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto'),
       azFetch('/rest/v1/dim_zone?select=zone_id,zona,lat,lng&activo=eq.true')
@@ -2251,6 +2282,8 @@
       var zonaNombre = r.property?.dim_zone?.zona;
       var colNombre  = r.property?.dim_colonia?.colonia;
       var tipo       = r.property?.dim_property_type?.tipo_inmueble;
+      var hab        = r.property?.habitaciones;
+      var ban        = r.property?.banos;
       if(!zoneId||!tipo) return;
       var pUSD=r.moneda==='USD'?r.precio_original:r.precio_original/(r.tipo_cambio||26.5);
       var pm2=pUSD/r.area_construccion;
@@ -2263,13 +2296,13 @@
       var kz=zoneId+'||'+tipo;
       if(!gruposZona[kz]) gruposZona[kz]={zone_id:zoneId, zona:zonaNombre, tipo, precios:[], items:[]};
       gruposZona[kz].precios.push(pm2);
-      gruposZona[kz].items.push({pm2:Math.round(pm2), area:r.area_construccion||0, total:Math.round(pUSD), colonia:colNombre||''});
+      gruposZona[kz].items.push({pm2:Math.round(pm2), area:r.area_construccion||0, total:Math.round(pUSD), colonia:colNombre||'', hab:hab, banos:ban});
       // Colonia aggregate
       if(!coloniaId) return;
       var kc=zoneId+'||'+coloniaId+'||'+tipo;
       if(!gruposColonia[kc]) gruposColonia[kc]={zone_id:zoneId, colonia_id:coloniaId, zona:zonaNombre, colonia:colNombre, tipo, precios:[], items:[]};
       gruposColonia[kc].precios.push(pm2);
-      gruposColonia[kc].items.push({pm2:Math.round(pm2), area:r.area_construccion||0, total:Math.round(pUSD), colonia:colNombre||''});
+      gruposColonia[kc].items.push({pm2:Math.round(pm2), area:r.area_construccion||0, total:Math.round(pUSD), colonia:colNombre||'', hab:hab, banos:ban});
     });
 
     function computeStats(grupos){
