@@ -430,7 +430,7 @@
       <span class="info-icon" data-tip="posicion">ⓘ</span>
       <div class="info-tooltip" id="tip-posicion">
         <div class="info-tooltip-title">Posicion en el mercado</div>
-        <div class="info-tooltip-body">Muestra que tan alejado esta el precio de esta propiedad respecto al precio de referencia de propiedades similares en la zona. El gauge y los colores usan el mismo criterio que el veredicto principal.</div>
+        <div class="info-tooltip-body">El "precio de mercado" es el precio tipico (la mediana) por m² de propiedades similares activas en la zona. El circulo muestra que tanto se aleja el precio de esa referencia: <b>+</b> cuando esta por debajo (oportunidad) y <b>−</b> cuando esta por encima (hacia sobreprecio). Aunque caiga dentro del rango normal, el signo indica hacia donde se inclina.</div>
       </div>
     </div>
     <div class="gauge-container">
@@ -466,7 +466,7 @@
       </svg>
       <div class="gauge-content">
         <span class="gauge-number" id="lblGaugeVal">--</span>
-        <span class="gauge-label" id="lblGaugeLabel">vs referencia</span>
+        <span class="gauge-label" id="lblGaugeLabel">vs precio de mercado</span>
       </div>
     </div>
     <p class="pos-text-desc" id="lblExplanation">Ingresa los datos y presiona Analizar para ver resultados.</p>
@@ -1319,17 +1319,24 @@
           : 'El precio esta alineado con propiedades similares en ' + zonaLabel + '. Rango observado: $' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2.';
     document.getElementById('resumenTexto').textContent = resTexto;
 
-    // ── GAUGE (colores alineados con IPR, signo desde perspectiva del comprador) ─
-    // bajo mercado (desv<0, oportunidad)  → +X%  · arco verde→azul
-    // sobre mercado (desv>0, sobreprecio) → -X%  · arco naranja→rojo
-    // en rango (desv≈0)                   → X%   · arco amarillo
+    // ── GAUGE (perspectiva del comprador · signo segun direccion vs el precio de mercado) ─
+    // El "precio de mercado" = mediana de propiedades similares en la zona.
+    //   por DEBAJO de la mediana → +X%  (oportunidad)        · arco verde→azul
+    //   por ENCIMA de la mediana → -X%  (hacia sobreprecio)  · arco naranja→rojo
+    //   exactamente en la mediana → 0%  (en el precio de mercado)
+    // El signo es direccional y aplica TAMBIEN dentro del rango: aunque sea 1% hacia
+    // arriba, muestra -1% (va hacia el sobreprecio); 1% hacia abajo, +1% (oportunidad).
     var gaugeColor   = iprInt.cat==='bajo' ? '#10b981' : iprInt.cat==='sobre' ? '#ef4444' : '#fbbf24';
-    var gaugeLabelTx = iprInt.cat==='bajo' ? 'bajo el mercado'
-                     : iprInt.cat==='sobre' ? 'sobre el mercado'
-                     : 'en linea con el mercado';
-    var absDesvR = Math.round(Math.abs(desv));
-    var signoComp = iprInt.cat==='bajo' ? '+' : iprInt.cat==='sobre' ? '-' : '';
-    document.getElementById('lblGaugeVal').textContent  = modoLimitado ? '~'+signoComp+absDesvR+'%' : signoComp+absDesvR+'%';
+    var absDesvR  = Math.round(Math.abs(desv));
+    var esNeutral = absDesvR === 0;
+    var signoComp = esNeutral ? '' : (desv > 0 ? '-' : '+');
+    var gaugeLabelTx = esNeutral             ? 'en el precio de mercado'
+                     : iprInt.cat==='bajo'   ? 'bajo el precio de mercado'
+                     : iprInt.cat==='sobre'  ? 'sobre el precio de mercado'
+                     : 'dentro del rango del mercado';
+    document.getElementById('lblGaugeVal').textContent  = esNeutral
+      ? (modoLimitado ? '~0%' : '0%')
+      : (modoLimitado ? '~' : '') + signoComp + absDesvR + '%';
     document.getElementById('lblGaugeVal').style.color  = gaugeColor;
     document.getElementById('lblGaugeLabel').textContent = gaugeLabelTx;
     document.getElementById('lblGaugeLabel').style.color = gaugeColor;
