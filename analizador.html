@@ -1269,7 +1269,11 @@
                 mediana, p25, p75, n, min, max, tuPM2, desv, signo, precioMercado, diferenciaPesos,
                 modoLimitado, nivelZona, nivel, nColonia, iqr, ipr, iprInt, iaoInt};
 
-    document.getElementById('inpPrecio').value = '$' + Math.round(precio).toLocaleString();
+    // Mantener el valor en la moneda que ingresó el usuario (la conversión a USD
+    // ya se hizo solo para el cálculo; no convertir lo que se muestra en pantalla).
+    var precioMostrar = monedaActual === 'LPS' ? Math.round(precio * tasaLPS) : Math.round(precio);
+    var simboloMostrar = monedaActual === 'LPS' ? 'L ' : '$';
+    document.getElementById('inpPrecio').value = simboloMostrar + precioMostrar.toLocaleString();
 
     // ── VEREDICTO PRINCIPAL ──────────────────────────────────
     var vPanel = document.getElementById('veredictoPanel');
