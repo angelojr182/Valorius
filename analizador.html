@@ -84,14 +84,19 @@
     .rl-titulo { font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:#64748b;
       font-weight:700; margin-bottom:4px; text-align:center; }
     .rl-row { display:flex; align-items:flex-start; gap:9px; padding:7px 10px; border-radius:8px;
-      border:1px solid transparent; transition:all 0.2s; }
-    .rl-row.activa { background:rgba(226,176,92,0.1); border-color:rgba(226,176,92,0.35); }
+      border:1px solid transparent; transition:all 0.2s; opacity:0.6; }
+    .rl-row.activa { background:rgba(226,176,92,0.12); border-color:rgba(226,176,92,0.45);
+      box-shadow:inset 3px 0 0 #e2b05c; opacity:1; }
     .rl-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:4px; }
     .rl-verde { background:#10b981; } .rl-ambar { background:#fbbf24; } .rl-rojo { background:#ef4444; }
     .rl-texto { flex:1; min-width:0; }
     .rl-linea { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
     .rl-cat { font-size:12px; color:#cbd5e1; font-weight:600; }
     .rl-row.activa .rl-cat { color:#e2b05c; }
+    .rl-badge { display:none; font-size:8.5px; font-weight:700; letter-spacing:0.04em;
+      text-transform:uppercase; color:#0a1428; background:#e2b05c; padding:2px 7px;
+      border-radius:10px; margin-left:7px; white-space:nowrap; vertical-align:middle; }
+    .rl-row.activa .rl-badge { display:inline-block; }
     .rl-val { font-size:11.5px; color:#94a3b8; white-space:nowrap; flex-shrink:0; }
     .rl-row.activa .rl-val { color:#e2e8f0; }
     .rl-desc { font-size:10px; color:#64748b; line-height:1.45; margin-top:2px; }
@@ -415,7 +420,7 @@
           <div class="paso-numero" id="numeroPaso5">Paso 5 · Precio a analizar</div>
           <label class="form-label">¿Qué precio deseas analizar?</label>
           <div style="display:flex;gap:6px;align-items:stretch;margin-top:6px;">
-            <input type="text" id="inpPrecio" class="form-input" placeholder="Ingresa el precio a analizar · ej: 180,000" style="flex:1;" required oninput="window.verificarBotonAnalizar()" />
+            <input type="text" id="inpPrecio" class="form-input" inputmode="numeric" placeholder="Ingresa el precio a analizar · ej: 180,000" style="flex:1;" required oninput="window.formatPrecio(this)" />
             <button type="button" id="btnMoneda" onclick="window.toggleMoneda()"
               style="background:rgba(226,176,92,0.15);border:1px solid rgba(226,176,92,0.4);color:#e2b05c;
                      padding:8px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;
@@ -555,21 +560,21 @@
       <div class="rl-row" id="rlRowBajo">
         <span class="rl-dot rl-verde"></span>
         <div class="rl-texto">
-          <div class="rl-linea"><span class="rl-cat">Bajo mercado</span><span class="rl-val" id="rlBajo">--</span></div>
+          <div class="rl-linea"><span class="rl-cat">Bajo mercado<span class="rl-badge">Tu propiedad</span></span><span class="rl-val" id="rlBajo">--</span></div>
           <div class="rl-desc">Podría ser oportunidad, pero requiere revisar estado, ubicación y urgencia del vendedor.</div>
         </div>
       </div>
       <div class="rl-row" id="rlRowRango">
         <span class="rl-dot rl-ambar"></span>
         <div class="rl-texto">
-          <div class="rl-linea"><span class="rl-cat">En rango</span><span class="rl-val" id="rlRango">--</span></div>
+          <div class="rl-linea"><span class="rl-cat">En rango<span class="rl-badge">Tu propiedad</span></span><span class="rl-val" id="rlRango">--</span></div>
           <div class="rl-desc">Precio normal para la zona.</div>
         </div>
       </div>
       <div class="rl-row" id="rlRowSobre">
         <span class="rl-dot rl-rojo"></span>
         <div class="rl-texto">
-          <div class="rl-linea"><span class="rl-cat">Sobre mercado</span><span class="rl-val" id="rlSobre">--</span></div>
+          <div class="rl-linea"><span class="rl-cat">Sobre mercado<span class="rl-badge">Tu propiedad</span></span><span class="rl-val" id="rlSobre">--</span></div>
           <div class="rl-desc">Precio alto frente a otras propiedades similares.</div>
         </div>
       </div>
@@ -1044,7 +1049,7 @@
     if (n === 2) return !!document.getElementById('selZona').value;
     if (n === 3) return true; // opcional — siempre "ok"
     if (n === 4) return (parseFloat(document.getElementById('inpArea').value) || 0) > 0;
-    if (n === 5) return (parseFloat(document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'')) || 0) > 0;
+    if (n === 5) return (parseFloat(document.getElementById('inpPrecio').value.replace(/[^0-9]/g,'')) || 0) > 0;
     return false;
   }
   function pasoAlcanzable(n) {
@@ -1074,7 +1079,7 @@
       var a = parseFloat(document.getElementById('inpArea').value) || 0;
       return { label:'Tamaño', valor: a > 0 ? a + ' m²' : 'Sin ingresar', lleno: a > 0 };
     }
-    var pr = parseFloat(document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'')) || 0;
+    var pr = parseFloat(document.getElementById('inpPrecio').value.replace(/[^0-9]/g,'')) || 0;
     var simb = monedaActual === 'LPS' ? 'L ' : '$';
     return { label:'Precio a analizar', valor: pr > 0 ? simb + pr.toLocaleString('en-US') : 'Sin ingresar', lleno: pr > 0 };
   }
@@ -1213,6 +1218,17 @@
     inp.focus();
   };
 
+  // Formatea el precio con comas como separador de miles mientras se escribe.
+  // Evita el bug de los puntos: "3.500.000" hacía parseFloat()=3.5 (se detenía en el 2º punto).
+  window.formatPrecio = function(el) {
+    var desdeFinal = el.value.length - (el.selectionStart || el.value.length);
+    var digitos    = el.value.replace(/[^0-9]/g, '');
+    if (digitos.length > 12) digitos = digitos.slice(0, 12);
+    el.value = digitos ? parseInt(digitos, 10).toLocaleString('en-US') : '';
+    try { var pos = Math.max(0, el.value.length - desdeFinal); el.setSelectionRange(pos, pos); } catch(e){}
+    window.verificarBotonAnalizar();
+  };
+
   // ─── VISIBILIDAD INTELIGENTE DEL PASO 3 (colonia + proyecto) ──
   // Decide qué mostrar: oculta colonia si repite el nombre de la zona o no hay datos,
   // oculta proyecto si no hay proyectos, y oculta todo el paso 3 si ambos están vacíos.
@@ -1294,7 +1310,7 @@
     var coloniaId = document.getElementById('selColonia').value;
     var tipo      = document.getElementById('selTipo').value;
     var area      = parseFloat(document.getElementById('inpArea').value) || 0;
-    var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
+    var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9]/g,'');
     var precio    = parseFloat(raw) || 0;
     if (monedaActual === 'LPS' && precio > 0) precio = precio / tasaLPS;
 
@@ -1355,7 +1371,7 @@
     var coloniaId = document.getElementById('selColonia').value;
     var tipo      = document.getElementById('selTipo').value;
     var area      = parseFloat(document.getElementById('inpArea').value) || 0;
-    var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9.]/g,'');
+    var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9]/g,'');
     var precio    = parseFloat(raw) || 0;
     var res       = resolverComparables(zoneId, coloniaId, tipo);
     ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res);
@@ -1407,8 +1423,8 @@
     // Mantener el valor en la moneda que ingresó el usuario (la conversión a USD
     // ya se hizo solo para el cálculo; no convertir lo que se muestra en pantalla).
     var precioMostrar = monedaActual === 'LPS' ? Math.round(precio * tasaLPS) : Math.round(precio);
-    var simboloMostrar = monedaActual === 'LPS' ? 'L ' : '$';
-    document.getElementById('inpPrecio').value = simboloMostrar + precioMostrar.toLocaleString();
+    // Mantener el campo solo con dígitos + comas (la moneda la indica el botón LPS/USD).
+    document.getElementById('inpPrecio').value = precioMostrar.toLocaleString('en-US');
 
     // ── VEREDICTO PRINCIPAL ──────────────────────────────────
     var vPanel = document.getElementById('veredictoPanel');
@@ -2423,27 +2439,27 @@
         .replace('Boulevard ', 'Blvd. ')
         .replace('Bulevar ', 'Blvr. ');
 
-      // Anillo exterior champán para zona analizada
+      // Halo champán para la zona analizada (disco difuso + anillo brillante)
       if (isTarget) {
         L.circleMarker(coords, {
-          radius: r + 9, fillColor: 'transparent',
-          color: 'rgba(228,199,138,0.18)', weight: 1.5,
-          fillOpacity: 0, opacity: 1, interactive: false
+          radius: r + 14, fillColor: '#E4C78A',
+          color: 'rgba(228,199,138,0.22)', weight: 2,
+          fillOpacity: 0.07, opacity: 1, interactive: false
         }).addTo(window.mapCtxMarkers);
         L.circleMarker(coords, {
-          radius: r + 5, fillColor: 'transparent',
-          color: 'rgba(228,199,138,0.40)', weight: 1,
+          radius: r + 8, fillColor: 'transparent',
+          color: 'rgba(228,199,138,0.50)', weight: 1.5,
           fillOpacity: 0, opacity: 1, interactive: false
         }).addTo(window.mapCtxMarkers);
       }
 
       var circle = L.circleMarker(coords, {
-        radius:      isTarget ? r + 3 : r,
-        fillColor:   isTarget ? '#B88A3B' : color,
-        color:       isTarget ? '#E4C78A' : 'rgba(255,255,255,0.15)',
-        weight:      isTarget ? 2 : 1,
-        fillOpacity: isTarget ? 1 : 0.88,
-        opacity: 1
+        radius:      isTarget ? r + 4 : r,
+        fillColor:   isTarget ? '#C9962F' : color,
+        color:       isTarget ? '#F0D38A' : 'rgba(255,255,255,0.12)',
+        weight:      isTarget ? 3 : 1,
+        fillOpacity: isTarget ? 1 : 0.4,   // resto atenuado: conserva el color pero cede protagonismo
+        opacity:     isTarget ? 1 : 0.8
       })
       .bindPopup(popContent, { className: 'map-ctx-popup', closeButton: false, maxWidth: 220 });
 
