@@ -80,18 +80,21 @@
     .pb-diff.pb-down { color:#34d399; }
 
     /* Leyenda de rangos (Posicion en el mercado) */
-    .rangos-legend { margin:14px auto 4px; max-width:320px; display:flex; flex-direction:column; gap:5px; }
+    .rangos-legend { margin:14px auto 4px; max-width:340px; display:flex; flex-direction:column; gap:5px; }
     .rl-titulo { font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:#64748b;
       font-weight:700; margin-bottom:4px; text-align:center; }
-    .rl-row { display:flex; align-items:center; gap:9px; padding:6px 10px; border-radius:8px;
+    .rl-row { display:flex; align-items:flex-start; gap:9px; padding:7px 10px; border-radius:8px;
       border:1px solid transparent; transition:all 0.2s; }
     .rl-row.activa { background:rgba(226,176,92,0.1); border-color:rgba(226,176,92,0.35); }
-    .rl-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .rl-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:4px; }
     .rl-verde { background:#10b981; } .rl-ambar { background:#fbbf24; } .rl-rojo { background:#ef4444; }
+    .rl-texto { flex:1; min-width:0; }
+    .rl-linea { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
     .rl-cat { font-size:12px; color:#cbd5e1; font-weight:600; }
     .rl-row.activa .rl-cat { color:#e2b05c; }
-    .rl-val { font-size:11.5px; color:#94a3b8; margin-left:auto; white-space:nowrap; }
+    .rl-val { font-size:11.5px; color:#94a3b8; white-space:nowrap; flex-shrink:0; }
     .rl-row.activa .rl-val { color:#e2e8f0; }
+    .rl-desc { font-size:10px; color:#64748b; line-height:1.45; margin-top:2px; }
     .info-tooltip {
       position:absolute; bottom:calc(100% + 8px); left:50%;
       transform:translateX(-50%);
@@ -260,9 +263,16 @@
 <section class="panel">
   <div class="panel-title">Datos de la propiedad</div>
 
-  <!-- Introducción siempre visible — funciona en móvil sin interacción -->
-  <div style="background:rgba(226,176,92,0.08);border:1px solid rgba(226,176,92,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#94a3b8;line-height:1.6;">
-    Ingresa los datos de la propiedad que quieres analizar. El sistema la comparará contra propiedades similares en el mercado de Tegucigalpa y te dirá si el precio está bien, alto o bajo.
+  <!-- Posicionamiento: qué hace (y qué NO hace) Valorius — visible antes del formulario -->
+  <div style="background:rgba(226,176,92,0.08);border:1px solid rgba(226,176,92,0.22);border-radius:10px;padding:13px 16px;margin-bottom:14px;">
+    <div style="font-size:14px;font-weight:700;color:#e2b05c;line-height:1.4;margin-bottom:6px;">
+      Valorius no te dice qué comprar. Te dice si el precio tiene sentido.
+    </div>
+    <div style="font-size:12px;color:#94a3b8;line-height:1.6;">
+      Analiza una propiedad que <b style="color:#cbd5e1;">ya tienes en mente</b> y descubre si su precio está
+      <b style="color:#cbd5e1;">bajo, en rango o sobre el mercado</b>, comparándola con inmuebles similares en la misma zona.
+      <span style="color:#64748b;">No es un buscador de propiedades ni reemplaza una tasación formal — es una referencia basada en precios publicados.</span>
+    </div>
   </div>
 
   <style>
@@ -452,7 +462,7 @@
         <div class="alerta-severidad-badge" id="alertaSevBadge">LEVE</div>
       </div>
       <div class="alerta-diff-principal" id="alertaDiffPct">+0%</div>
-      <div class="alerta-diff-sub">vs precio de referencia de la zona</div>
+      <div class="alerta-diff-sub">vs precio de mercado de la zona</div>
       <div class="alerta-nums">
         <div class="alerta-num-item">
           <span class="alerta-num-label">Tu precio / m2</span>
@@ -499,7 +509,7 @@
       <span class="info-icon" data-tip="posicion">ⓘ</span>
       <div class="info-tooltip" id="tip-posicion">
         <div class="info-tooltip-title">Posicion en el mercado</div>
-        <div class="info-tooltip-body">El "precio de referencia" es la mediana por m² de propiedades similares activas en la zona. El circulo muestra que tanto se aleja tu precio de esa referencia: <b>+</b> cuando esta por encima (mas caro) y <b>−</b> cuando esta por debajo (mas barato). El color indica si es oportunidad (verde) o sobreprecio (rojo).</div>
+        <div class="info-tooltip-body">El "precio de mercado" es la mediana por m² de propiedades similares activas en la zona. El circulo muestra que tanto se aleja tu precio de ese valor: <b>+</b> cuando esta por encima (mas caro) y <b>−</b> cuando esta por debajo (mas barato). El color indica si es oportunidad (verde) o sobreprecio (rojo).</div>
       </div>
     </div>
     <div class="gauge-container">
@@ -535,7 +545,7 @@
       </svg>
       <div class="gauge-content">
         <span class="gauge-number" id="lblGaugeVal">--</span>
-        <span class="gauge-label" id="lblGaugeLabel">vs precio de referencia</span>
+        <span class="gauge-label" id="lblGaugeLabel">vs precio de mercado</span>
       </div>
     </div>
     <p class="pos-text-desc" id="lblExplanation">Ingresa los datos y presiona Analizar para ver resultados.</p>
@@ -543,16 +553,25 @@
     <div class="rangos-legend" id="rangosLegend">
       <div class="rl-titulo">¿Qué precio define cada zona?</div>
       <div class="rl-row" id="rlRowBajo">
-        <span class="rl-dot rl-verde"></span><span class="rl-cat">Bajo mercado</span>
-        <span class="rl-val" id="rlBajo">--</span>
+        <span class="rl-dot rl-verde"></span>
+        <div class="rl-texto">
+          <div class="rl-linea"><span class="rl-cat">Bajo mercado</span><span class="rl-val" id="rlBajo">--</span></div>
+          <div class="rl-desc">Podría ser oportunidad, pero requiere revisar estado, ubicación y urgencia del vendedor.</div>
+        </div>
       </div>
       <div class="rl-row" id="rlRowRango">
-        <span class="rl-dot rl-ambar"></span><span class="rl-cat">En rango</span>
-        <span class="rl-val" id="rlRango">--</span>
+        <span class="rl-dot rl-ambar"></span>
+        <div class="rl-texto">
+          <div class="rl-linea"><span class="rl-cat">En rango</span><span class="rl-val" id="rlRango">--</span></div>
+          <div class="rl-desc">Precio normal para la zona.</div>
+        </div>
       </div>
       <div class="rl-row" id="rlRowSobre">
-        <span class="rl-dot rl-rojo"></span><span class="rl-cat">Sobre mercado</span>
-        <span class="rl-val" id="rlSobre">--</span>
+        <span class="rl-dot rl-rojo"></span>
+        <div class="rl-texto">
+          <div class="rl-linea"><span class="rl-cat">Sobre mercado</span><span class="rl-val" id="rlSobre">--</span></div>
+          <div class="rl-desc">Precio alto frente a otras propiedades similares.</div>
+        </div>
       </div>
     </div>
   </section>
@@ -591,7 +610,7 @@
       <div class="punto-bubble" id="puntoBubble" style="display:none;"></div>
     </div>
     <div class="explain-box-wrapper">
-      <div class="explain-box-label">Lo que esto significa</div>
+      <div class="explain-box-label">Interpretación</div>
       <div class="explain-box" id="lblWarning">Completa el analisis para ver la interpretacion.</div>
     </div>
   </section>
@@ -602,7 +621,7 @@
 
     <!-- Resumen rapido -->
     <div class="resumen-rapido" id="resumenRapido">
-      <div class="resumen-rapido-label">Resumen del analisis</div>
+      <div class="resumen-rapido-label">Conclusión</div>
       <div class="resumen-rapido-texto" id="resumenTexto">--</div>
     </div>
 
@@ -627,7 +646,7 @@
 
       <div class="metrica">
         <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">TU PRECIO / M2
+          <span class="metrica-label info-wrap">PRECIO DE ESTA PROPIEDAD
             <span class="info-icon" data-tip="pm2">ⓘ</span>
             <div class="info-tooltip" id="tip-pm2">
               <div class="info-tooltip-title">Tu precio por m2</div>
@@ -641,35 +660,35 @@
 
       <div class="metrica">
         <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">PRECIO DE REFERENCIA
+          <span class="metrica-label info-wrap">PRECIO TÍPICO DE MERCADO
             <span class="info-icon" data-tip="mediana">ⓘ</span>
             <div class="info-tooltip" id="tip-mediana">
               <div class="info-tooltip-title">Precio de referencia de la zona</div>
               <div class="info-tooltip-body">El precio por m2 que representa el punto medio de propiedades similares activas en esta zona. Se calcula como mediana, no promedio, para evitar que propiedades muy caras o muy baratas distorsionen la referencia. A menor cantidad de propiedades detectadas, mas orientativa es esta cifra.</div>
             </div>
           </span>
-          <span class="metrica-descripcion">Punto de referencia de propiedades similares en la zona.</span>
+          <span class="metrica-descripcion">Precio típico por m² de propiedades similares en la zona.</span>
         </div>
         <span id="lblMediana" class="metrica-valor mediana">--</span>
       </div>
 
       <div class="metrica">
         <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">DIFERENCIA
+          <span class="metrica-label info-wrap">QUÉ TAN ARRIBA O ABAJO ESTÁ
             <span class="info-icon" data-tip="diferencia">ⓘ</span>
             <div class="info-tooltip" id="tip-diferencia">
               <div class="info-tooltip-title">Diferencia vs referencia</div>
-              <div class="info-tooltip-body">Porcentaje de diferencia entre tu precio por m2 y el precio de referencia de la zona. Positivo significa que estas por encima; negativo, por debajo. Este dato no determina si la propiedad es buena o mala inversion: hay factores cualitativos que el analisis no captura.</div>
+              <div class="info-tooltip-body">Porcentaje de diferencia entre el precio de esta propiedad por m2 y el precio tipico de mercado. Positivo significa que esta por encima; negativo, por debajo. Este dato no determina si la propiedad es buena o mala inversion: hay factores cualitativos que el analisis no captura.</div>
             </div>
           </span>
-          <span class="metrica-descripcion">Distancia entre tu precio y el de referencia de la zona.</span>
+          <span class="metrica-descripcion">Distancia entre el precio de esta propiedad y el de mercado.</span>
         </div>
         <span id="lblDiff" class="metrica-valor positivo">--</span>
       </div>
 
       <div class="metrica">
         <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">RANGO DE PRECIOS
+          <span class="metrica-label info-wrap">RANGO ANALIZADO EN LA ZONA
             <span class="info-icon" data-tip="rango">ⓘ</span>
             <div class="info-tooltip" id="tip-rango">
               <div class="info-tooltip-title">Rango de precios observados</div>
@@ -1317,7 +1336,7 @@
         var alertaEl = document.getElementById('alertaAtipica');
         alertaEl.className = 'alerta-contextual ' + sev.clase;
         document.getElementById('alertaSevBadge').textContent = sev.label;
-        document.getElementById('alertaDiffPct').textContent  = signo + Math.round(desv) + '% vs precio de referencia';
+        document.getElementById('alertaDiffPct').textContent  = signo + Math.round(desv) + '% vs precio de mercado';
         document.getElementById('alertaTuPrecio').textContent = '$' + Math.round(tuPM2).toLocaleString() + '/m2';
         document.getElementById('alertaMediana').textContent  = '$' + res.cob.mediana.toLocaleString() + '/m2';
         alertaEl.style.display = 'block';
@@ -1411,13 +1430,13 @@
       var dirV = desv > 0 ? 'por encima' : 'por debajo';
       var descV;
       if (absDesv === 0) {
-        descV = 'Tu precio coincide con el precio de referencia de propiedades similares en ' + zonaLabel + '.';
+        descV = 'Tu precio coincide con el precio de mercado en ' + zonaLabel + '.';
       } else if (iprInt.cat === 'rango') {
-        descV = 'Tu precio esta ' + absDesv + '% ' + dirV + ' del precio de referencia de propiedades similares en ' + zonaLabel + ', todavia dentro del rango habitual del mercado.';
+        descV = 'Tu precio esta ' + absDesv + '% ' + dirV + ' del precio de mercado en ' + zonaLabel + ', todavia dentro del rango habitual del mercado.';
       } else if (iprInt.cat === 'bajo') {
-        descV = 'Tu precio esta ' + absDesv + '% por debajo del precio de referencia de propiedades similares en ' + zonaLabel + '.';
+        descV = 'Tu precio esta ' + absDesv + '% por debajo del precio de mercado en ' + zonaLabel + '.';
       } else { // sobre
-        descV = 'Tu precio esta ' + absDesv + '% por encima del precio de referencia de propiedades similares en ' + zonaLabel + '.';
+        descV = 'Tu precio esta ' + absDesv + '% por encima del precio de mercado en ' + zonaLabel + '.';
       }
       document.getElementById('vrdDescripcion').textContent = descV;
     }
@@ -1434,20 +1453,20 @@
     resumen.style.display = 'block';
     var resTexto;
     if (modoLimitado) {
-      resTexto = 'Esta zona cuenta con pocas propiedades similares registradas. Los valores son orientativos: conviene complementar con una inspeccion directa del mercado antes de decidir.';
+      resTexto = 'Pocas propiedades similares registradas en la zona. Los valores son orientativos: complementa con una inspeccion directa del mercado antes de decidir.';
     } else if (Math.round(desv) === 0) {
-      resTexto = 'Recomendacion: el precio esta en linea con el mercado. Compara las condiciones especificas del inmueble (estado, acabados, ubicacion) para tomar tu decision.';
+      resTexto = 'Precio en linea con el mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta para decidir.';
     } else if (iprInt.cat === 'bajo') {
-      resTexto = 'Recomendacion: si el inmueble esta en buenas condiciones, puede ser un buen punto de entrada. Conviene inspeccionarlo y negociar con datos.';
+      resTexto = 'Precio por debajo del mercado. Puede ser una oportunidad. Recomendacion: inspecciona el inmueble y verifica que no haya un problema detras antes de avanzar.';
     } else if (iprInt.cat === 'sobre') {
-      resTexto = 'Recomendacion: hay margen para negociar. Propiedades similares se ofrecen alrededor de $' + Math.round(mediana).toLocaleString() + '/m2; usalo como base para tu oferta.';
-    } else { // rango
-      resTexto = 'Recomendacion: el precio es razonable para la zona. Enfocate en comparar las condiciones especificas (estado, acabados, ubicacion exacta).';
+      resTexto = 'Precio por encima del mercado. Recomendacion: negocia con datos; propiedades similares se ofrecen alrededor de $' + Math.round(mediana).toLocaleString() + '/m2.';
+    } else { // rango con direccion
+      resTexto = 'Precio razonable. No muestra una ganga clara, pero esta levemente ' + (desv>0?'por encima':'por debajo') + ' del mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta antes de ofertar.';
     }
     document.getElementById('resumenTexto').textContent = resTexto;
 
-    // ── GAUGE (signo LITERAL vs el precio de referencia de la zona) ─
-    // El "precio de referencia" = mediana de propiedades similares en la zona.
+    // ── GAUGE (signo LITERAL vs el precio de mercado de la zona) ─
+    // El "precio de mercado" = mediana de propiedades similares en la zona.
     //   por ENCIMA de la referencia → +X%  (mas caro)   · color naranja/rojo
     //   por DEBAJO de la referencia → -X%  (mas barato)  · color verde
     //   exactamente en la referencia → 0%
@@ -1456,9 +1475,9 @@
     var absDesvR  = Math.round(Math.abs(desv));
     var esNeutral = absDesvR === 0;
     var signoComp = esNeutral ? '' : (desv > 0 ? '+' : '-');
-    var gaugeLabelTx = esNeutral ? 'en el precio de referencia'
-                     : desv > 0  ? 'sobre el precio de referencia'
-                     :             'bajo el precio de referencia';
+    var gaugeLabelTx = esNeutral ? 'en el precio de mercado'
+                     : desv > 0  ? 'sobre el precio de mercado'
+                     :             'bajo el precio de mercado';
     document.getElementById('lblGaugeVal').textContent  = esNeutral
       ? (modoLimitado ? '~0%' : '0%')
       : (modoLimitado ? '~' : '') + signoComp + absDesvR + '%';
@@ -1489,17 +1508,18 @@
 
     // ── TEXTO POSICION (explicito, en lenguaje claro) ─────────
     var dir = desv > 0 ? 'por encima' : 'por debajo';
+    var tipoPlural = tipo.toLowerCase() + 's';
     var expTxt;
     if (modoLimitado) {
       expTxt = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.';
     } else if (esNeutral) {
-      expTxt = 'Tu precio coincide con el precio de referencia de ' + tipo.toLowerCase() + 's similares en ' + zonaLabel + '.';
+      expTxt = 'Esta propiedad esta justo en el precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
     } else if (iprInt.cat === 'rango') {
-      expTxt = 'Tu precio esta ' + absDesvR + '% ' + dir + ' del precio de referencia de la zona, todavia dentro del rango normal del mercado en ' + zonaLabel + '.';
+      expTxt = 'Esta propiedad esta ligeramente ' + dir + ' del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '. La diferencia es pequeña, por lo que se considera dentro del rango normal.';
     } else if (iprInt.cat === 'bajo') {
-      expTxt = 'Tu precio esta ' + absDesvR + '% por debajo del precio de referencia de la zona. Suele indicar una oportunidad, pero conviene revisar el estado de la propiedad.';
+      expTxt = 'Esta propiedad esta ' + absDesvR + '% por debajo del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
     } else { // sobre
-      expTxt = 'Tu precio esta ' + absDesvR + '% por encima del precio de referencia de la zona. Esta mas caro que propiedades similares; hay margen para negociar.';
+      expTxt = 'Esta propiedad esta ' + absDesvR + '% por encima del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
     }
     document.getElementById('lblExplanation').textContent = expTxt;
 
@@ -1539,16 +1559,16 @@
 
     var warnTxt;
     if (modoLimitado) {
-      warnTxt = 'La zona cuenta con pocas propiedades similares registradas, asi que la referencia es orientativa. Conviene complementar con informacion directa del mercado.';
+      warnTxt = 'La zona cuenta con pocas propiedades similares, asi que la referencia es orientativa. Conviene complementar con informacion directa del mercado antes de decidir.';
     } else if (iprInt.cat === 'bajo') {
-      warnTxt = 'Un precio por debajo de la referencia puede ser una oportunidad, pero tambien puede reflejar el estado del inmueble, su ubicacion exacta o detalles que este analisis no captura. Recuerda: son precios de oferta publicados, no de cierre.';
+      warnTxt = 'El precio esta por debajo del mercado. Puede ser una oportunidad, pero revisa si hay una razon detras (estado, ubicacion exacta o urgencia del vendedor) antes de avanzar. Son precios de oferta, no de cierre.';
     } else if (iprInt.cat === 'sobre') {
-      warnTxt = 'Un precio por encima de la referencia no siempre es excesivo: puede deberse a mejores acabados, vista o ubicacion. Compara las caracteristicas reales antes de concluir. Recuerda: son precios de oferta, no de cierre.';
+      warnTxt = 'El precio esta por encima del mercado. Justificalo con ventajas reales (mejores acabados, vista, amenidades, mas parqueos) o negocia hacia abajo. Son precios de oferta, no de cierre.';
     } else { // rango y neutral
-      warnTxt = 'Dentro del rango, las diferencias suelen explicarse por el estado, los acabados y la ubicacion exacta dentro de la zona. Recuerda: son precios de oferta publicados, no de cierre.';
+      warnTxt = 'El precio esta dentro del rango esperado. Antes de decidir, revisa si la propiedad tiene ventajas reales: mejor torre, mas parqueos, mejores acabados, vista, amenidades o ubicacion interna. Si no tiene ventajas claras, negocia.';
     }
     document.getElementById('lblWarning').textContent = warnTxt;
-    document.getElementById('chartGuia').textContent  = 'Cada punto es una propiedad similar activa en ' + zonaLabel + ' · ' + tipo + '. Toca un punto para ver sus datos.';
+    document.getElementById('chartGuia').textContent  = 'Comparamos tu propiedad contra ' + tipo.toLowerCase() + 's activos en ' + zonaLabel + '. Cada punto azul es una referencia del mercado; el amarillo es tu propiedad. Toca un punto para ver sus datos.';
 
     // ── FOOTER ────────────────────────────────────────────────
     document.getElementById('lblMetodologia').textContent = modoLimitado
@@ -1724,7 +1744,7 @@
         lt.setAttribute('x',pt.x); lt.setAttribute('y',labelY);
         lt.setAttribute('text-anchor',anchor); lt.setAttribute('font-family','Inter,sans-serif');
         lt.setAttribute('font-size','8'); lt.setAttribute('font-weight','600');
-        lt.setAttribute('fill','rgba(226,176,92,0.85)'); lt.textContent='tu precio';
+        lt.setAttribute('fill','rgba(226,176,92,0.85)'); lt.textContent='Tu propiedad';
         g.appendChild(lt);
         // Círculo objetivo
         var c=document.createElementNS(SVG,'circle');
@@ -1912,18 +1932,18 @@
       var pdfDesvTxt = Math.round(d.desv)===0 ? '0%' : (d.signo+Math.round(d.desv)+'%');
       pdf.text((d.modoLimitado?'~':'')+pdfDesvTxt,W-M-5,y+22,{align:'right'});
       pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
-      pdf.text('vs precio de referencia',W-M-5,y+28,{align:'right'});
+      pdf.text('vs precio de mercado',W-M-5,y+28,{align:'right'});
       var concTxt;
       if (d.modoLimitado) {
         concTxt='Zona con pocas propiedades similares registradas ('+d.n+'). Los datos son orientativos.';
       } else if (Math.round(d.desv)===0) {
-        concTxt='Tu precio coincide con el precio de referencia de propiedades similares activas en '+d.zonaLabel+'.';
+        concTxt='Tu precio coincide con el precio de mercado en '+d.zonaLabel+'.';
       } else if (d.iprInt.cat==='bajo') {
-        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% por debajo del precio de referencia de propiedades similares activas en '+d.zonaLabel+'.';
+        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% por debajo del precio de mercado en '+d.zonaLabel+'.';
       } else if (d.iprInt.cat==='sobre') {
-        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% por encima del precio de referencia de propiedades similares activas en '+d.zonaLabel+'.';
+        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% por encima del precio de mercado en '+d.zonaLabel+'.';
       } else { // rango
-        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% '+(d.desv>0?'por encima':'por debajo')+' del precio de referencia de propiedades similares activas en '+d.zonaLabel+', todavia dentro del rango habitual del mercado.';
+        concTxt='Tu precio esta '+Math.abs(Math.round(d.desv))+'% '+(d.desv>0?'por encima':'por debajo')+' del precio de mercado en '+d.zonaLabel+', todavia dentro del rango habitual del mercado.';
       }
       sub(concTxt,M+8,y+34,white,8,W-2*M-16);
       y+=51;
@@ -2098,7 +2118,7 @@
         },
         {
           t:'Resultado del analisis',
-          d:'Clasifica el precio de la propiedad evaluada en relacion al precio de referencia de la zona: Bajo mercado (precio por debajo del rango), En rango (precio dentro del rango habitual), Sobre mercado (precio por encima del rango).',
+          d:'Clasifica el precio de la propiedad evaluada en relacion al precio de mercado de la zona: Bajo mercado (precio por debajo del rango), En rango (precio dentro del rango habitual), Sobre mercado (precio por encima del rango).',
           n:'No determina si la propiedad es una buena o mala inversion. Solo compara precios de oferta observados.'
         },
         {
