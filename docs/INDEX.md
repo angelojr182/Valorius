@@ -1,0 +1,63 @@
+# Índice de documentación — Valorius
+
+> **Regla operativa del proyecto:**
+> **Si no está documentado, versionado y trazable en este repo, no existe como decisión formal.**
+> El chat es para pensar; Git es la fuente de verdad.
+
+Este índice es el punto de entrada a toda la documentación formal de Valorius.
+Mantenerlo al día es parte de la *Definition of Done* (ver abajo).
+
+---
+
+## Tipos de artefacto
+
+| Tipo | Para qué | Carpeta | Inmutable |
+|---|---|---|---|
+| **ADR** (Architecture Decision Record) | Registrar una decisión difícil de revertir | [`/docs/decisions/`](decisions/) | Sí |
+| **RFC / Design Doc** | Diseñar una mejora **antes** de construirla | [`/docs/design/`](design/) | Se congela al aceptarse |
+| **Método canónico** | Cómo Valorius calcula e interpreta resultados (versionado) | [`/docs/architecture/`](architecture/) | No (vive) |
+| **Diccionario de datos** | Definición de tablas/campos/calidad | hoy en `CLAUDE.md` *(diferido a `/docs/database/`)* | No |
+| **CHANGELOG** | Historial legible de cambios | [`/docs/changelog/`](changelog/CHANGELOG.md) | No |
+
+---
+
+## Regla de cobertura
+
+> Todo cambio importante en Valorius debe tener **al menos una** de estas tres cosas:
+> - **ADR** — si es una decisión difícil de revertir.
+> - **RFC** — si es una mejora que debe diseñarse antes de construir.
+> - **Actualización del método** — si cambia cómo Valorius calcula o interpreta resultados.
+
+## Definition of Done
+
+Un cambio **no está cerrado** si no tiene:
+1. Código o SQL aplicado, si corresponde.
+2. Documento actualizado (ADR / RFC / método / este índice).
+3. Registro en el CHANGELOG.
+4. Validación o evidencia del resultado.
+
+---
+
+## Registro de Decisiones (ADR)
+
+| ID | Título | Estado | Fecha |
+|---|---|---|---|
+| [ADR-0001](decisions/ADR-0001-precios-de-oferta-no-de-cierre.md) | Trabajamos con precios de oferta, no de cierre | Aceptado | 2026-06-04 |
+| [ADR-0002](decisions/ADR-0002-gobernanza-documental.md) | Gobernanza documental de Valorius | Aceptado | 2026-06-04 |
+
+## Diseños (RFC)
+
+| ID | Título | Estado | Fecha |
+|---|---|---|---|
+| [RFC-005](design/RFC-005-motor-comparables-ajustado.md) | Motor de comparables ajustado por tamaño (FASE 5) | Borrador | 2026-06-04 |
+
+## Método canónico
+
+| Documento | Versión | Estado |
+|---|---|---|
+| [calculo_analizador.md](architecture/calculo_analizador.md) | 0.1 | En definición (ver RFC-005) |
+
+## Plantillas
+
+- [Plantilla ADR](decisions/ADR-TEMPLATE.md)
+- [Plantilla RFC](design/RFC-TEMPLATE.md)

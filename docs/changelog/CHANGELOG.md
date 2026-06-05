@@ -5,6 +5,36 @@
 
 ---
 
+## 2026-06-04
+
+### DECISION — Gobernanza documental de Valorius (ADR-0002)
+- Se adopta un sistema mínimo de documentación versionada en Git. Regla operativa:
+  "Si no está documentado, versionado y trazable, no existe como decisión formal".
+- Artefactos: ADR (decisiones), RFC (diseño previo), método canónico (versionado),
+  INDEX, CHANGELOG. Diferidos: diccionario de datos formal, SOP, linaje completo.
+- Estructura nueva: `docs/INDEX.md`, `docs/decisions/`, `docs/design/`, plantillas
+  ADR y RFC.
+
+### RULE — Definition of Done del proyecto
+- Un cambio no está cerrado sin: (1) código/SQL aplicado si corresponde,
+  (2) documento actualizado, (3) registro en este CHANGELOG, (4) validación o
+  evidencia del resultado.
+- Regla de cobertura: todo cambio importante lleva al menos un ADR, un RFC o una
+  actualización del método canónico.
+
+### DECISION — Trabajamos con precios de oferta, no de cierre (ADR-0001)
+- Formaliza que las fuentes publican precios pedidos, no de transacción. Todo
+  resultado es "referencia", no valoración formal; el score de confianza nace
+  atado a esta limitación.
+
+### DECISION — FASE 5 "Motor de Comparables Confiables" en diseño (RFC-005)
+- Borrador del motor de comparables ajustado por tamaño: estratificación +
+  limpieza de atípicos multivariante + score de confianza, como métrica
+  SECUNDARIA. Umbrales en estado DRAFT. No se toca aún el cálculo principal.
+- Método canónico iniciado como stub versionado: `docs/architecture/calculo_analizador.md` v0.1.
+
+---
+
 ## 2026-05-28
 
 ### FIX — FASE 2-A2: filtro de proyectos por tipo de inmueble (basado en data real)
