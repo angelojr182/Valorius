@@ -44,6 +44,7 @@ Un cambio **no está cerrado** si no tiene:
 |---|---|---|---|
 | [ADR-0001](decisions/ADR-0001-precios-de-oferta-no-de-cierre.md) | Trabajamos con precios de oferta, no de cierre | Aceptado | 2026-06-04 |
 | [ADR-0002](decisions/ADR-0002-gobernanza-documental.md) | Gobernanza documental de Valorius | Aceptado | 2026-06-04 |
+| [ADR-0003](decisions/ADR-0003-rls-dim-colonia.md) | RLS en core.dim_colonia (lectura pública, escritura service_role) | Aceptado | 2026-06-06 |
 
 ## Diseños (RFC)
 
@@ -61,7 +62,7 @@ Un cambio **no está cerrado** si no tiene:
 
 | Documento | Versión | Estado |
 |---|---|---|
-| [data_dictionary.md](database/data_dictionary.md) | 1.0 | Vigente (modelo de datos `core`) |
+| [data_dictionary.md](database/data_dictionary.md) | 1.1 | Vigente (modelo de datos `core`) |
 
 ## Plantillas
 

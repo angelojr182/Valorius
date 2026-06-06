@@ -1,9 +1,10 @@
 # Diccionario de Datos — Valorius (esquema `core`)
 
-**Versión:** 1.0 · **Estado:** Vigente (as-built) · **Última actualización:** 2026-06-06
+**Versión:** 1.1 · **Estado:** Vigente (as-built) · **Última actualización:** 2026-06-06
 
 | Versión | Fecha | Cambio | Ref |
 |---|---|---|---|
+| 1.1 | 2026-06-06 | RLS activado en `dim_colonia` (hallazgo §9.1 RESUELTO). | ADR-0003 |
 | 1.0 | 2026-06-06 | Diccionario inicial, verificado contra el esquema real (`list_tables core`). Reemplaza al diccionario de facto que vivía en `CLAUDE.md`. | as-built |
 
 > Definición canónica del modelo de datos. Verificado contra la base (no de memoria).
@@ -24,7 +25,7 @@ AGREGADOS       market_snapshot (49) ──1:1──> market_metrics (49)
 CLUSTERING      dim_zone_cluster (5) ──N:1── zone_cluster_assignment (45)
 OPERATIVO       exchange_rate (11) · audit_log (8) · data_quarantine (0)
 ```
-Conteos = filas reales al 2026-06-06. Todas con RLS activado **excepto `dim_colonia`** (ver §9).
+Conteos = filas reales al 2026-06-06. **Todas con RLS activado** (dim_colonia corregido — ver §9.1).
 
 ---
 
@@ -83,7 +84,7 @@ Una fila por publicación. Lo que sí varía en el tiempo (precio, fuente, fecha
 | `geo_source` | text | sí | `'MANUAL'` | |
 | `geo_confidence` | smallint | sí | `3`, check 1..5 | |
 
-### 3.2 `core.dim_colonia` — colonia (60 filas) · ⚠️ **RLS DESACTIVADO** (§9.1)
+### 3.2 `core.dim_colonia` — colonia (60 filas)
 | Columna | Tipo | Null | Default | Notas |
 |---|---|---|---|---|
 | `colonia_id` | uuid | no | `gen_random_uuid()` | **PK** |
@@ -161,11 +162,10 @@ Fuera de `core`. Usado por el control de acceso del analizador:
 
 ## 9. Hallazgos y deudas (al capturar el as-built)
 
-1. **⚠️ CRÍTICO — `core.dim_colonia` tiene RLS DESACTIVADO.** Es la única tabla de `core`
-   sin Row Level Security: con la anon key se puede **leer y modificar** toda la tabla.
-   El analizador la **lee** con esa key, así que activar RLS **sin** una policy de SELECT
-   la rompería. → Decisión pendiente: activar RLS **+** crear policy de solo-lectura para
-   `anon`. No auto-aplicado. (Las demás 13 tablas de `core` sí tienen RLS.)
+1. ~~**CRÍTICO — `core.dim_colonia` tenía RLS DESACTIVADO.**~~ — **RESUELTO (2026-06-06,
+   [ADR-0003](../decisions/ADR-0003-rls-dim-colonia.md)):** RLS activado + policy de lectura
+   pública (`Permitir lectura colonias`), igual que dim_zone/dim_proyecto. Escritura ahora
+   solo vía `service_role`. Verificado: el analizador sigue leyendo (REST 200).
 2. **Conteos desactualizados en `CLAUDE.md`** (a corregir): property/listing 134 → **145**;
    dim_zone → **52**; dim_proyecto → **32**; dim_colonia → **60**; market_snapshot → **49**.
 3. **Infra de zonas gemelas ya existe** (`dim_zone_cluster` 5 + `zone_cluster_assignment`

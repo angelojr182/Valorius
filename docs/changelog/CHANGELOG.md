@@ -7,6 +7,14 @@
 
 ## 2026-06-06
 
+### SCHEMA/SECURITY — RLS activado en core.dim_colonia (ADR-0003)
+- `dim_colonia` era la única tabla de `core` con RLS desactivado (anon key podía leer y
+  modificar). Aplicada migración `enable_rls_dim_colonia`: `ENABLE ROW LEVEL SECURITY` +
+  policy `Permitir lectura colonias` (SELECT, public, USING true), patrón de dim_zone.
+- Resultado: lectura pública intacta (analizador sigue leyendo, REST 200), escritura solo
+  vía service_role. Verificado en DB y navegador.
+- Artefactos: ADR-0003, `docs/database/migration_rls_dim_colonia.sql`, data_dictionary v1.1.
+
 ### DOCS — Diccionario de datos as-built (data_dictionary.md v1.0)
 - Documentado el modelo de datos completo del esquema `core` (14 tablas), verificado
   contra la base con `list_tables`. Reemplaza al diccionario de facto de CLAUDE.md.
