@@ -31,14 +31,15 @@
 Próximo paso   : Pendiente decisión del usuario · FASE 3 documentación · FASE 4 Mercado Primario
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : verificar tasa Ficohsa actual (última registrada L 26.5923 / 26.6200)
-DB count       : 134 properties / 134 listings
-dim_colonia    : 55 colonias (51 originales + 4 villas El Sauce: Los Nopales, Cipreses, Napoleón, Las Palmeras)
-dim_zone       : 49 zonas con lat/lng · 48 activas · Residencial Zarahemla II activo=false
+DB count       : 145 properties / 145 listings
+Docs           : /docs versionado — INDEX, ADR-0001..0003, RFC-005, data_dictionary, calculo_analizador
+dim_colonia    : 60 colonias · catálogo canónico en docs/database/data_dictionary.md
+dim_zone       : 52 zonas · 51 activas · Residencial Zarahemla II activo=false
                : Nuevas columnas: lat, lng, geo_precision, geo_source, geo_confidence
                : El Sauce y San Ignacio pendientes verificación manual de coordenadas
                : REGLA: dropdowns futuros deben filtrar WHERE activo = true
 dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones
-Seguridad      : RLS activado en 5 tablas
+Seguridad      : RLS en todas las tablas de core (dim_colonia agregada 2026-06-06 · ADR-0003)
 FASE 4         : Mercado Primario APROBADA — ver sección 12
 GitHub         : commit b74072a — FASE 2-E subido 2026-05-29
 ```
@@ -162,7 +163,7 @@ gh CLI              : NO instalado — usar git nativo
 SELECT
   (SELECT COUNT(*) FROM core.property) as properties,
   (SELECT COUNT(*) FROM core.listing) as listings;
--- Estado actual: 134 / 134
+-- Estado actual: 145 / 145
 ```
 
 ---
@@ -213,7 +214,7 @@ lng            NUMERIC(10,7) NULL  -- centroide de zona (verificado 2026-05-29)
 geo_precision  TEXT DEFAULT 'ZONA_CENTROIDE'
 geo_source     TEXT DEFAULT 'MANUAL'
 geo_confidence SMALLINT DEFAULT 3  -- escala 1-5
--- 49 zonas con lat/lng · 48 activas · Zarahemla II activo=false
+-- 52 zonas · 51 activas · Zarahemla II activo=false
 -- El Sauce y San Ignacio: coordenadas pendientes verificación manual
 -- REGLA: dropdowns futuros filtran WHERE activo = true
 ```
@@ -240,7 +241,7 @@ activo        BOOLEAN DEFAULT true
 
 ### core.market_snapshot / core.market_metrics
 ```sql
--- Snapshots actuales: 34 registros (fechas: 2026-04-07 a 2026-05-17)
+-- Snapshots actuales: 49 registros
 -- Zonas con snapshots: Bulevar Morazán, El Trapiche, Lomas del Guijarro,
 --   Miraflores, Res. El Sauce, Res. Portal Bosque 1, Res. Villa Elena,
 --   San Ignacio, Anillo Periférico, Res. Zarahemla II, Las Colinas
@@ -257,7 +258,7 @@ CASA         → 8c4efee8-42c2-43ee-b4de-82a64798365e
 TERRENO      → d6006231-4bc5-4375-a6c2-1381089aea84
 ```
 
-### dim_zone (50 zonas activas — actualizado 2026-05-27)
+### dim_zone (52 zonas · 51 activas — conteo 2026-06-06 · catálogo canónico: docs/database/data_dictionary.md)
 ```
 -- ELIMINADAS 2026-05-27 (eran colonias, no zonas): Colonia Palmira, Las Colinas, Las Hadas, Residencial Centroamérica
 -- CREADA 2026-05-27: Boulevard Centroamerica
@@ -314,7 +315,7 @@ Torocagua                            → fdd06173-ad0c-42e6-acf6-b85e9e2e6dc9
 Zambrano                             → 66062aa9-b8a7-4a08-ac4a-7e9ec9aba1fc
 ```
 
-### dim_proyecto (26 proyectos)
+### dim_proyecto (32 proyectos)
 ```
 Condominios Alcazar          (Anillo Periférico)        → a6db2b5b-474d-4177-b88b-84a3dd4fce95
 Torre Atlas                  (Bulevar Morazán)          → 87bab2a8-e771-47c6-ab51-9eb75cd02c6b
