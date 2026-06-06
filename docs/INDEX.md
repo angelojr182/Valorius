@@ -63,6 +63,7 @@ Un cambio **no está cerrado** si no tiene:
 | Documento | Versión | Estado |
 |---|---|---|
 | [data_dictionary.md](database/data_dictionary.md) | 1.1 | Vigente (modelo de datos `core`) |
+| [arquitectura.md](architecture/arquitectura.md) | 1.0 | Vigente (inventario del sistema) |
 
 ## Plantillas
 

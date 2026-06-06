@@ -7,6 +7,15 @@
 
 ## 2026-06-06
 
+### DOCS — Arquitectura as-built (arquitectura.md v1.0) · cierra documentación base
+- Inventario del sistema verificado: front (index/ingesta/analizador + auth beta/admin),
+  7 Edge Functions, pipeline de scrapers (Rentify, Playwright, CSV→Excel→revisión), flujo
+  de datos extremo a extremo, versionado.
+- Hallazgos: CLAUDE.md documentaba solo 2 Edge Functions (hay 7: +insert-listing, ingesta-ui,
+  scraper-webhook, github-deploy, github-push); LEEME.txt desactualizado (scraper_rentify.py
+  → apartamentos.py/casas.py); código TS de funciones y hosting del front sin auditar.
+- Con esto queda completa la línea base as-built (1.1 método, 1.2 datos, 1.3 arquitectura).
+
 ### SCHEMA/SECURITY — RLS activado en core.dim_colonia (ADR-0003)
 - `dim_colonia` era la única tabla de `core` con RLS desactivado (anon key podía leer y
   modificar). Aplicada migración `enable_rls_dim_colonia`: `ENABLE ROW LEVEL SECURITY` +
