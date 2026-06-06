@@ -16,7 +16,7 @@ Mantenerlo al día es parte de la *Definition of Done* (ver abajo).
 | **ADR** (Architecture Decision Record) | Registrar una decisión difícil de revertir | [`/docs/decisions/`](decisions/) | Sí |
 | **RFC / Design Doc** | Diseñar una mejora **antes** de construirla | [`/docs/design/`](design/) | Se congela al aceptarse |
 | **Método canónico** | Cómo Valorius calcula e interpreta resultados (versionado) | [`/docs/architecture/`](architecture/) | No (vive) |
-| **Diccionario de datos** | Definición de tablas/campos/calidad | hoy en `CLAUDE.md` *(diferido a `/docs/database/`)* | No |
+| **Diccionario de datos** | Definición de tablas/campos/calidad | [`/docs/database/data_dictionary.md`](database/data_dictionary.md) | No |
 | **CHANGELOG** | Historial legible de cambios | [`/docs/changelog/`](changelog/CHANGELOG.md) | No |
 
 ---
@@ -56,6 +56,12 @@ Un cambio **no está cerrado** si no tiene:
 | Documento | Versión | Estado |
 |---|---|---|
 | [calculo_analizador.md](architecture/calculo_analizador.md) | 1.1 | Vigente (as-built capturado) |
+
+## Documentación base (as-built)
+
+| Documento | Versión | Estado |
+|---|---|---|
+| [data_dictionary.md](database/data_dictionary.md) | 1.0 | Vigente (modelo de datos `core`) |
 
 ## Plantillas
 

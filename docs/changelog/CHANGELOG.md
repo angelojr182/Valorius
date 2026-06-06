@@ -7,6 +7,16 @@
 
 ## 2026-06-06
 
+### DOCS — Diccionario de datos as-built (data_dictionary.md v1.0)
+- Documentado el modelo de datos completo del esquema `core` (14 tablas), verificado
+  contra la base con `list_tables`. Reemplaza al diccionario de facto de CLAUDE.md.
+- Hallazgo CRÍTICO: `core.dim_colonia` tiene **RLS desactivado** (única tabla de core
+  sin protección; anon key puede leer/modificar). Documentado, NO auto-aplicado (activar
+  RLS sin policy rompería el analizador que la lee). Pendiente decisión del usuario.
+- Hallazgos menores: conteos desactualizados en CLAUDE.md (145/52/32/60/49), infra de
+  zonas gemelas ya existente (dim_zone_cluster + zone_cluster_assignment 45/52),
+  property_code sin ampliar, doble representación colonia (texto + colonia_id).
+
 ### FIX — Tasa LPS dinámica desde core.exchange_rate (resuelve deuda técnica #1)
 - El analizador dejaba de usar la tasa hardcodeada `26.58` y ahora lee la más reciente
   de `core.exchange_rate` al iniciar (fetch en el `Promise.all` de carga). Fallback a
