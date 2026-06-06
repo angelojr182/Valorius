@@ -11,26 +11,22 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-05-29
-Último paso    : FASE 2-E completada — GEO_DICT migrado de JS a core.dim_zone
-               : dim_zone: +5 columnas (lat, lng, geo_precision, geo_source, geo_confidence)
-               : 3 constraints de rango idempotentes (DO $$ ... EXCEPTION)
-               : 49 centroides verificados con fuentes cruzadas (Mapcarta/OSM/WorldPlaces)
-               : analizador.html: GEO_DICT vacío → poblado desde dim_zone en init
-               : Clave cambiada de nombre-zona a zone_id (UUID) — más robusto
-               : Filter/lookup: !== null y !== undefined (correcto para coordenadas)
-               : migration_dim_zone_geo.sql ejecutado y validado (zonas_con_coords=49)
-               : GitHub commit b74072a subido 2026-05-29
-               :
-               : FASE 2-D completada (sesión anterior misma fecha)
-               : Mapa de contexto competitivo (Leaflet.js CartoDB dark)
-               : Zonas coloreadas por precio relativo a la mediana global
-               : Burbujas proporcionales a cobertura · tooltip permanente en zona analizada
-               : Overlay navy ::after z-index 350 para fondos oscuros sin tapar marcadores
-               : Burbuja dorada de precio sobre slider POSICION EN EL MERCADO
-Próximo paso   : Pendiente decisión del usuario · FASE 3 documentación · FASE 4 Mercado Primario
+Última sesión  : 2026-06-06
+Último paso    : Sesión larga — UX analizador + GOBERNANZA DOCUMENTAL + documentación base as-built
+               : UX (commit 63b8610): precio con comas (fix bug "L 3.5"), badge "Tu propiedad" en
+               :   leyenda de rangos, resaltado de zona analizada en mapa (resto atenuado)
+               : Gobernanza /docs creada (ADR-0002): INDEX, decisions/, design/, plantillas, DoD
+               :   ADR-0001 (precio de oferta) · RFC-005 (FASE 5 motor comparables, borrador)
+               : DOC BASE AS-BUILT (que nada viva solo en chat/frontend):
+               :   calculo_analizador.md v1.1 — lógica COMPLETA del analizador (antes solo en JS)
+               :   data_dictionary.md v1.1 — modelo core (14 tablas, verificado vs DB)
+               :   arquitectura.md v1.0 — front, 7 Edge Functions, scrapers, flujo
+               : FIX tasa LPS dinámica desde exchange_rate (deuda #1) · RLS en dim_colonia (ADR-0003)
+               : Análisis Accumin → lecciones: zonas gemelas, score de confianza, dato limpio = activo
+Próximo paso   : Usuario revisando NUEVOS ACTIVOS — avisará para ingestar
+               : Luego: FASE 6 (audit_02 reingeniería geográfica) o FASE 5 (confirmar umbrales RFC-005)
 Pendiente auth : CERO cambios a DB sin autorización explícita
-Tipo cambio    : verificar tasa Ficohsa actual (última registrada L 26.5923 / 26.6200)
+Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
 DB count       : 145 properties / 145 listings
 Docs           : /docs versionado — INDEX, ADR-0001..0003, RFC-005, data_dictionary, calculo_analizador
 dim_colonia    : 60 colonias · catálogo canónico en docs/database/data_dictionary.md
@@ -41,13 +37,41 @@ dim_zone       : 52 zonas · 51 activas · Residencial Zarahemla II activo=false
 dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones
 Seguridad      : RLS en todas las tablas de core (dim_colonia agregada 2026-06-06 · ADR-0003)
 FASE 4         : Mercado Primario APROBADA — ver sección 12
-GitHub         : commit b74072a — FASE 2-E subido 2026-05-29
+GitHub         : commit 925c1f3 — documentación base as-built subida 2026-06-06
 ```
 
 ---
 
 ## 📋 LOG DE SESIONES
 ```
+2026-06-06 | Sesión larga: UX analizador + gobernanza documental + documentación base as-built
+           | UX analizador (commit 63b8610): precio con comas (fix "L 3.5" — parseFloat de puntos
+           |   daba 3.5), badge "Tu propiedad" en leyenda de rangos, resaltado de zona analizada
+           |   en mapa (resto atenuado conservando color)
+           | GOBERNANZA DOCUMENTAL (ADR-0002): /docs con INDEX, decisions/, design/, plantillas,
+           |   Definition of Done, regla de cobertura. Principio: Git = fuente de verdad
+           | ADR-0001: trabajamos con precios de OFERTA, no de cierre (techo de confianza)
+           | RFC-005: motor de comparables ajustado por tamaño (FASE 5) — borrador, umbrales DRAFT
+           |   (estratificación + outliers multivariante + score de confianza + zonas gemelas)
+           | DOCUMENTACIÓN BASE AS-BUILT (para que nada viva solo en el chat/frontend):
+           |   calculo_analizador.md v1.1 — lógica COMPLETA del analizador capturada del JS
+           |   data_dictionary.md v1.1 — modelo de datos core (14 tablas), verificado vs DB
+           |   arquitectura.md v1.0 — inventario: front (index/ingesta/analizador), 7 Edge Functions,
+           |     scrapers (Rentify/Playwright), flujo de datos extremo a extremo
+           | FIX tasa LPS dinámica: analizador lee core.exchange_rate (deuda técnica #1) — commit e7e4778
+           | SECURITY: RLS activado en core.dim_colonia (era la ÚNICA tabla de core sin RLS;
+           |   anon podía leer/modificar). Migración enable_rls_dim_colonia + ADR-0003 — commit f4bb754
+           | CLAUDE.md: conteos sincronizados 134→145, zonas →52/51act, colonias →60, proyectos →32,
+           |   snapshots →49 (commit 532becd)
+           | Análisis Accumin (ex-Tinsa): evolución de cómo consiguen datos (físico→exhaust→índice→
+           |   compra calidad de datos→automatiza). Lecciones: zonas gemelas, score de confianza,
+           |   dato limpio = activo. Hallazgo: infra de clusters YA existe (zone_cluster_assignment 45/52)
+           | Cobertura medida (145 listings): colonia vs zona → FASE 6 reingeniería geográfica
+           |   PROPUESTA (no decidida). Pendiente audit_02 de los 52 nombres de zona
+           | Deudas registradas (no resueltas): analizador #2 filtro pm² laxo, #3 PRECIO_MIN,
+           |   #4 mediana no interpolada (reconciliar docs); Edge Functions TS sin auditar; LEEME.txt viejo
+           | Commits del día: 63b8610, f9ee633, e7e4778, 1aea1f7, f4bb754, 532becd, 925c1f3
+
 2026-05-29 | FASE 2-E completada — GEO_DICT migrado de JS hardcoded a core.dim_zone
            | dim_zone: +5 columnas geo (lat, lng, geo_precision, geo_source, geo_confidence)
            | 3 constraints idempotentes (DO $$ EXCEPTION WHEN duplicate_object)
