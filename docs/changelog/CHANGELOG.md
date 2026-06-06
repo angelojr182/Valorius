@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-06-06
+
+### FIX — Tasa LPS dinámica desde core.exchange_rate (resuelve deuda técnica #1)
+- El analizador dejaba de usar la tasa hardcodeada `26.58` y ahora lee la más reciente
+  de `core.exchange_rate` al iniciar (fetch en el `Promise.all` de carga). Fallback a
+  26.58 solo si el fetch falla.
+- Verificado en navegador: `tasaLPS` cargó `26.5943` (tasa del 2026-06-06), no el 26.58.
+- Afecta `analizador.html` (real) + `analizador_prototipo.html`. Doc `calculo_analizador.md`
+  → v1.1; deuda §4.1 marcada RESUELTA.
+
+---
+
+## 2026-06-05
+
+### FEATURE — Documentación as-built: método completo del analizador (calculo_analizador.md v1.0)
+- Capturada la lógica COMPLETA del analizador, que hasta ahora vivía solo en el JS:
+  constantes, pipeline de datos, computeStats, fallback de 3 niveles, IPR/umbrales,
+  IAO, severidad, sanity, alerta de atípicos, derivación del veredicto, moneda.
+- Verificada contra `analizador.html` (no de memoria). Mitiga el riesgo de "lógica
+  solo en frontend se puede perder".
+- Discrepancias detectadas y registradas (§4 del doc): tasa LPS hardcodeada (no lee
+  exchange_rate), filtro pm² de carga (50/15000) más laxo que la regla escrita
+  (500/4000), PRECIO_MIN=10000 vs regla "<20000", mediana/percentiles no interpolados.
+
+---
+
 ## 2026-06-04
 
 ### DECISION — Gobernanza documental de Valorius (ADR-0002)

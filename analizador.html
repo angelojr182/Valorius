@@ -1191,7 +1191,7 @@
 
   // ─── TOGGLE MONEDA (prototipo UX) ────────────────────────────
   var monedaActual = 'USD';
-  var tasaLPS      = 26.58; // se puede actualizar desde exchange_rate
+  var tasaLPS      = 26.58; // fallback; se sobreescribe en init con la tasa mas reciente de core.exchange_rate
 
   window.toggleMoneda = function() {
     var btn   = document.getElementById('btnMoneda');
@@ -2305,12 +2305,19 @@
       azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,habitaciones,banos,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
       azFetch('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
       azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto'),
-      azFetch('/rest/v1/dim_zone?select=zone_id,zona,lat,lng&activo=eq.true')
+      azFetch('/rest/v1/dim_zone?select=zone_id,zona,lat,lng&activo=eq.true'),
+      azFetch('/rest/v1/exchange_rate?select=tasa_usd_hnl,fecha&order=fecha.desc&limit=1')
     ]);
     var rows=results[0]||[];
     azColonias  = results[1]||[];
     azProyectos = (results[2]||[]).map(function(p){ return {proyecto_id:p.proyecto_id, proyecto:p.proyecto, zone_id:p.zone_id, colonia_id:p.colonia_id}; });
     var azZonasGeo = results[3]||[];
+    // Tasa LPS->USD desde core.exchange_rate (la mas reciente); fallback al valor por defecto si falla
+    var erRows = results[4] || [];
+    if (erRows[0] && erRows[0].tasa_usd_hnl) {
+      tasaLPS = Number(erRows[0].tasa_usd_hnl);
+      console.log('[Valorius] Tasa LPS desde exchange_rate: ' + tasaLPS + ' (' + erRows[0].fecha + ')');
+    }
     azZonasGeo.forEach(function(z) {
       if (z.lat !== null && z.lng !== null) {
         GEO_DICT[z.zone_id] = [Number(z.lat), Number(z.lng)];

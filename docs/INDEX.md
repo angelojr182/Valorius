@@ -55,7 +55,7 @@ Un cambio **no está cerrado** si no tiene:
 
 | Documento | Versión | Estado |
 |---|---|---|
-| [calculo_analizador.md](architecture/calculo_analizador.md) | 0.1 | En definición (ver RFC-005) |
+| [calculo_analizador.md](architecture/calculo_analizador.md) | 1.1 | Vigente (as-built capturado) |
 
 ## Plantillas
 
