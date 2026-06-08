@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-06-08
+
+### SCHEMA — Reingeniería geográfica FASE 6 v1: separar zonas de colonias (ADR-0004)
+- **Detectado:** "Residencial Las Casitas", "Residencial El Sauce", "Residencial Villa Elena"
+  estaban como ZONAS cuando deberían ser COLONIAS dentro de zonas base.
+- **Aplicada migración** `fase6_reingenieria_geografica_v1`: 3 zonas nuevas (Las Casitas,
+  El Sauce, Villa Elena) + 3 colonias nuevas (Residencial Las Casitas, etc.).
+- **Migradas 10 properties:** 1 Las Casitas, 5 El Sauce, 4 Villa Elena. Reasignadas zone_id
+  + poblado colonia_id. Zonas antiguas desactivadas (activo=false), no eliminadas (preserva
+  historial para auditoría).
+- **Actualizaciones:**
+  - `zone_aliases.json`: 9 entradas (3 zonas × 3 variantes) reasignadas a nuevos UUIDs.
+  - CLAUDE.md: dim_zone 52→55, dim_colonia 60→63.
+  - INDEX: ADR-0004 agregado.
+- **Impacto:** Jerarquía zona/colonia ahora consistente. Scrapers futuros tendrán zonas
+  base correctas. Snapshots de zonas antiguas quedan desacoplados (no crítico: analizador
+  calcula en vivo).
+
 ## 2026-06-06
 
 ### DOCS — Arquitectura as-built (arquitectura.md v1.0) · cierra documentación base

@@ -11,33 +11,28 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-06-06
-Último paso    : Sesión larga — UX analizador + GOBERNANZA DOCUMENTAL + documentación base as-built
-               : UX (commit 63b8610): precio con comas (fix bug "L 3.5"), badge "Tu propiedad" en
-               :   leyenda de rangos, resaltado de zona analizada en mapa (resto atenuado)
-               : Gobernanza /docs creada (ADR-0002): INDEX, decisions/, design/, plantillas, DoD
-               :   ADR-0001 (precio de oferta) · RFC-005 (FASE 5 motor comparables, borrador)
-               : DOC BASE AS-BUILT (que nada viva solo en chat/frontend):
-               :   calculo_analizador.md v1.1 — lógica COMPLETA del analizador (antes solo en JS)
-               :   data_dictionary.md v1.1 — modelo core (14 tablas, verificado vs DB)
-               :   arquitectura.md v1.0 — front, 7 Edge Functions, scrapers, flujo
-               : FIX tasa LPS dinámica desde exchange_rate (deuda #1) · RLS en dim_colonia (ADR-0003)
-               : Análisis Accumin → lecciones: zonas gemelas, score de confianza, dato limpio = activo
-Próximo paso   : Usuario revisando NUEVOS ACTIVOS — avisará para ingestar
-               : Luego: FASE 6 (audit_02 reingeniería geográfica) o FASE 5 (confirmar umbrales RFC-005)
+Última sesión  : 2026-06-08
+Último paso    : FASE 6 v1 — reingeniería geográfica: separar zonas de colonias
+               : Detectado: Residencial Las Casitas/El Sauce/Villa Elena eran ZONAS (error)
+               : Corregido: creadas zonas nuevas (Las Casitas/El Sauce/Villa Elena) + colonias
+               :   (Residencial Las Casitas/El Sauce/Villa Elena) · migradas 10 properties
+               : Migración aplicada + zone_aliases.json + ADR-0004 + CHANGELOG + INDEX
+               : Zonas antiguas desactivadas (activo=false), preservado historial
+Próximo paso   : Usuario revisando NUEVOS ACTIVOS — avisará para ingestar (jerarquía ahora limpia)
+               : Luego: audit_02 reingeniería geográfica completa o FASE 5 (confirmar umbrales RFC-005)
 Pendiente auth : CERO cambios a DB sin autorización explícita
-Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
+Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943
 DB count       : 145 properties / 145 listings
-Docs           : /docs versionado — INDEX, ADR-0001..0003, RFC-005, data_dictionary, calculo_analizador
-dim_colonia    : 60 colonias · catálogo canónico en docs/database/data_dictionary.md
-dim_zone       : 52 zonas · 51 activas · Residencial Zarahemla II activo=false
+Docs           : /docs versionado — INDEX, ADR-0001..0004, RFC-005, data_dictionary, calculo_analizador
+dim_colonia    : 63 colonias (60 + 3 nuevas: Residencial Las Casitas/El Sauce/Villa Elena)
+dim_zone       : 55 zonas (52 + 3 nuevas: Las Casitas/El Sauce/Villa Elena) · 52 activas + 3 antiguas inactivas
                : Nuevas columnas: lat, lng, geo_precision, geo_source, geo_confidence
                : El Sauce y San Ignacio pendientes verificación manual de coordenadas
                : REGLA: dropdowns futuros deben filtrar WHERE activo = true
 dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones
 Seguridad      : RLS en todas las tablas de core (dim_colonia agregada 2026-06-06 · ADR-0003)
 FASE 4         : Mercado Primario APROBADA — ver sección 12
-GitHub         : commit 925c1f3 — documentación base as-built subida 2026-06-06
+GitHub         : commit [pendiente] — FASE 6 v1 reingeniería geográfica (docs + scripts + CLAUDE.md)
 ```
 
 ---

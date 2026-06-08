@@ -605,18 +605,19 @@
   },
 
   "residencial el sauce": {
-    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
-    "zona_canonica": "Residencial El Sauce",
-    "confianza": "ALTA"
+    "zone_id": "550e8400-e29b-41d4-a716-446655440002",
+    "zona_canonica": "El Sauce",
+    "confianza": "ALTA",
+    "nota": "Zona nueva (reingeniería geográfica). Colonia: Residencial El Sauce"
   },
   "res el sauce": {
-    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
-    "zona_canonica": "Residencial El Sauce",
+    "zone_id": "550e8400-e29b-41d4-a716-446655440002",
+    "zona_canonica": "El Sauce",
     "confianza": "ALTA"
   },
   "el sauce": {
-    "zone_id": "8e11848a-54a9-484e-98aa-ebf35ce7b77e",
-    "zona_canonica": "Residencial El Sauce",
+    "zone_id": "550e8400-e29b-41d4-a716-446655440002",
+    "zona_canonica": "El Sauce",
     "confianza": "ALTA"
   },
   "villa los nopales": {
@@ -661,18 +662,19 @@
   },
 
   "residencial las casitas": {
-    "zone_id": "063cd486-1a14-481b-baf2-78c18b4a5068",
-    "zona_canonica": "Residencial Las Casitas",
-    "confianza": "ALTA"
+    "zone_id": "550e8400-e29b-41d4-a716-446655440001",
+    "zona_canonica": "Las Casitas",
+    "confianza": "ALTA",
+    "nota": "Zona nueva (reingeniería geográfica). Colonia: Residencial Las Casitas"
   },
   "res las casitas": {
-    "zone_id": "063cd486-1a14-481b-baf2-78c18b4a5068",
-    "zona_canonica": "Residencial Las Casitas",
+    "zone_id": "550e8400-e29b-41d4-a716-446655440001",
+    "zona_canonica": "Las Casitas",
     "confianza": "ALTA"
   },
   "las casitas": {
-    "zone_id": "063cd486-1a14-481b-baf2-78c18b4a5068",
-    "zona_canonica": "Residencial Las Casitas",
+    "zone_id": "550e8400-e29b-41d4-a716-446655440001",
+    "zona_canonica": "Las Casitas",
     "confianza": "ALTA"
   },
 
@@ -798,18 +800,19 @@
   },
 
   "residencial villa elena": {
-    "zone_id": "ab73c240-311e-4b1f-a081-15cccb0c6f7b",
-    "zona_canonica": "Residencial Villa Elena",
-    "confianza": "ALTA"
+    "zone_id": "550e8400-e29b-41d4-a716-446655440003",
+    "zona_canonica": "Villa Elena",
+    "confianza": "ALTA",
+    "nota": "Zona nueva (reingeniería geográfica). Colonia: Residencial Villa Elena"
   },
   "res villa elena": {
-    "zone_id": "ab73c240-311e-4b1f-a081-15cccb0c6f7b",
-    "zona_canonica": "Residencial Villa Elena",
+    "zone_id": "550e8400-e29b-41d4-a716-446655440003",
+    "zona_canonica": "Villa Elena",
     "confianza": "ALTA"
   },
   "villa elena": {
-    "zone_id": "ab73c240-311e-4b1f-a081-15cccb0c6f7b",
-    "zona_canonica": "Residencial Villa Elena",
+    "zone_id": "550e8400-e29b-41d4-a716-446655440003",
+    "zona_canonica": "Villa Elena",
     "confianza": "ALTA"
   },
 

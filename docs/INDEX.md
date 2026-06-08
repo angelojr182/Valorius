@@ -45,6 +45,7 @@ Un cambio **no está cerrado** si no tiene:
 | [ADR-0001](decisions/ADR-0001-precios-de-oferta-no-de-cierre.md) | Trabajamos con precios de oferta, no de cierre | Aceptado | 2026-06-04 |
 | [ADR-0002](decisions/ADR-0002-gobernanza-documental.md) | Gobernanza documental de Valorius | Aceptado | 2026-06-04 |
 | [ADR-0003](decisions/ADR-0003-rls-dim-colonia.md) | RLS en core.dim_colonia (lectura pública, escritura service_role) | Aceptado | 2026-06-06 |
+| [ADR-0004](decisions/ADR-0004-reingenieria-geografica-fase6.md) | Reingeniería geográfica: separar zonas de colonias (Las Casitas, El Sauce, Villa Elena) | Aceptado | 2026-06-08 |
 
 ## Diseños (RFC)
 
