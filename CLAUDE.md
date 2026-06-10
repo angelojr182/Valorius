@@ -12,16 +12,23 @@
 ## ⚡ SESIÓN ACTIVA
 ```
 Última sesión  : 2026-06-10
-Último paso    : PHASE 0 COMPLETADA — Baseline congelado antes de refactorizar
-               : test-cases.js: 6 casos de prueba (input → expected output)
-               : test-runner.html: interfaz interactiva para ejecutar casos manualmente
-               : docs/BUSINESS_RULES.md (v1.0): números duros versionados
-               : docs/PHASE0_BASELINE.md (v1.0): cómo usar baseline después de refactorizar
-               : screenshots/phase0-test-runner-baseline.png: baseline visual
-               : Commits: bc9c323, 1a1f9a0 — PHASE 0 completa
-Próximo paso   : FASE 1 (separar lógica) — crear lib/comparable.js + analyzer.js + validator + formatter + constants
+Último paso    : PHASE 1 PASO 1 COMPLETA — Extracción de lógica a lib/ (5 librerías)
+               : lib/comparable.js (v1.0): experto en seleccionar comparables (CORAZÓN)
+               :   filterByDate, filterByArea, detectOutliers, calculateStats, selectComparables
+               : lib/constants.js (v1.0): números duros versionados (códigos, no UUIDs)
+               :   PRECIOS, RANGOS_AREA, DIAS, COMPARABLES, IPR, OUTLIER, MONEDAS
+               :   getSeveridad, interpretarIPR, interpretarIAO
+               : lib/validator.js (v1.0): validaciones de entrada
+               :   validateInput, validateTipo, validateArea, validatePrecio, validateMoneda
+               : lib/formatter.js (v1.0): formato visual de números
+               :   formatCurrency, formatPricePerSquareMeter, formatPercentage, parseInputPrice
+               : lib/analyzer.js (v1.0): coordinador que orquesta todo
+               :   analyze (entrada → valida → resuelve → calcula → interpreta → retorna)
+               :   resolverComparables (fallback 3 niveles), checkAtipicoRatio
+               : Commits: c3e7675, fe0c4c2, 7cb2c42 — PHASE 1 PASO 1
+Próximo paso   : PHASE 1 PASO 2: Integrar librerías en analizador.html (refactorizar HTML)
+               : Luego PHASE 1 PASO 3: Verificar test-cases sigan pasando
                : Luego: FASE 2 (JSON de datos: zones, colonias, projects)
-               : Luego: FASE 3 (componentes HTML modulares)
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
 DB count       : 145 properties / 145 listings
@@ -30,13 +37,38 @@ Docs           : /docs ACTUALIZADO — INDEX, ADR-0001..0004, RFC-005, PLAN_EVOL
 dim_colonia    : 63 colonias (tras FASE 6 reingeniería) — catálogo en data_dictionary.md
 dim_zone       : 55 zonas · 52 activas (tras FASE 6: +3 nuevas Las Casitas/El Sauce/Villa Elena)
 Seguridad      : RLS en todas las tablas de core (activado 2026-05-27 ss, ADR-0003)
-GitHub         : rama main sincronizada — commit 1a1f9a0 (2026-06-10)
+GitHub         : rama main sincronizada — commit 7cb2c42 (2026-06-10)
 ```
 
 ---
 
 ## 📋 LOG DE SESIONES
 ```
+2026-06-10 | PHASE 1 PASO 1 COMPLETADA — Extracción de lógica a librerías (5 módulos)
+           | lib/comparable.js (v1.0): CORAZÓN del analizador
+           |   - ComparableSelector: experto en seleccionar y analizar comparables
+           |   - filterByDate (100 días), filterByArea (por rango tipo)
+           |   - detectOutliers (IQR factor 1.8), calculateStats (mediana, p25, p75)
+           |   - selectComparables: pipeline completo (fecha → área → outliers → stats)
+           | lib/constants.js (v1.0): números duros versionados
+           |   - Precios: $20k-$5M; Áreas: APTO 25-600, CASA 45-1200, TERRENO 100-5000
+           |   - IPR: <0.85 (BAJO), 0.85-1.15 (RANGO), >1.15 (SOBRE)
+           |   - Comparables: 100 días, mínimo 3, ideal 15
+           |   - Outlier factor 1.8
+           |   - getSeveridad, interpretarIPR, interpretarIAO
+           | lib/validator.js (v1.0): validaciones de entrada
+           |   - validateInput (completa), validateTipo, validateArea (advertencia), validatePrecio (rechazo)
+           |   - Advertencia si area fuera de rango, pero no rechazo automático
+           | lib/formatter.js (v1.0): formato visual de números
+           |   - formatCurrency, formatPricePerSquareMeter, formatPercentage, formatIPRPercentage
+           |   - formatArea, formatRange, formatForInput, parseInputPrice
+           | lib/analyzer.js (v1.0): COORDINADOR que orquesta todo
+           |   - analyze: entrada → valida → resuelve comparables → calcula → interpreta → retorna
+           |   - resolverComparables: fallback 3 niveles (colonia ≥3 → zona ≥3 → limitado)
+           |   - checkAtipicoRatio: detecta si ratio > 1.8 o < 1/1.8
+           | Commits: c3e7675 (comparable+constants), fe0c4c2 (validator+formatter), 7cb2c42 (analyzer)
+           | Próximo: PHASE 1 PASO 2 (integrar en analizador.html)
+
 2026-06-10 | PHASE 0 COMPLETADA — Baseline congelado antes de refactorizar
            | test-cases.js: 6 casos de prueba documentados (input → expected output)
            |   Caso 1: Apartamento zona buena, precio en rango (RANGO)
