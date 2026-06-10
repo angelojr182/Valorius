@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PHASE 0 — Test Runner</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #0a1428;
+      color: #cbd5e1;
+      padding: 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #e2b05c; margin-bottom: 20px; }
+    .test-case {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(100,116,139,0.2);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .test-case h3 { color: #e2b05c; margin-bottom: 12px; }
+    .test-case p { font-size: 13px; line-height: 1.6; margin-bottom: 8px; }
+    .input-box {
+      background: rgba(0,0,0,0.2);
+      border-left: 3px solid #e2b05c;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+    .expected-box {
+      background: rgba(16,185,129,0.08);
+      border-left: 3px solid #10b981;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+    .error-box {
+      background: rgba(239,68,68,0.08);
+      border-left: 3px solid #ef4444;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+    .instructions {
+      background: rgba(226,176,92,0.08);
+      border: 1px solid rgba(226,176,92,0.2);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .instructions h2 { color: #e2b05c; font-size: 14px; margin-bottom: 12px; }
+    .instructions ol { margin-left: 20px; }
+    .instructions li { margin-bottom: 8px; font-size: 12px; line-height: 1.5; }
+    button {
+      background: rgba(226,176,92,0.15);
+      border: 1px solid rgba(226,176,92,0.4);
+      color: #e2b05c;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: rgba(226,176,92,0.25);
+    }
+    .status { font-size: 11px; margin-top: 8px; padding: 6px 10px; border-radius: 4px; display: inline-block; }
+    .status.pending { background: rgba(100,116,139,0.2); color: #94a3b8; }
+    .status.done { background: rgba(34,197,94,0.2); color: #4ade80; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 PHASE 0 — Test Runner (BASELINE)</h1>
+
+    <div class="instructions">
+      <h2>Instrucciones:</h2>
+      <ol>
+        <li>Abre <strong>analizador.html</strong> en otra pestaña</li>
+        <li>Para cada caso abajo, llena los datos en analizador.html</li>
+        <li>Haz clic "Analizar propiedad"</li>
+        <li>Verifica el resultado contra "Expected Output"</li>
+        <li>Marca como "✓ HECHO" aquí cuando termines</li>
+        <li>Si algo NO coincide, anota la diferencia</li>
+      </ol>
+    </div>
+
+    <div id="cases-container"></div>
+  </div>
+
+  <script>
+    const TEST_CASES = [
+      {
+        id: 1,
+        titulo: 'Apartamento zona con buena cobertura, precio en rango',
+        input: { zona: 'Bulevar Morazán', tipo: 'APARTAMENTO', precio: 250000, area: 120, moneda: 'USD' },
+        expected: 'Veredicto: RANGO (0.85 ≤ IPR ≤ 1.15) | Confianza: MEDIA a ALTA | Sin alarmas'
+      },
+      {
+        id: 2,
+        titulo: 'Apartamento precio bajo (ganga potencial)',
+        input: { zona: 'Lomas del Guijarro', tipo: 'APARTAMENTO', precio: 150000, area: 100, moneda: 'USD' },
+        expected: 'Veredicto: BAJO (IPR < 0.85) | Confianza: MEDIA | Sin alarmas sanity'
+      },
+      {
+        id: 3,
+        titulo: 'Apartamento precio alto (sobre mercado)',
+        input: { zona: 'El Trapiche', tipo: 'APARTAMENTO', precio: 380000, area: 110, moneda: 'USD' },
+        expected: 'Veredicto: SOBRE (IPR > 1.15) | Confianza: MEDIA | Alerta contextual visible'
+      },
+      {
+        id: 4,
+        titulo: 'Zona con pocas referencias (fallback a zona)',
+        input: { zona: 'San Ignacio', tipo: 'APARTAMENTO', precio: 180000, area: 90, moneda: 'USD' },
+        expected: 'Veredicto: RANGO (por zona) | Confianza: BAJA-MEDIA | Badge "pocas referencias" visible'
+      },
+      {
+        id: 5,
+        titulo: 'Entrada inválida: precio fuera de rango',
+        input: { zona: 'Bulevar Morazán', tipo: 'APARTAMENTO', precio: 5000, area: 100, moneda: 'USD' },
+        expected: 'ERROR: Alerta sanity visible | Mensaje: "precio ingresado parece demasiado bajo" | NO ejecuta análisis'
+      },
+      {
+        id: 6,
+        titulo: 'Entrada inválida: área fuera de rango',
+        input: { zona: 'Miraflores', tipo: 'APARTAMENTO', precio: 200000, area: 25, moneda: 'USD' },
+        expected: 'ADVERTENCIA: Alerta sanity | Mensaje: "tamaño...inusualmente pequeño" | Usuario debe confirmar'
+      }
+    ];
+
+    const container = document.getElementById('cases-container');
+
+    TEST_CASES.forEach(tc => {
+      const div = document.createElement('div');
+      div.className = 'test-case';
+      div.innerHTML = `
+        <h3>Caso ${tc.id}: ${tc.titulo}</h3>
+        <p><strong>Datos a ingresar:</strong></p>
+        <div class="input-box">
+          Zona: <strong>${tc.input.zona}</strong><br>
+          Tipo: <strong>${tc.input.tipo}</strong><br>
+          Precio: <strong>$${tc.input.precio.toLocaleString()}</strong> (${tc.input.moneda})<br>
+          Área: <strong>${tc.input.area} m²</strong>
+        </div>
+        <p><strong>Resultado esperado:</strong></p>
+        <div class="expected-box">${tc.expected}</div>
+        <div>
+          <button onclick="marcarDone(${tc.id})">✓ Hecho — resultado coincide</button>
+          <button onclick="marcarError(${tc.id})" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:#ef4444;">✕ Diferente — anotar abajo</button>
+          <div id="status-${tc.id}" class="status pending">⏳ Pendiente</div>
+          <textarea id="notes-${tc.id}" placeholder="Anota qué fue diferente..." style="width:100%;height:60px;margin-top:10px;padding:8px;background:rgba(0,0,0,0.3);border:1px solid rgba(100,116,139,0.3);color:#cbd5e1;border-radius:4px;font-size:12px;font-family:monospace;" disabled></textarea>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    window.marcarDone = function(id) {
+      const status = document.getElementById(`status-${id}`);
+      status.textContent = '✓ PASÓ';
+      status.className = 'status done';
+    };
+
+    window.marcarError = function(id) {
+      const notes = document.getElementById(`notes-${id}`);
+      notes.disabled = false;
+      notes.focus();
+      const status = document.getElementById(`status-${id}`);
+      status.textContent = '✕ FALLÓ';
+      status.className = 'status';
+      status.style.background = 'rgba(239,68,68,0.2)';
+      status.style.color = '#ef4444';
+    };
+  </script>
+</body>
+</html>
