@@ -11,34 +11,67 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-06-08
-Último paso    : FASE 6 v1 — reingeniería geográfica: separar zonas de colonias
-               : Detectado: Residencial Las Casitas/El Sauce/Villa Elena eran ZONAS (error)
-               : Corregido: creadas zonas nuevas (Las Casitas/El Sauce/Villa Elena) + colonias
-               :   (Residencial Las Casitas/El Sauce/Villa Elena) · migradas 10 properties
-               : Migración aplicada + zone_aliases.json + ADR-0004 + CHANGELOG + INDEX
-               : Zonas antiguas desactivadas (activo=false), preservado historial
-Próximo paso   : Usuario revisando NUEVOS ACTIVOS — avisará para ingestar (jerarquía ahora limpia)
-               : Luego: audit_02 reingeniería geográfica completa o FASE 5 (confirmar umbrales RFC-005)
+Última sesión  : 2026-06-09
+Último paso    : DOCUMENTACIÓN ESTRATÉGICA COMPLETADA — Plan evolución + explicación funcional
+               : docs/PLAN_EVOLUCION.md (v1.0) — 9 semanas, CERO presupuesto, 5 FASES
+               :   FASE 0: Congelar comportamiento (test-cases, screenshots)
+               :   FASE 1: Separar lógica (comparable.js, analyzer.js, validator, formatter, constants)
+               :   FASE 2: JSON (zones, colonias, projects)
+               :   FASE 3: Componentes modulares
+               :   Arquitectura final: 200-300 líneas analizador.html, lib/, data/, components/
+               :   Principio: cada commit = analizador funcionando
+               : docs/COMO_FUNCIONA_ANALIZADOR.md (v1.0) — explicación sin pseudocode/UUIDs
+               :   30s resumen + paso a paso (validar → buscar → filtrar → stats → comparar → confianza)
+               :   Números duros: 100 días, 3+ comparables, ±15% IPR, outlier factor 1.8
+               :   Flujo visual, ejemplo real, FAQ, casos especiales
+               : Commit: 4d675b7 — ambas docs subidas 2026-06-09
+Próximo paso   : FASE 0 (congelar comportamiento) — crear test-cases.js + screenshots
+               : Luego: FASE 1 (separar lógica) con comparable.js como "corazón"
 Pendiente auth : CERO cambios a DB sin autorización explícita
-Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943
+Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
 DB count       : 145 properties / 145 listings
-Docs           : /docs versionado — INDEX, ADR-0001..0004, RFC-005, data_dictionary, calculo_analizador
-dim_colonia    : 63 colonias (60 + 3 nuevas: Residencial Las Casitas/El Sauce/Villa Elena)
-dim_zone       : 55 zonas (52 + 3 nuevas: Las Casitas/El Sauce/Villa Elena) · 52 activas + 3 antiguas inactivas
+Docs           : /docs ACTUALIZADO — INDEX, ADR-0001..0004, RFC-005, PLAN_EVOLUCION, COMO_FUNCIONA
+dim_colonia    : 63 colonias (tras FASE 6 reingeniería) — catálogo en data_dictionary.md
+dim_zone       : 55 zonas · 52 activas (tras FASE 6: +3 nuevas Las Casitas/El Sauce/Villa Elena)
                : Nuevas columnas: lat, lng, geo_precision, geo_source, geo_confidence
-               : El Sauce y San Ignacio pendientes verificación manual de coordenadas
-               : REGLA: dropdowns futuros deben filtrar WHERE activo = true
+               : REGLA: dropdowns futuros filtran WHERE activo = true
 dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones
-Seguridad      : RLS en todas las tablas de core (dim_colonia agregada 2026-06-06 · ADR-0003)
-FASE 4         : Mercado Primario APROBADA — ver sección 12
-GitHub         : commit [pendiente] — FASE 6 v1 reingeniería geográfica (docs + scripts + CLAUDE.md)
+Seguridad      : RLS en todas las tablas de core (activado 2026-05-27 ss, ADR-0003)
+GitHub         : rama main sincronizada — commit 4d675b7 (2026-06-09)
 ```
 
 ---
 
 ## 📋 LOG DE SESIONES
 ```
+2026-06-09 | DOCUMENTACIÓN ESTRATÉGICA: Plan de evolución 9 semanas + explicación funcional
+           | docs/PLAN_EVOLUCION.md (v1.0) — roadmap CERO presupuesto, 3-4 horas/semana
+           |   Principio: cada commit = analizador funcionando
+           |   FASE 0 (1 sem): Congelar comportamiento (test-cases.js, screenshots)
+           |   FASE 1 (2-3 sem): Separar lógica (comparable.js=EXPERTO, analyzer.js=COORDINADOR,
+           |     validator, formatter, constants con códigos estables no UUIDs)
+           |   FASE 2 (1-2 sem): Datos en JSON (zones, colonias, projects, property_types)
+           |   FASE 3 (3-4 sem): Componentes modulares (AnalysisSummary, PriceCard, ConfidenceIndicator,
+           |     ComparableTable, MarketRangeChart, MapPanel)
+           |   Arquitectura final: lib/, data/, components/, 200-300 líneas analizador.html
+           | docs/COMO_FUNCIONA_ANALIZADOR.md (v1.0) — explicación en palabras claras
+           |   30-segundo resumen + paso a paso: validar → buscar → filtrar → estadísticas → 
+           |   comparar → confianza
+           |   Números duros: 100 días comparables, 3+ mínimo, ±15% IPR, outlier factor 1.8,
+           |   rangos de área por tipo, mediana no promedio
+           |   Flujo visual, ejemplo real (San Ignacio $180k), FAQ, casos especiales
+           |   Sin pseudocode, sin UUIDs, sin jargon técnico
+           | Commit 4d675b7: ambas docs subidas
+           | Próximo: FASE 0 (test-cases.js + screenshots de comportamiento actual como baseline)
+
+2026-06-08 | FASE 6 v1 — reingeniería geográfica: separar zonas de colonias
+           | Detectado: Residencial Las Casitas/El Sauce/Villa Elena eran ZONAS (error)
+           | Corregido: creadas zonas nuevas (Las Casitas/El Sauce/Villa Elena) + colonias
+           |   (Residencial Las Casitas/El Sauce/Villa Elena) · migradas 10 properties
+           | Migración aplicada + zone_aliases.json + ADR-0004 + CHANGELOG + INDEX
+           | Zonas antiguas desactivadas (activo=false), preservado historial
+           | Commit pending — reingeniería geográfica completa (documentación + CLAUDE.md)
+
 2026-06-06 | Sesión larga: UX analizador + gobernanza documental + documentación base as-built
            | UX analizador (commit 63b8610): precio con comas (fix "L 3.5" — parseFloat de puntos
            |   daba 3.5), badge "Tu propiedad" en leyenda de rangos, resaltado de zona analizada
