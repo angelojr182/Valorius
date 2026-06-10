@@ -11,39 +11,61 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-06-09
-Último paso    : DOCUMENTACIÓN ESTRATÉGICA COMPLETADA — Plan evolución + explicación funcional
-               : docs/PLAN_EVOLUCION.md (v1.0) — 9 semanas, CERO presupuesto, 5 FASES
-               :   FASE 0: Congelar comportamiento (test-cases, screenshots)
-               :   FASE 1: Separar lógica (comparable.js, analyzer.js, validator, formatter, constants)
-               :   FASE 2: JSON (zones, colonias, projects)
-               :   FASE 3: Componentes modulares
-               :   Arquitectura final: 200-300 líneas analizador.html, lib/, data/, components/
-               :   Principio: cada commit = analizador funcionando
-               : docs/COMO_FUNCIONA_ANALIZADOR.md (v1.0) — explicación sin pseudocode/UUIDs
-               :   30s resumen + paso a paso (validar → buscar → filtrar → stats → comparar → confianza)
-               :   Números duros: 100 días, 3+ comparables, ±15% IPR, outlier factor 1.8
-               :   Flujo visual, ejemplo real, FAQ, casos especiales
-               : Commit: 4d675b7 — ambas docs subidas 2026-06-09
-Próximo paso   : FASE 0 (congelar comportamiento) — crear test-cases.js + screenshots
-               : Luego: FASE 1 (separar lógica) con comparable.js como "corazón"
+Última sesión  : 2026-06-10
+Último paso    : PHASE 0 COMPLETADA — Baseline congelado antes de refactorizar
+               : test-cases.js: 6 casos de prueba (input → expected output)
+               : test-runner.html: interfaz interactiva para ejecutar casos manualmente
+               : docs/BUSINESS_RULES.md (v1.0): números duros versionados
+               : docs/PHASE0_BASELINE.md (v1.0): cómo usar baseline después de refactorizar
+               : screenshots/phase0-test-runner-baseline.png: baseline visual
+               : Commits: bc9c323, 1a1f9a0 — PHASE 0 completa
+Próximo paso   : FASE 1 (separar lógica) — crear lib/comparable.js + analyzer.js + validator + formatter + constants
+               : Luego: FASE 2 (JSON de datos: zones, colonias, projects)
+               : Luego: FASE 3 (componentes HTML modulares)
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
 DB count       : 145 properties / 145 listings
-Docs           : /docs ACTUALIZADO — INDEX, ADR-0001..0004, RFC-005, PLAN_EVOLUCION, COMO_FUNCIONA
+Docs           : /docs ACTUALIZADO — INDEX, ADR-0001..0004, RFC-005, PLAN_EVOLUCION, COMO_FUNCIONA,
+               : BUSINESS_RULES, PHASE0_BASELINE
 dim_colonia    : 63 colonias (tras FASE 6 reingeniería) — catálogo en data_dictionary.md
 dim_zone       : 55 zonas · 52 activas (tras FASE 6: +3 nuevas Las Casitas/El Sauce/Villa Elena)
-               : Nuevas columnas: lat, lng, geo_precision, geo_source, geo_confidence
-               : REGLA: dropdowns futuros filtran WHERE activo = true
-dim_subzona    : LEGADO — no eliminar, no usar en nuevas inserciones
 Seguridad      : RLS en todas las tablas de core (activado 2026-05-27 ss, ADR-0003)
-GitHub         : rama main sincronizada — commit 4d675b7 (2026-06-09)
+GitHub         : rama main sincronizada — commit 1a1f9a0 (2026-06-10)
 ```
 
 ---
 
 ## 📋 LOG DE SESIONES
 ```
+2026-06-10 | PHASE 0 COMPLETADA — Baseline congelado antes de refactorizar
+           | test-cases.js: 6 casos de prueba documentados (input → expected output)
+           |   Caso 1: Apartamento zona buena, precio en rango (RANGO)
+           |   Caso 2: Precio bajo (BAJO)
+           |   Caso 3: Precio alto (SOBRE)
+           |   Caso 4: Pocas referencias (fallback zona)
+           |   Caso 5: Sanity check precio < $20k (rechaza)
+           |   Caso 6: Sanity check area fuera de rango (advierte)
+           | test-runner.html: interfaz interactiva para ejecutar casos manualmente
+           |   - Muestra instrucciones claras
+           |   - Lista 6 casos con datos a ingresar
+           |   - Botones para marcar "hecho" o "diferente"
+           |   - Campo de notas para reportar diferencias
+           | docs/BUSINESS_RULES.md (v1.0): números duros versionados
+           |   - Precios: $20k-$5M
+           |   - Áreas por tipo (APTO 25-600, CASA 45-1200, TERRENO 100-5000)
+           |   - IPR < 0.85 (BAJO) | 0.85-1.15 (RANGO) | > 1.15 (SOBRE)
+           |   - IAO ≤3 (baja) | 4-8 (moderada) | ≥9 (alta)
+           |   - IQR outlier factor 1.8
+           |   - Período 100 días, mínimo 3 comparables
+           |   - Fallback: colonia ≥3 → zona ≥3 → limitado
+           | docs/PHASE0_BASELINE.md (v1.0): cómo usar baseline tras refactorizar
+           |   - Artefactos generados (test-cases.js, test-runner.html, BUSINESS_RULES)
+           |   - Regla de oro: Si caso falla → revertir inmediatamente
+           |   - Qué comportamiento está congelado (input validation, fallback, cálculos, UI)
+           | screenshots/phase0-test-runner-baseline.png: baseline visual
+           | Commits: bc9c323, 1a1f9a0
+           | Próximo: FASE 1 (extraer comparable.js, analyzer.js, validator, formatter, constants)
+
 2026-06-09 | DOCUMENTACIÓN ESTRATÉGICA: Plan de evolución 9 semanas + explicación funcional
            | docs/PLAN_EVOLUCION.md (v1.0) — roadmap CERO presupuesto, 3-4 horas/semana
            |   Principio: cada commit = analizador funcionando
