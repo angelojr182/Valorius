@@ -58,6 +58,8 @@ Un cambio **no está cerrado** si no tiene:
 | Documento | Versión | Estado |
 |---|---|---|
 | [calculo_analizador.md](architecture/calculo_analizador.md) | 1.1 | Vigente (as-built capturado) |
+| [COMO_FUNCIONA_ANALIZADOR.md](COMO_FUNCIONA_ANALIZADOR.md) | 1.0 | Vigente (explicación plain-language) |
+| [BUSINESS_RULES.md](BUSINESS_RULES.md) | 1.0 | Vigente (números duros versionados) |
 
 ## Documentación base (as-built)
 
@@ -65,6 +67,13 @@ Un cambio **no está cerrado** si no tiene:
 |---|---|---|
 | [data_dictionary.md](database/data_dictionary.md) | 1.1 | Vigente (modelo de datos `core`) |
 | [arquitectura.md](architecture/arquitectura.md) | 1.0 | Vigente (inventario del sistema) |
+
+## Documentación de evolución (Plan maestro)
+
+| Documento | Versión | Fase | Estado |
+|---|---|---|---|
+| [PLAN_EVOLUCION.md](PLAN_EVOLUCION.md) | 1.0 | 0–3 | Roadmap 9 semanas, CERO presupuesto |
+| [PHASE0_BASELINE.md](PHASE0_BASELINE.md) | 1.0 | 0 | Baseline congelado antes de refactorizar |
 
 ## Plantillas
 
