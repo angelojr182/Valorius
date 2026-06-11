@@ -183,31 +183,46 @@
 }
 
 /* Price card states */
-.pc-bajo {
-  border-left-color: #10b981;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
-}
 
-.pc-bajo:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
-}
-
-.pc-rango {
+/* Bajo moderado (desv < -15%) — ámbar suave */
+.pc-low {
   border-left-color: #f59e0b;
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%);
 }
 
-.pc-rango:hover {
+.pc-low:hover {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
 }
 
-.pc-sobre {
+/* En rango (-15% a +15%) — ámbar neutro */
+.pc-range {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%);
+}
+
+.pc-range:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+}
+
+/* Sobre rango (desv > +15%) — rojo */
+.pc-high {
   border-left-color: #ef4444;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
 }
 
-.pc-sobre:hover {
+.pc-high:hover {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+/* Muy bajo/crítico (desv < -35%) — rojo alerta */
+.pc-critical {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.03) 100%);
+  opacity: 0.95;
+}
+
+.pc-critical:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.06) 100%);
 }
 
 /* ─── RESPONSIVE ────────────────────────────────────── */
