@@ -768,36 +768,6 @@
   let autoColoniaSet = false;
 
   // ─── INDICES ──────────────────────────────────────────────
-  // IPR = precio_m2 / mediana_zona
-  function calcIPR(tuPM2, mediana) {
-    if (!mediana) return null;
-    return tuPM2 / mediana;
-  }
-
-  function interpretarIPR(ipr) {
-    if (!ipr) return {cat:'ref', clase:'vrd-ref', label:'Referencia limitada', color:[100,116,139]};
-    if (ipr < 0.85)  return {cat:'bajo',  clase:'vrd-bajo',  label:'Por debajo del mercado observable', color:[16,185,129]};
-    if (ipr <= 1.15) return {cat:'rango', clase:'vrd-rango', label:'Dentro del rango observable',       color:[226,176,92]};
-    return               {cat:'sobre', clase:'vrd-sobre', label:'Por encima del mercado observable', color:[239,68,68]};
-  }
-
-  // IAO — rangos discretos simples y defensibles
-  // 1-3 = Baja | 4-8 = Moderada | 9+ = Alta
-  function interpretarIAO(n) {
-    if (n <= 3) return {clase:'iao-baja',  icono:'○', label:'Actividad baja',     sub: n + ' propiedad' + (n===1?'':'es') + ' similar' + (n===1?'':'es') + ' detectada' + (n===1?'':'s') + ' en los ultimos ' + DIAS_COMPARABLES + ' dias. Pocas referencias disponibles en esta zona.'};
-    if (n <= 8) return {clase:'iao-media', icono:'◎', label:'Actividad moderada', sub: n + ' propiedades similares detectadas en los ultimos ' + DIAS_COMPARABLES + ' dias. Contexto de referencia razonable.'};
-    return              {clase:'iao-alta',  icono:'●', label:'Actividad alta',     sub: n + ' propiedades similares detectadas en los ultimos ' + DIAS_COMPARABLES + ' dias. Buena base de comparacion disponible.'};
-  }
-
-  // Severidad: f(desviacion, cobertura)
-  function getSeveridad(pctDesviacion, n) {
-    var abs = Math.abs(pctDesviacion);
-    var cobAlta  = n >= 10, cobMedia = n >= 5;
-    if (abs >= 100) return cobAlta||cobMedia ? {label:'EXTREMO',clase:'sev-extremo'} : {label:'MODERADO',clase:'sev-moderado'};
-    if (abs >= 60)  return cobAlta ? {label:'MODERADO',clase:'sev-moderado'} : {label:'LEVE',clase:'sev-leve'};
-    return {label:'LEVE', clase:'sev-leve'};
-  }
-
   // ─── TOOLTIPS ────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
     function toggleTip(tip) {
@@ -1322,14 +1292,10 @@
     if (!area)   return alert('Ingresa el área de construcción en m².');
     if (!precio) return alert('Ingresa el precio solicitado.');
 
-    // Sanity check — mensaje explícito segun cual valor esté fuera de rango
-    var rangos = RANGOS_AREA[tipo] || {min:25,max:1200};
-    var tipoTxt = tipo === 'CASA' ? 'una casa' : 'un apartamento';
-    var problemas = [];
-    if (area < rangos.min)      problemas.push('El tamaño de ' + Math.round(area) + ' m² es inusualmente pequeño para ' + tipoTxt + ' (lo normal ronda entre ' + rangos.min + ' y ' + rangos.max + ' m²). ¿Quizá lo ingresaste mal?');
-    else if (area > rangos.max) problemas.push('El tamaño de ' + Math.round(area) + ' m² es inusualmente grande para ' + tipoTxt + ' (lo normal ronda entre ' + rangos.min + ' y ' + rangos.max + ' m²). ¿Quizá lo ingresaste mal?');
-    if (precio < PRECIO_MIN)      problemas.push('El precio ingresado parece demasiado bajo para una propiedad real. Revisa la cifra y la moneda (USD/LPS).');
-    else if (precio > PRECIO_MAX) problemas.push('El precio ingresado parece demasiado alto. Revisa la cifra y la moneda (USD/LPS).');
+    // Sanity check — delegar a InputValidator
+    var valArea = InputValidator.validateArea(area, tipo);
+    var valPrecio = InputValidator.validatePrecio(precio);
+    var problemas = valArea.problemas.concat(valPrecio.problemas);
     if (problemas.length) {
       var s = document.getElementById('alertaSanity');
       s.querySelector('.alerta-sanity-body').textContent = problemas.join(' ');
@@ -1345,10 +1311,10 @@
     if (!pendienteAtipico && res.cob.mediana > 0) {
       var tuPM2 = precio / area;
       var ratio = tuPM2 / res.cob.mediana;
-      if (ratio > UMBRAL_ATIPICO || ratio < (1/UMBRAL_ATIPICO)) {
+      if (ratio > AnalyzerConstants.OUTLIER_FACTOR || ratio < (1/AnalyzerConstants.OUTLIER_FACTOR)) {
         var desv  = ((tuPM2 - res.cob.mediana) / res.cob.mediana) * 100;
         var signo = desv >= 0 ? '+' : '';
-        var sev   = getSeveridad(desv, res.cob.n);
+        var sev   = AnalyzerConstants.getSeveridad(desv, res.cob.n);
         var alertaEl = document.getElementById('alertaAtipica');
         alertaEl.className = 'alerta-contextual ' + sev.clase;
         document.getElementById('alertaSevBadge').textContent = sev.label;
@@ -1411,10 +1377,10 @@
     var precioMercado   = Math.round(mediana * area);
     var diferenciaPesos = Math.round(precio - precioMercado);
 
-    // IPR + IAO
-    var ipr    = calcIPR(tuPM2, mediana);
-    var iprInt = modoLimitado ? interpretarIPR(null) : interpretarIPR(ipr);
-    var iaoInt = interpretarIAO(n);
+    // IPR + IAO — delegar a AnalyzerConstants
+    var ipr    = tuPM2 / mediana;
+    var iprInt = modoLimitado ? AnalyzerConstants.interpretarIPR(null) : AnalyzerConstants.interpretarIPR(ipr);
+    var iaoInt = AnalyzerConstants.interpretarIAO(n);
 
     lastData = {zona, colonia, zonaLabel, zone_id: zoneId, colonia_id: coloniaId, tipo, area, precio,
                 mediana, p25, p75, n, min, max, tuPM2, desv, signo, precioMercado, diferenciaPesos,
