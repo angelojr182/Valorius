@@ -1,0 +1,257 @@
+/* ─── COMPONENTS CSS ────────────────────────────────
+   Estilos modulares para componentes extraídos en PHASE 3.
+   Cada componente tiene su propio namespace de clases.
+   v1.0 — PHASE 3
+   ──────────────────────────────────────────────────── */
+
+/* ─── CONFIDENCE INDICATOR ──────────────────────────── */
+
+.confidence-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+
+.conf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  width: fit-content;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.conf-badge .badge-number {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.conf-badge .badge-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Badge colores según cantidad */
+.badge-gold {
+  background: linear-gradient(135deg, #f0d76f 0%, #e2b05c 100%);
+  color: #1a1a1a;
+  border-color: #d4a850;
+}
+
+.badge-orange {
+  background: linear-gradient(135deg, #ffa726 0%, #f57c00 100%);
+  color: #ffffff;
+  border-color: #e65100;
+}
+
+.badge-red {
+  background: linear-gradient(135deg, #ef5350 0%, #c62828 100%);
+  color: #ffffff;
+  border-color: #b71c1c;
+}
+
+/* Alertas */
+.conf-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  border-left: 3px solid;
+}
+
+.conf-alert .alert-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.conf-alert .alert-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.conf-alert-warning {
+  background: rgba(255, 152, 0, 0.08);
+  border-color: #ff9800;
+  color: #e65100;
+}
+
+.conf-alert-info {
+  background: rgba(33, 150, 243, 0.08);
+  border-color: #2196f3;
+  color: #1565c0;
+}
+
+/* ─── PRICE CARD ────────────────────────────────────── */
+
+.price-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #cbd5e1;
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.05) 0%, rgba(203, 213, 225, 0.02) 100%);
+  transition: all 0.3s ease;
+}
+
+.price-card:hover {
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.1) 0%, rgba(203, 213, 225, 0.05) 100%);
+}
+
+.pc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.pc-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.pc-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pc-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.2;
+}
+
+.pc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.pc-area {
+  font-weight: 500;
+}
+
+.pc-separator {
+  color: #64748b;
+}
+
+.pc-total {
+  font-weight: 500;
+  color: #e2b05c;
+}
+
+.pc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.pc-diff {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.pc-diff-value {
+  font-size: 18px;
+}
+
+.pc-diff-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  opacity: 0.8;
+  letter-spacing: 0.3px;
+}
+
+/* Price card states */
+.pc-bajo {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
+}
+
+.pc-bajo:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.pc-rango {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%);
+}
+
+.pc-rango:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+}
+
+.pc-sobre {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%);
+}
+
+.pc-sobre:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+/* ─── RESPONSIVE ────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .conf-badge {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .conf-badge .badge-number {
+    font-size: 14px;
+  }
+
+  .conf-badge .badge-label {
+    font-size: 11px;
+  }
+
+  .conf-alert {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+
+  .conf-alert .alert-icon {
+    font-size: 13px;
+  }
+
+  .price-card {
+    padding: 12px;
+  }
+
+  .pc-value {
+    font-size: 24px;
+  }
+
+  .pc-meta {
+    font-size: 12px;
+  }
+
+  .pc-diff-value {
+    font-size: 16px;
+  }
+
+  .pc-diff-label {
+    font-size: 10px;
+  }
+}
