@@ -45,12 +45,15 @@
                :   analyze (entrada → valida → resuelve → calcula → interpreta → retorna)
                :   resolverComparables (fallback 3 niveles), checkAtipicoRatio
                : Commits: c3e7675, fe0c4c2, 7cb2c42 — PHASE 1 PASO 1
-Próximo paso   : ⏳ PHASE 1.6: Auditoría bloqueante
-               :   - Medir Lighthouse (FCP<1.5s, TTI<3s, score>80)
-               :   - Documentar extension points
-               :   - Verificar test-cases con nueva auth
-               : Luego PHASE 2: Datos JSON + resiliencia (caché, fallback)
-               : Luego PHASE 3: 3 componentes faltantes + auditoría
+Próximo paso   : ⏳ PHASE 1 PASO 1.6-1.8 (ORIGINAL)
+               :   - 1.6: Refactorizar HTML para usar lib/ (< 300 líneas)
+               :   - 1.7: Verificar test-cases (node test-runner.js)
+               :   - 1.8: Prueba manual en navegador
+               : ⏳ PHASE 1 PASO 1.9-1.10 (NUEVO — auditoría)
+               :   - 1.9: Lighthouse + extension points + seguridad
+               :   - 1.10: Validar desacoplamiento
+               : Luego PHASE 2: Datos JSON + resiliencia (caché, fallback, reutilizable)
+               : Luego PHASE 3: 3 componentes + auditoría extensibilidad/performance
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
 DB count       : 145 properties / 145 listings
