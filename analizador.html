@@ -1395,7 +1395,7 @@
 
     // ── VEREDICTO PRINCIPAL ──────────────────────────────────
     var vPanel = document.getElementById('veredictoPanel');
-    vPanel.className = 'veredicto-principal ' + iprInt.clase;
+    vPanel.className = 'veredicto-principal ' + iprInt.categoria;
     vPanel.style.display = 'block';
     document.getElementById('vrdEtiqueta').textContent = modoLimitado
       ? 'Analisis orientativo'
@@ -1426,9 +1426,9 @@
 
     // ── IAO ───────────────────────────────────────────────────
     var iaoCard = document.getElementById('iaoCard');
-    iaoCard.className = 'iao-card ' + iaoInt.clase;
+    iaoCard.className = 'iao-card ' + iaoInt.categoria;
     document.getElementById('iaoIcono').textContent = iaoInt.icono;
-    document.getElementById('iaoValor').textContent = iaoInt.label;
+    document.getElementById('iaoValor').textContent = iaoInt.etiqueta;
     document.getElementById('iaoSub').textContent   = iaoInt.sub;
 
     // ── RESUMEN RAPIDO ────────────────────────────────────────
@@ -1819,7 +1819,7 @@
       var blue  = [14,165,233];
 
       var iprColor = d.iprInt.cat==='bajo' ? green : d.iprInt.cat==='sobre' ? red : gold;
-      var iaoColor = d.iaoInt.clase==='iao-alta' ? green : d.iaoInt.clase==='iao-media' ? blue : slate;
+      var iaoColor = d.iaoInt.categoria==='iao-alta' ? green : d.iaoInt.categoria==='iao-media' ? blue : slate;
 
       // Helpers
       function bg()           { pdf.setFillColor(...dark); pdf.rect(0,0,W,H,'F'); }
@@ -1978,7 +1978,7 @@
       // Bloque 5 — Actividad + N (20mm)
       var hw2=(W-2*M-6)/2;
       card(M,y,hw2,20); lbl('Actividad en la zona',M+5,y+7);
-      pdf.setFontSize(11); pdf.setTextColor(...iaoColor); pdf.setFont('helvetica','bold'); pdf.text(d.iaoInt.label,M+5,y+17);
+      pdf.setFontSize(11); pdf.setTextColor(...iaoColor); pdf.setFont('helvetica','bold'); pdf.text(d.iaoInt.etiqueta,M+5,y+17);
       card(M+hw2+6,y,hw2,20); lbl('Propiedades similares detectadas',M+hw2+11,y+7);
       pdf.setFontSize(16); pdf.setTextColor(...white); pdf.setFont('helvetica','bold'); pdf.text(String(d.n),M+hw2+11,y+18);
       pdf.setFontSize(7); pdf.setTextColor(...slate); pdf.setFont('helvetica','normal');
@@ -2044,7 +2044,7 @@
          v:d.n>=9?'Bien documentada':d.n>=4?'En crecimiento':d.n>=1?'Pocas referencias':'Sin referencias',
          c:d.n>=9?green:d.n>=4?amber:slate,
          d:'Se detectaron '+d.n+' propiedad'+(d.n===1?'':'es')+' similar'+(d.n===1?'':'es')+' activa'+(d.n===1?'':'s')+' en los ultimos '+DIAS_COMPARABLES+' dias.'},
-        {t:'Actividad observable',v:d.iaoInt.label,c:iaoColor,
+        {t:'Actividad observable',v:d.iaoInt.etiqueta,c:iaoColor,
          d:d.n<=3?'Pocas referencias disponibles actualmente en esta zona.':d.n<=8?'Cantidad razonable de referencias para orientar el analisis.':'Buena cantidad de referencias disponibles para este tipo de propiedad.'},
         {t:'Variabilidad de precios',
          v:d.modoLimitado?'Sin dato':d.iqr>800?'Alta':d.iqr>400?'Moderada':'Baja',
