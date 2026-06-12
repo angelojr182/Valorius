@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Iniciar sesión — Valorius</title>
   <style>
     * {
@@ -167,7 +170,8 @@
 
     <div id="errorMsg" class="error"></div>
 
-    <form id="loginForm">
+    <!-- IMPORTANTE: method="POST" para NO pasar credenciales en URL -->
+    <form id="loginForm" method="POST" action="#">
       <div class="form-group">
         <label for="email">Correo</label>
         <input
@@ -205,21 +209,14 @@
   </div>
 
   <script src="../secrets.js?v=1.2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
+    'use strict';
+
     // Obtener parámetro redirect de la URL
     const urlParams = new URLSearchParams(window.location.search);
     const redirect = urlParams.get('redirect') || 'dashboard';
-
-    // Verificar que secrets.js esté cargado
-    if (!SECRETS || !SECRETS.SURL || !SECRETS.SKEY) {
-      showError('Error de configuración — intenta recargar la página');
-      console.error('secrets.js no está cargado');
-      return;
-    }
-
-    // Inicializar Supabase
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SECRETS.SURL, SECRETS.SKEY);
 
     const form = document.getElementById('loginForm');
     const submitBtn = document.getElementById('submitBtn');
@@ -228,62 +225,128 @@
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
 
-    // Verificar si ya hay sesión activa
-    supabaseClient.auth.onAuthStateChanged(async (session) => {
-      if (session) {
-        // User ya está autenticado — redirigir al destino
-        window.location.href = `../${redirect}/`;
-      }
-    });
+    /**
+     * Mostrar mensaje de error
+     */
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add('show');
+    }
 
-    // Manejar el login
-    form.addEventListener('submit', async (e) => {
+    /**
+     * Limpiar error
+     */
+    function clearError() {
+      errorMsg.classList.remove('show');
+      errorMsg.textContent = '';
+    }
+
+    /**
+     * Verificar autenticación existente
+     */
+    async function checkExistingSession() {
+      // Verificar que secrets.js esté cargado
+      if (!SECRETS || !SECRETS.SURL || !SECRETS.SKEY) {
+        console.error('❌ secrets.js no está cargado');
+        return;
+      }
+
+      try {
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SECRETS.SURL, SECRETS.SKEY);
+
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+        if (session && !error) {
+          // Ya hay sesión activa — redirigir al destino
+          console.log('✅ Sesión activa detectada, redirigiendo...');
+          window.location.href = `../${redirect}/`;
+        }
+      } catch (e) {
+        console.error('Error verificando sesión:', e);
+      }
+    }
+
+    /**
+     * Manejar submit del formulario
+     */
+    async function handleLogin(e) {
       e.preventDefault();
 
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
+      // Validación básica
       if (!email || !password) {
         showError('Por favor completa todos los campos');
         return;
       }
 
-      // Mostrar loading, ocultar error
+      if (!email.includes('@')) {
+        showError('Correo electrónico inválido');
+        return;
+      }
+
+      // Verificar que secrets.js esté cargado
+      if (!SECRETS || !SECRETS.SURL || !SECRETS.SKEY) {
+        showError('Error de configuración — intenta recargar la página');
+        console.error('secrets.js no está cargado');
+        return;
+      }
+
+      // Mostrar loading
+      clearError();
       loading.classList.add('show');
-      errorMsg.classList.remove('show');
       submitBtn.disabled = true;
 
       try {
+        // Inicializar Supabase
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SECRETS.SURL, SECRETS.SKEY);
+
+        // Intentar login
         const { data, error } = await supabaseClient.auth.signInWithPassword({
           email,
           password
         });
 
         if (error) {
-          showError(error.message || 'Error al iniciar sesión');
-          submitBtn.disabled = false;
+          // Error de Supabase
+          showError(error.message || 'Correo o contraseña incorrectos');
           loading.classList.remove('show');
+          submitBtn.disabled = false;
+          // Limpiar campos de contraseña (seguridad)
+          passwordInput.value = '';
           return;
         }
 
         if (data.session) {
-          // Login exitoso — redirigir al destino
+          // Login exitoso
+          console.log('✅ Login exitoso:', data.user.email);
           loading.classList.remove('show');
           submitBtn.disabled = false;
+
+          // Limpiar campos antes de redirigir
+          emailInput.value = '';
+          passwordInput.value = '';
+
+          // Redirigir al destino
           window.location.href = `../${redirect}/`;
         }
       } catch (err) {
+        console.error('❌ Error de conexión:', err);
         showError('Error de conexión. Intenta de nuevo.');
-        console.error(err);
-        submitBtn.disabled = false;
         loading.classList.remove('show');
+        submitBtn.disabled = false;
+        passwordInput.value = '';
       }
-    });
-
-    function showError(msg) {
-      errorMsg.textContent = msg;
-      errorMsg.classList.add('show');
     }
+
+    // Event listeners
+    form.addEventListener('submit', handleLogin);
+
+    // Verificar sesión al cargar
+    window.addEventListener('load', checkExistingSession);
   </script>
 </body>
 </html>
