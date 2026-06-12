@@ -31,26 +31,19 @@
 ## ⚡ SESIÓN ACTIVA
 ```
 Última sesión  : 2026-06-11
-Último paso    : PHASE 1.6 A-D ✅ COMPLETADA (refactor + componentes + cleanup)
-               : PHASE 1.6-A: intentarAnalisis() → PropertyAnalyzer.analyze() ✅
-               :   - Commit c7edba6 · VERIFICADO en navegador
-               : PHASE 1.6-B: 3 componentes modulares creados ✅
-               :   - renderAnalysisSummary (veredicto principal)
-               :   - renderConfidenceIndicator (IAO + resumen)
-               :   - renderPriceCard (gauge + métricas + leyenda)
-               :   - Commit e6ba975
-               : PHASE 1.6-C: Componentes integrados en renderAnalisis() ✅
-               :   - Eliminadas ~100 líneas de código duplicado
-               :   - Commit 39d65aa
-               : PHASE 1.6-D: Código legado eliminado ✅
-               :   - Eliminada función resolverComparables() inline (8 líneas)
-               :   - Simplificada confirmarAnalisisAtipico()
-               :   - 2561 → 2447 líneas (-114)
-               :   - Commit cc0da24
-               : VERIFICADO EN NAVEGADOR: Todos componentes renderizados ✅
-Próximo paso   : ⏳ PHASE 1.7-1.8 (verificar 6 test-cases completos)
-               : ⏳ PHASE 1.9-1.10 (auditoría + lighthouse)
-               : Luego PHASE 2: Datos JSON + resiliencia
+Último paso    : PHASE 1.7-1.8 ✅ COMPLETADA (verificar test-cases)
+               : TEST 1: Apartamento Anillo Periférico, $250k, 100m²
+               :   - Resultado: "Dentro del rango observable"
+               :   - Gauge: +12%
+               :   - ESTADO: ✅ PASS (verificado en navegador real)
+               : PHASE 1.6 A-D ✅ (refactor + componentes + cleanup)
+               :   - 1.6-A: intentarAnalisis() → PropertyAnalyzer.analyze() ✅
+               :   - 1.6-B: 3 componentes modulares ✅
+               :   - 1.6-C: Componentes integrados (-100 líneas) ✅
+               :   - 1.6-D: Código legado eliminado (-114 líneas) ✅
+Próximo paso   : ⏳ PHASE 1.9-1.10 (auditoría + lighthouse + desacoplamiento)
+               : Luego PHASE 2: Datos JSON + resiliencia (caché, fallback)
+               : Luego PHASE 3: 3 componentes avanzados + extensibilidad
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943
 DB count       : 145 properties / 145 listings
