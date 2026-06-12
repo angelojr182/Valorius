@@ -1492,177 +1492,79 @@
                 mediana, p25, p75, n, min, max, tuPM2, desv, signo, precioMercado, diferenciaPesos,
                 modoLimitado, nivelZona, nivel, nColonia, iqr, ipr, iprInt, iaoInt};
 
-    // Mantener el valor en la moneda que ingresó el usuario (la conversión a USD
-    // ya se hizo solo para el cálculo; no convertir lo que se muestra en pantalla).
     var precioMostrar = monedaActual === 'LPS' ? Math.round(precio * tasaLPS) : Math.round(precio);
-    // Mantener el campo solo con dígitos + comas (la moneda la indica el botón LPS/USD).
     document.getElementById('inpPrecio').value = precioMostrar.toLocaleString('en-US');
 
-    // ── VEREDICTO PRINCIPAL ──────────────────────────────────
-    var vPanel = document.getElementById('veredictoPanel');
-    vPanel.className = 'veredicto-principal ' + iprInt.categoria;
-    vPanel.style.display = 'block';
-    document.getElementById('vrdEtiqueta').textContent = modoLimitado
-      ? 'Analisis orientativo'
-      : nivelZona ? 'Analisis por zona (colonia sin suficientes referencias)'
-      : 'Resultado del analisis';
-    document.getElementById('vrdComparables').textContent = n;
-
-    if (modoLimitado) {
-      document.getElementById('vrdTitulo').textContent = 'Referencia basada en pocas propiedades similares';
-      document.getElementById('vrdDescripcion').textContent =
-        'Se detectaron ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' activa' + (n>1?'s':'') + ' en ' + zona + ' en los ultimos ' + DIAS_COMPARABLES + ' dias. El analisis es orientativo y no debe usarse como referencia definitiva.';
-    } else {
-      document.getElementById('vrdTitulo').textContent = iprInt.etiqueta;
-      var absDesv = Math.abs(Math.round(desv));
-      var dirV = desv > 0 ? 'por encima' : 'por debajo';
-      var descV;
-      if (absDesv === 0) {
-        descV = 'Tu precio coincide con el precio de mercado en ' + zonaLabel + '.';
-      } else if (iprInt.cat === 'rango') {
-        descV = 'Tu precio esta ' + absDesv + '% ' + dirV + ' del precio de mercado en ' + zonaLabel + ', todavia dentro del rango habitual del mercado.';
-      } else if (iprInt.cat === 'bajo') {
-        descV = 'Tu precio esta ' + absDesv + '% por debajo del precio de mercado en ' + zonaLabel + '.';
-      } else { // sobre
-        descV = 'Tu precio esta ' + absDesv + '% por encima del precio de mercado en ' + zonaLabel + '.';
-      }
-      document.getElementById('vrdDescripcion').textContent = descV;
-    }
-
-    // ── IAO ───────────────────────────────────────────────────
-    var iaoCard = document.getElementById('iaoCard');
-    iaoCard.className = 'iao-card ' + iaoInt.categoria;
-    document.getElementById('iaoIcono').textContent = iaoInt.icono;
-    document.getElementById('iaoValor').textContent = iaoInt.etiqueta;
-    document.getElementById('iaoSub').textContent   = iaoInt.sub;
-
-    // ── RESUMEN RAPIDO ────────────────────────────────────────
-    var resumen = document.getElementById('resumenRapido');
-    resumen.style.display = 'block';
-    var resTexto;
-    if (modoLimitado) {
-      resTexto = 'Pocas propiedades similares registradas en la zona. Los valores son orientativos: complementa con una inspeccion directa del mercado antes de decidir.';
-    } else if (Math.round(desv) === 0) {
-      resTexto = 'Precio en linea con el mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta para decidir.';
-    } else if (iprInt.cat === 'bajo') {
-      resTexto = 'Precio por debajo del mercado. Puede ser una oportunidad. Recomendacion: inspecciona el inmueble y verifica que no haya un problema detras antes de avanzar.';
-    } else if (iprInt.cat === 'sobre') {
-      resTexto = 'Precio por encima del mercado. Recomendacion: negocia con datos; propiedades similares se ofrecen alrededor de $' + Math.round(mediana).toLocaleString() + '/m2.';
-    } else { // rango con direccion
-      resTexto = 'Precio razonable. No muestra una ganga clara, pero esta levemente ' + (desv>0?'por encima':'por debajo') + ' del mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta antes de ofertar.';
-    }
-    document.getElementById('resumenTexto').textContent = resTexto;
-
-    // ── GAUGE (signo LITERAL vs el precio de mercado de la zona) ─
-    // El "precio de mercado" = mediana de propiedades similares en la zona.
-    //   por ENCIMA de la referencia → +X%  (mas caro)   · color naranja/rojo
-    //   por DEBAJO de la referencia → -X%  (mas barato)  · color verde
-    //   exactamente en la referencia → 0%
-    // Signo literal, aplica tambien dentro del rango: +1% = 1% mas caro, -1% = 1% mas barato.
-    var gaugeColor   = iprInt.cat==='bajo' ? '#10b981' : iprInt.cat==='sobre' ? '#ef4444' : '#fbbf24';
-    var absDesvR  = Math.round(Math.abs(desv));
+    var absDesv = Math.abs(Math.round(desv));
+    var dirV = desv > 0 ? 'por encima' : 'por debajo';
+    var absDesvR = absDesv;
     var esNeutral = absDesvR === 0;
-    var signoComp = esNeutral ? '' : (desv > 0 ? '+' : '-');
-    var gaugeLabelTx = esNeutral ? 'en el precio de mercado'
-                     : desv > 0  ? 'sobre el precio de mercado'
-                     :             'bajo el precio de mercado';
-    document.getElementById('lblGaugeVal').textContent  = esNeutral
-      ? (modoLimitado ? '~0%' : '0%')
-      : (modoLimitado ? '~' : '') + signoComp + absDesvR + '%';
-    document.getElementById('lblGaugeVal').style.color  = gaugeColor;
-    document.getElementById('lblGaugeLabel').textContent = gaugeLabelTx;
-    document.getElementById('lblGaugeLabel').style.color = gaugeColor;
-    document.getElementById('lblGaugeLabel').style.opacity = '0.9';
 
+    var descripcion;
     if (modoLimitado) {
-      document.getElementById('gaugeFill').style.strokeDashoffset = 200;
-      document.getElementById('gaugeFill').style.stroke = '#334155';
+      descripcion = 'Se detectaron ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' activa' + (n>1?'s':'') + ' en ' + zona + ' en los ultimos ' + DIAS_COMPARABLES + ' dias. El analisis es orientativo y no debe usarse como referencia definitiva.';
     } else {
-      // Gradiente segun direccion
-      var gradId = iprInt.cat==='bajo' ? 'gradBajo'
-                 : iprInt.cat==='sobre' ? 'gradSobre'
-                 : 'gradRango';
-      document.getElementById('gaugeFill').style.stroke = 'url(#' + gradId + ')';
-      // Arco proporcional a la magnitud |desv|, capado a 50% como maximo visual
-      var arcPct = Math.min(Math.max(Math.abs(desv)/50, 0.05), 0.98);
-      document.getElementById('gaugeFill').style.strokeDashoffset = 283 - (213*arcPct);
-      // Bulb: 0° = SVG(95,50) = visual TOP; max arco = 271° (213/283 * 360)
-      var ang = arcPct * 271 * Math.PI / 180;
-      document.getElementById('gaugeBulb').setAttribute('cx', (50+45*Math.cos(ang)).toFixed(2));
-      document.getElementById('gaugeBulb').setAttribute('cy', (50+45*Math.sin(ang)).toFixed(2));
-      document.getElementById('gaugeBulb').style.fill = gaugeColor;
-      document.getElementById('gaugeBulb').style.filter = 'drop-shadow(0 0 6px ' + gaugeColor + ')';
+      if (absDesv === 0) {
+        descripcion = 'Tu precio coincide con el precio de mercado en ' + zonaLabel + '.';
+      } else if (iprInt.cat === 'rango') {
+        descripcion = 'Tu precio esta ' + absDesv + '% ' + dirV + ' del precio de mercado en ' + zonaLabel + ', todavia dentro del rango habitual del mercado.';
+      } else if (iprInt.cat === 'bajo') {
+        descripcion = 'Tu precio esta ' + absDesv + '% por debajo del precio de mercado en ' + zonaLabel + '.';
+      } else {
+        descripcion = 'Tu precio esta ' + absDesv + '% por encima del precio de mercado en ' + zonaLabel + '.';
+      }
     }
 
-    // ── TEXTO POSICION (explicito, en lenguaje claro) ─────────
-    var dir = desv > 0 ? 'por encima' : 'por debajo';
-    var tipoPlural = tipo.toLowerCase() + 's';
-    var expTxt;
+    var resumen;
     if (modoLimitado) {
-      expTxt = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.';
-    } else if (esNeutral) {
-      expTxt = 'Esta propiedad esta justo en el precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
-    } else if (iprInt.cat === 'rango') {
-      expTxt = 'Esta propiedad esta ligeramente ' + dir + ' del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '. La diferencia es pequeña, por lo que se considera dentro del rango normal.';
+      resumen = 'Pocas propiedades similares registradas en la zona. Los valores son orientativos: complementa con una inspeccion directa del mercado antes de decidir.';
+    } else if (Math.round(desv) === 0) {
+      resumen = 'Precio en linea con el mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta para decidir.';
     } else if (iprInt.cat === 'bajo') {
-      expTxt = 'Esta propiedad esta ' + absDesvR + '% por debajo del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
-    } else { // sobre
-      expTxt = 'Esta propiedad esta ' + absDesvR + '% por encima del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
-    }
-    document.getElementById('lblExplanation').textContent = expTxt;
-
-    // ── METRICAS ───────────────────────────────────────────────
-    document.getElementById('lblTuPrecio').textContent = '$' + tuPM2.toLocaleString();
-    document.getElementById('lblMediana').textContent  = '$' + Math.round(mediana).toLocaleString() + (modoLimitado?'*':'');
-    document.getElementById('lblRango').textContent    = '$' + Math.round(min).toLocaleString() + ' - $' + Math.round(max).toLocaleString() + '/m2';
-
-    if (modoLimitado) {
-      document.getElementById('lblDiff').textContent = 'Referencia orientativa';
-      document.getElementById('lblDiff').className   = 'metrica-valor rango';
-    } else {
-      document.getElementById('lblDiff').textContent = signoComp + Math.abs(desv).toFixed(1) + '%';
-      document.getElementById('lblDiff').className   = 'metrica-valor';
-      document.getElementById('lblDiff').style.color = gaugeColor;
-    }
-
-    // ── CONTEXTO / GRAFICO ────────────────────────────────────
-    document.getElementById('lblMinVal').textContent = '$' + Math.round(min).toLocaleString();
-    document.getElementById('lblMedVal').textContent = '$' + Math.round(mediana).toLocaleString();
-    document.getElementById('lblMaxVal').textContent = '$' + Math.round(max).toLocaleString();
-
-    // ── Leyenda de rangos: precio que define cada zona (umbrales 0.85x / 1.15x mediana)
-    var uBajo  = Math.round(mediana * 0.85);
-    var uSobre = Math.round(mediana * 1.15);
-    document.getElementById('rlBajo').textContent  = 'menos de $' + uBajo.toLocaleString() + '/m²';
-    document.getElementById('rlRango').textContent = '$' + uBajo.toLocaleString() + ' – $' + uSobre.toLocaleString() + '/m²';
-    document.getElementById('rlSobre').textContent = 'mas de $' + uSobre.toLocaleString() + '/m²';
-    // Resaltar la zona donde cae el precio analizado
-    ['rlRowBajo','rlRowRango','rlRowSobre'].forEach(function(id){ document.getElementById(id).classList.remove('activa'); });
-    var rowAct = iprInt.cat==='bajo' ? 'rlRowBajo' : iprInt.cat==='sobre' ? 'rlRowSobre' : 'rlRowRango';
-    if (!modoLimitado) document.getElementById(rowAct).classList.add('activa');
-    var tt = document.getElementById('specTooltip');
-    tt.textContent = '$' + tuPM2.toLocaleString() + '/m2';
-    var tp = ((tuPM2-min)/(max-min+1))*100;
-    tt.style.left = Math.min(Math.max(tp,5),92) + '%';
-
-    var warnTxt;
-    if (modoLimitado) {
-      warnTxt = 'La zona cuenta con pocas propiedades similares, asi que la referencia es orientativa. Conviene complementar con informacion directa del mercado antes de decidir.';
-    } else if (iprInt.cat === 'bajo') {
-      warnTxt = 'El precio esta por debajo del mercado. Puede ser una oportunidad, pero revisa si hay una razon detras (estado, ubicacion exacta o urgencia del vendedor) antes de avanzar. Son precios de oferta, no de cierre.';
+      resumen = 'Precio por debajo del mercado. Puede ser una oportunidad. Recomendacion: inspecciona el inmueble y verifica que no haya un problema detras antes de avanzar.';
     } else if (iprInt.cat === 'sobre') {
-      warnTxt = 'El precio esta por encima del mercado. Justificalo con ventajas reales (mejores acabados, vista, amenidades, mas parqueos) o negocia hacia abajo. Son precios de oferta, no de cierre.';
-    } else { // rango y neutral
-      warnTxt = 'El precio esta dentro del rango esperado. Antes de decidir, revisa si la propiedad tiene ventajas reales: mejor torre, mas parqueos, mejores acabados, vista, amenidades o ubicacion interna. Si no tiene ventajas claras, negocia.';
+      resumen = 'Precio por encima del mercado. Recomendacion: negocia con datos; propiedades similares se ofrecen alrededor de $' + Math.round(mediana).toLocaleString() + '/m2.';
+    } else {
+      resumen = 'Precio razonable. No muestra una ganga clara, pero esta levemente ' + (desv>0?'por encima':'por debajo') + ' del mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta antes de ofertar.';
     }
-    document.getElementById('lblWarning').textContent = warnTxt;
-    document.getElementById('chartGuia').textContent  = 'Comparamos tu propiedad contra ' + tipo.toLowerCase() + 's activos en ' + zonaLabel + '. Cada punto azul es una referencia del mercado; el amarillo es tu propiedad. Toca un punto para ver sus datos.';
 
-    // ── FOOTER ────────────────────────────────────────────────
-    document.getElementById('lblMetodologia').textContent = modoLimitado
-      ? 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' en ' + zonaLabel + ' · ' + tipo + '. Datos orientativos. No constituye valuacion formal.'
-      : 'Referencia construida con ' + n + ' propiedades similares activas en ' + zonaLabel + ' · ' + tipo + ' · ultimos ' + DIAS_COMPARABLES + ' dias. No constituye valuacion formal ni avaluo profesional.';
+    var tipoPlural = tipo.toLowerCase() + 's';
+    var explicacion;
+    if (modoLimitado) {
+      explicacion = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.';
+    } else if (esNeutral) {
+      explicacion = 'Esta propiedad esta justo en el precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
+    } else if (iprInt.cat === 'rango') {
+      explicacion = 'Esta propiedad esta ligeramente ' + dirV + ' del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '. La diferencia es pequena, por lo que se considera dentro del rango normal.';
+    } else if (iprInt.cat === 'bajo') {
+      explicacion = 'Esta propiedad esta ' + absDesvR + '% por debajo del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
+    } else {
+      explicacion = 'Esta propiedad esta ' + absDesvR + '% por encima del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
+    }
 
+    var advertencia;
+    if (modoLimitado) {
+      advertencia = 'La zona cuenta con pocas propiedades similares, asi que la referencia es orientativa. Conviene complementar con informacion directa del mercado antes de decidir.';
+    } else if (iprInt.cat === 'bajo') {
+      advertencia = 'El precio esta por debajo del mercado. Puede ser una oportunidad, pero revisa si hay una razon detras (estado, ubicacion exacta o urgencia del vendedor) antes de avanzar. Son precios de oferta, no de cierre.';
+    } else if (iprInt.cat === 'sobre') {
+      advertencia = 'El precio esta por encima del mercado. Justificalo con ventajas reales (mejores acabados, vista, amenidades, mas parqueos) o negocia hacia abajo. Son precios de oferta, no de cierre.';
+    } else {
+      advertencia = 'El precio esta dentro del rango esperado. Antes de decidir, revisa si la propiedad tiene ventajas reales: mejor torre, mas parqueos, mejores acabados, vista, amenidades o ubicacion interna. Si no tiene ventajas claras, negocia.';
+    }
+
+    var guiaChart = 'Comparamos tu propiedad contra ' + tipo.toLowerCase() + 's activos en ' + zonaLabel + '. Cada punto azul es una referencia del mercado; el amarillo es tu propiedad. Toca un punto para ver sus datos.';
+
+    var componentData = {
+      modoLimitado: modoLimitado, nivelZona: nivelZona, n: n, zona: zona, zonaLabel: zonaLabel,
+      iprInt: iprInt, iaoInt: iaoInt,
+      descripcion: descripcion, resumen: resumen, explicacion: explicacion, advertencia: advertencia, guiaChart: guiaChart,
+      desv: desv, mediana: mediana, p25: p25, p75: p75, min: min, max: max, tuPM2: tuPM2
+    };
+
+    renderAnalysisSummary(componentData);
+    renderConfidenceIndicator(componentData);
+    renderPriceCard(componentData);
     renderChart(min, mediana, max, tuPM2, cob.items || []);
 
     // ── MAPA DE CONTEXTO ──────────────────────────────────────
