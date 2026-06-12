@@ -156,35 +156,39 @@ Cualquier cambio se nota inmediatamente.
 - Porcentaje de IPR (-11%, +5%)
 - Etiqueta de confianza (BAJA/MEDIA/ALTA)
 
-**Paso 1.6: Integración con Auth + Auditoría de Principios (NUEVO)**
+**Paso 1.6: Actualizar `analizador.html` para usar librerías (ORIGINAL)**
+- Import `lib/analyzer.js`
+- Import `lib/constants.js`
+- Import `lib/formatter.js`
+- El HTML SOLO orquesta: recolecta datos → llama analyzer → muestra resultado
+- < 300 líneas
+- ✅ Auth integrado (2026-06-11): /login/ centralizado, POST form, sin credenciales en URL
 
-**Auth integrado (2026-06-11):**
-- ✅ /login/ centralizado
-- ✅ /analyzer/ redirige si no hay sesión
-- ✅ Credenciales NO en URL (POST form)
-- ✅ Campos limpios post-error
-
-**Auditoría de Principios (bloqueantes):**
-- [ ] Medir Lighthouse (FCP < 1.5s, TTI < 3s, score > 80)
-- [ ] Documentar "extension points" (cómo agregar feature sin refactorizar)
-- [ ] Validar que test-cases pasen CON la nueva auth
-
-**Auditoría de Principios (no-bloqueantes, PHASE 2):**
-- [ ] Fallback caché local si Supabase down
-- [ ] Optimizar sesión caching (no revalidar en cada load)
-
-**Paso 1.7: Verificar con test-cases**
+**Paso 1.7: Verificar con test-cases (ORIGINAL)**
 ```bash
 node test-runner.js
 # Si todos los tests pasan: ✅ FASE 1 exitosa
 # Si alguno falla: ❌ Revertir y debuggear
 ```
 
-**Paso 1.8: Prueba manual en navegador**
+**Paso 1.8: Prueba manual en navegador (ORIGINAL)**
 - Para cada test-case: ingresa datos, verifica que resultado sea igual a before
 - Compara screenshots con originales
-- Verifica que auth redirige correctamente
 - Si coinciden: ✅ OK
+
+**Paso 1.9: Auditoría de Principios (NUEVO — bloqueantes)**
+- [ ] Medir Lighthouse (FCP < 1.5s, TTI < 3s, score > 80)
+- [ ] Documentar "extension points" en `docs/EXTENSION_GUIDE.md`
+  - Cómo agregar nuevo tipo de propiedad
+  - Cómo agregar nuevo filtro
+  - Cómo agregar nuevo componente
+- [ ] Validar que test-cases pasen CON la nueva auth
+- [ ] Verificar seguridad: credenciales NO en logs, NO en URL, NO en localStorage sin cipher
+
+**Paso 1.10: Validar Desacoplamiento (NUEVO — refuerzo)**
+- [ ] Verificar: Cambiar constants.js NO rompe tests ✓
+- [ ] Verificar: Remover /login/ NO rompe analizador (solo no autentica) ✓
+- [ ] Verificar: Agregar nuevo componente NO afecta lib/ ✓
 
 **Commit:**
 ```
@@ -231,11 +235,12 @@ VERIFICACIÓN:
 - Llenar dropdowns dinámicamente (sin hardcoding)
 - Cuando selecciona zona → llenar colonias de esa zona
 
-**Paso 2.3: Auditoría no-bloqueante: Resiliencia**
+**Paso 2.3: Auditoría de Resiliencia (NUEVO — refuerzo)**
 - [ ] Cachear listings en localStorage al primer load exitoso
 - [ ] Si fetch falla → usar datos de caché (modo degradado)
 - [ ] Mostrar banner "Modo offline — datos cacheados"
 - [ ] Optimizar sesión caching: no revalidar en cada load, solo si token expira
+- [ ] Validar: Si Supabase down 5 min → analizador sigue funcionando ✓
 
 **Paso 2.4: Verificar con test-cases**
 ```bash
@@ -249,9 +254,18 @@ node test-runner.js
 - Análisis funciona igual ✅
 - (BONUS) Desactiva WiFi → analizador funciona con caché ✅
 
-**Paso 2.6: Auditoría: Inventario de reutilizable**
+**Paso 2.6: Auditoría de Reutilización (NUEVO — refuerzo)**
 - [ ] Crear `docs/REUTILIZABLE.md` (qué módulos pueden usar cada librería)
+  - formatter.js → PDF, email, APIs
+  - comparable.js → analytics, historial, alertas
+  - analyzer.js → dashboard, reporting, exports
 - [ ] Documentar sem-versioning (v1.0 compatible con ...)
+- [ ] Verificar: Dashboard futuro puede usar lib/ sin copiar código ✓
+
+**Paso 2.7: Auditoría de Escalabilidad (NUEVO — refuerzo)**
+- [ ] Verificar: Agregar 1000 listings más → ¿impacto performance?
+- [ ] Verificar: Cacheing de JSON → bundle size aceptable?
+- [ ] Documentar: "A 10k usuarios, agregar load balancer aquí"
 
 **Commit:**
 ```
@@ -289,15 +303,19 @@ VERIFICACIÓN:
 - [ ] Crear `components/MapPanel.html` (Leaflet interactivo)
 - [ ] Actualizar `analizador.html` para usar todos los componentes
 
-**Paso 3.2: Auditoría de Extensibilidad**
+**Paso 3.2: Auditoría de Extensibilidad (REFORZADA)**
 - [ ] Verificar: ¿Podemos agregar nuevo componente sin romper existentes?
-- [ ] Verificar: ¿Puedo extender ConfidenceIndicator sin editar el módulo?
+- [ ] Verificar: ¿Puedo extender ConfidenceIndicator sin editar el módulo? (plugin pattern)
 - [ ] Documentar patrón de componentes (props → render)
+- [ ] Crear `docs/COMPONENT_PATTERN.md` con ejemplos
+- [ ] Validar: Agregar 3 componentes nuevos NO requiere refactoring ✓
 
-**Paso 3.3: Auditoría de Performance**
+**Paso 3.3: Auditoría de Performance (REFORZADA)**
 - [ ] Re-medir Lighthouse (debe mantener score > 80)
 - [ ] Verificar bundle size con 6 componentes (< 100KB gzip)
 - [ ] Lazy load componentes grandes (MapPanel) si necesario
+- [ ] Validar: Agregar 6 componentes NO aumentó FCP > 0.5s ✓
+- [ ] Benchmarking: Renderizar 1000 comparables → tiempo aceptable ✓
 
 **Paso 3.4: Verificar con test-cases**
 ```bash
@@ -364,18 +382,19 @@ VERIFICACIÓN:
 
 ---
 
-## TIMELINE ACTUALIZADO
+## TIMELINE ACTUALIZADO (Plan original + Auditoría integrada)
 
 | Semana | FASE | Horas | Resultado | Status |
 |---|---|---|---|---|
-| 1 | 0: Congelar | 2-3 | Test-cases + comportamiento | ✅ |
+| 1 | 0: Congelar | 2-3 | Test-cases + baseline | ✅ |
 | 2-3 | 1A: Comparable.js | 4-6 | Lógica de selección | ✅ |
-| 3-4 | 1B: Analyzer.js + Auth | 6-8 | Coordinador + auth centralizado | ✅ |
-| 5 | 1.6: Auditoría (bloqueante) | 3-4 | Lighthouse + extension points | ⏳ |
-| 6 | 2: Datos JSON + Resiliencia | 6-8 | JSON + fallback caché | 🔜 |
-| 7-9 | 3: Componentes + Auditoría | 12-14 | 6 componentes + extensibilidad | 🔜 |
+| 3-4 | 1B: Analyzer.js + Auth | 6-8 | Coordinador + auth | ✅ |
+| 5 | 1.6-1.8: Refactor HTML + tests | 2-3 | Integración librerías + validación | ⏳ NEXT |
+| 5 | 1.9-1.10: Auditoría PHASE 1 | 4-5 | Lighthouse + docs + desacoplamiento | ⏳ NEXT |
+| 6 | 2: Datos JSON + Resiliencia | 7-9 | JSON + caché + fallback + reutilizable | 🔜 |
+| 7-9 | 3: Componentes + Auditoría | 14-16 | 6 componentes + extensibilidad + performance | 🔜 |
 | 10 | 4: Seguridad VPS | 4-6 | CSP + rate limit + httpOnly | 🔜 (VPS) |
-| 11 | Buffer | — | Fixes, optimizaciones, docs | 🔜 |
+| 11 | Buffer | — | Fixes, optimizaciones, docs final | 🔜 |
 
 ---
 
@@ -394,17 +413,19 @@ VERIFICACIÓN:
 
 ---
 
-## AUDITORÍA DE PRINCIPIOS (Integrada)
+## AUDITORÍA DE PRINCIPIOS (Integrada en cada FASE)
 
-| Principio | FASE 1.6 | FASE 2 | FASE 3 | FASE 4 |
-|-----------|----------|--------|--------|--------|
-| 1. Escalabilidad | Lighthouse ✓ | JSON ✓ | Componentes ✓ | Load test |
-| 2. Disponibilidad | — | Caché fallback ✓ | — | — |
-| 3. Performance | Medición ✓ | Optimizar | Re-medir ✓ | Final ✓ |
-| 4. Seguridad | Form POST ✓ | — | — | CSP + httpOnly ✓ |
-| 5. Desacoplamiento | ✓ | ✓ | ✓ | ✓ |
-| 6. Extensibilidad | Docs ✓ | Inventario | Patrón ✓ | Guides ✓ |
-| 7. Reutilización | Verificar | Inventario ✓ | — | Docs ✓ |
+| Principio | FASE 1 (1.6-1.10) | FASE 2 | FASE 3 | FASE 4 |
+|-----------|-----------|--------|--------|--------|
+| 1. Escalabilidad | Refactor ✓ | 1000 listings test | Componentes scale | Load test |
+| 2. Disponibilidad | Auth integrado | Caché fallback ✓ | — | — |
+| 3. Performance | Lighthouse medir | Optimizar | Re-medir + bench | Final audit |
+| 4. Seguridad | Creds safe ✓ | — | — | CSP + httpOnly |
+| 5. Desacoplamiento | Validar ✓ | ✓ | ✓ | ✓ |
+| 6. Extensibilidad | Extension guide | Inventario | Pattern doc + test | Full guide |
+| 7. Reutilización | Verificar | Inventario ✓ | Dashboard compat | Docs final |
+
+**Clave:** Cada fase valida 1-2 principios a fondo. No es "listo" hasta que TODOS pasen auditoría en su fase.
 
 ---
 
