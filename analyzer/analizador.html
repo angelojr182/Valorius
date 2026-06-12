@@ -1379,6 +1379,91 @@
     finally  { wizRender(); }
   }
 
+  // PHASE 1.6-B: Componentes de renderizado modular
+  function renderAnalysisSummary(data) {
+    var vPanel = document.getElementById('veredictoPanel');
+    vPanel.className = 'veredicto-principal ' + data.iprInt.categoria;
+    vPanel.style.display = 'block';
+    document.getElementById('vrdEtiqueta').textContent = data.modoLimitado
+      ? 'Analisis orientativo'
+      : data.nivelZona ? 'Analisis por zona (colonia sin suficientes referencias)'
+      : 'Resultado del analisis';
+    document.getElementById('vrdComparables').textContent = data.n;
+    document.getElementById('vrdTitulo').textContent = data.modoLimitado
+      ? 'Referencia basada en pocas propiedades similares'
+      : data.iprInt.etiqueta;
+    document.getElementById('vrdDescripcion').textContent = data.descripcion;
+  }
+
+  function renderConfidenceIndicator(data) {
+    var iaoCard = document.getElementById('iaoCard');
+    iaoCard.className = 'iao-card ' + data.iaoInt.categoria;
+    document.getElementById('iaoIcono').textContent = data.iaoInt.icono;
+    document.getElementById('iaoValor').textContent = data.iaoInt.etiqueta;
+    document.getElementById('iaoSub').textContent = data.iaoInt.sub;
+    var resumen = document.getElementById('resumenRapido');
+    resumen.style.display = 'block';
+    document.getElementById('resumenTexto').textContent = data.resumen;
+  }
+
+  function renderPriceCard(data) {
+    var gaugeColor = data.iprInt.cat==='bajo' ? '#10b981' : data.iprInt.cat==='sobre' ? '#ef4444' : '#fbbf24';
+    var absDesvR = Math.round(Math.abs(data.desv));
+    var esNeutral = absDesvR === 0;
+    var signoComp = esNeutral ? '' : (data.desv > 0 ? '+' : '-');
+    var gaugeLabelTx = esNeutral ? 'en el precio de mercado'
+                     : data.desv > 0  ? 'sobre el precio de mercado'
+                     : 'bajo el precio de mercado';
+    document.getElementById('lblGaugeVal').textContent = esNeutral ? (data.modoLimitado ? '~0%' : '0%') : (data.modoLimitado ? '~' : '') + signoComp + absDesvR + '%';
+    document.getElementById('lblGaugeVal').style.color = gaugeColor;
+    document.getElementById('lblGaugeLabel').textContent = gaugeLabelTx;
+    document.getElementById('lblGaugeLabel').style.color = gaugeColor;
+    document.getElementById('lblGaugeLabel').style.opacity = '0.9';
+    if (data.modoLimitado) {
+      document.getElementById('gaugeFill').style.strokeDashoffset = 200;
+      document.getElementById('gaugeFill').style.stroke = '#334155';
+    } else {
+      var gradId = data.iprInt.cat==='bajo' ? 'gradBajo' : data.iprInt.cat==='sobre' ? 'gradSobre' : 'gradRango';
+      document.getElementById('gaugeFill').style.stroke = 'url(#' + gradId + ')';
+      var arcPct = Math.min(Math.max(Math.abs(data.desv)/50, 0.05), 0.98);
+      document.getElementById('gaugeFill').style.strokeDashoffset = 283 - (213*arcPct);
+      var ang = arcPct * 271 * Math.PI / 180;
+      document.getElementById('gaugeBulb').setAttribute('cx', (50+45*Math.cos(ang)).toFixed(2));
+      document.getElementById('gaugeBulb').setAttribute('cy', (50+45*Math.sin(ang)).toFixed(2));
+      document.getElementById('gaugeBulb').style.fill = gaugeColor;
+      document.getElementById('gaugeBulb').style.filter = 'drop-shadow(0 0 6px ' + gaugeColor + ')';
+    }
+    document.getElementById('lblExplanation').textContent = data.explicacion;
+    document.getElementById('lblTuPrecio').textContent = '$' + data.tuPM2.toLocaleString();
+    document.getElementById('lblMediana').textContent = '$' + Math.round(data.mediana).toLocaleString() + (data.modoLimitado?'*':'');
+    document.getElementById('lblRango').textContent = '$' + Math.round(data.min).toLocaleString() + ' - $' + Math.round(data.max).toLocaleString() + '/m2';
+    if (data.modoLimitado) {
+      document.getElementById('lblDiff').textContent = 'Referencia orientativa';
+      document.getElementById('lblDiff').className = 'metrica-valor rango';
+    } else {
+      document.getElementById('lblDiff').textContent = signoComp + Math.abs(data.desv).toFixed(1) + '%';
+      document.getElementById('lblDiff').className = 'metrica-valor';
+      document.getElementById('lblDiff').style.color = gaugeColor;
+    }
+    document.getElementById('lblMinVal').textContent = '$' + Math.round(data.min).toLocaleString();
+    document.getElementById('lblMedVal').textContent = '$' + Math.round(data.mediana).toLocaleString();
+    document.getElementById('lblMaxVal').textContent = '$' + Math.round(data.max).toLocaleString();
+    var uBajo = Math.round(data.mediana * 0.85);
+    var uSobre = Math.round(data.mediana * 1.15);
+    document.getElementById('rlBajo').textContent = 'menos de $' + uBajo.toLocaleString() + '/m²';
+    document.getElementById('rlRango').textContent = '$' + uBajo.toLocaleString() + ' – $' + uSobre.toLocaleString() + '/m²';
+    document.getElementById('rlSobre').textContent = 'mas de $' + uSobre.toLocaleString() + '/m²';
+    ['rlRowBajo','rlRowRango','rlRowSobre'].forEach(function(id){ document.getElementById(id).classList.remove('activa'); });
+    var rowAct = data.iprInt.cat==='bajo' ? 'rlRowBajo' : data.iprInt.cat==='sobre' ? 'rlRowSobre' : 'rlRowRango';
+    if (!data.modoLimitado) document.getElementById(rowAct).classList.add('activa');
+    var tt = document.getElementById('specTooltip');
+    tt.textContent = '$' + data.tuPM2.toLocaleString() + '/m2';
+    var tp = ((data.tuPM2-data.min)/(data.max-data.min+1))*100;
+    tt.style.left = Math.min(Math.max(tp,5),92) + '%';
+    document.getElementById('lblWarning').textContent = data.advertencia;
+    document.getElementById('chartGuia').textContent = data.guiaChart;
+  }
+
   function renderAnalisis(zoneId, coloniaId, tipo, area, precio, res) {
     var cob = res.cob, n = cob.n, nivel = res.nivel, nColonia = res.nColonia;
     var zona    = cob.zona || '';
