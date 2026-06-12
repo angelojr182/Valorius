@@ -31,25 +31,30 @@
 ## ⚡ SESIÓN ACTIVA
 ```
 Última sesión  : 2026-06-11
-Último paso    : PHASE 1.6-A ✅ COMPLETADA (refactor intentarAnalisis → lib/analyzer.js)
-               : PropertyAnalyzer.analyze() ahora orquesta análisis completo
-               :   - Sin cambios visuales, mismo flujo, wizard intacto
-               :   - Validación local + análisis centralizado
-               :   - Backward compatible: mismo input/output
-               :   - Commit c7edba6 · VERIFICADO Playwright ✅
-               : lib/comparable.js, lib/constants.js, lib/validator.js, lib/formatter.js ✅
-               : lib/analyzer.js: AHORA window.Analyzer = PropertyAnalyzer ✅
-Próximo paso   : ⏳ PHASE 1.6-B (renderAnalisis → componentes)
-               :   - Refactorizar salida (resultado → ConfidenceIndicator, PriceCard, AnalysisSummary)
-               :   - Sin tocar datos, solo UI
-               : ⏳ PHASE 1.6-C (cleanup — eliminar código duplicado)
-               : ⏳ PHASE 1.6-D (reducir HTML < 300 líneas)
-               : ⏳ PHASE 1.7-1.8 (verificar 6 test-cases)
+Último paso    : PHASE 1.6 A-D ✅ COMPLETADA (refactor + componentes + cleanup)
+               : PHASE 1.6-A: intentarAnalisis() → PropertyAnalyzer.analyze() ✅
+               :   - Commit c7edba6 · VERIFICADO en navegador
+               : PHASE 1.6-B: 3 componentes modulares creados ✅
+               :   - renderAnalysisSummary (veredicto principal)
+               :   - renderConfidenceIndicator (IAO + resumen)
+               :   - renderPriceCard (gauge + métricas + leyenda)
+               :   - Commit e6ba975
+               : PHASE 1.6-C: Componentes integrados en renderAnalisis() ✅
+               :   - Eliminadas ~100 líneas de código duplicado
+               :   - Commit 39d65aa
+               : PHASE 1.6-D: Código legado eliminado ✅
+               :   - Eliminada función resolverComparables() inline (8 líneas)
+               :   - Simplificada confirmarAnalisisAtipico()
+               :   - 2561 → 2447 líneas (-114)
+               :   - Commit cc0da24
+               : VERIFICADO EN NAVEGADOR: Todos componentes renderizados ✅
+Próximo paso   : ⏳ PHASE 1.7-1.8 (verificar 6 test-cases completos)
                : ⏳ PHASE 1.9-1.10 (auditoría + lighthouse)
+               : Luego PHASE 2: Datos JSON + resiliencia
 Pendiente auth : CERO cambios a DB sin autorización explícita
-Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
+Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943
 DB count       : 145 properties / 145 listings
-GitHub         : rama main — commit c7edba6 (2026-06-11)
+GitHub         : rama main — commit cc0da24 (2026-06-11)
 ```
 
 ---
