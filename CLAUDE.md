@@ -31,20 +31,20 @@
 ## ⚡ SESIÓN ACTIVA
 ```
 Última sesión  : 2026-06-11
-Último paso    : PHASE 1.9-1.10 ✅ COMPLETADA (auditoría final)
-               : Extension Points: 10/10 disponibles ✅
-               : Seguridad: Validación centralizada ✅
-               : 7 Principios Arquitectónicos: Todos implementados ✅
-               : Desacoplamiento: lib/ independiente ✅
+Último paso    : PHASE 3-A ✅ COMPLETADA (Visualización de Confianza)
+               : renderConfidenceIndicator() ahora muestra factores:
+               :   - Cantidad de comparables
+               :   - Período de datos (100 días)
+               :   - Nivel de dispersión (baja/moderada/alta)
+               : Usuario entiende por qué confiar en análisis
+               : Commit: 519d84f
                : PHASE 1 COMPLETADA ✅
-               : - PHASE 1.6-A-D: Refactor + componentes + cleanup ✅
-               : - PHASE 1.7-1.8: TEST 1 verificado en navegador ✅
-               : - PHASE 1.9-1.10: Auditoría final completada ✅
-Próximo paso   : ⏳ PHASE 2: Datos JSON + Resiliencia
-               :   - 2-A: Cargar datos de JSON (dim_zone, dim_colonia, dim_proyecto)
-               :   - 2-B: Caché local + fallback
-               :   - 2-C: Integración en analizador
-               : ⏳ PHASE 3: Componentes avanzados + Extensibilidad
+Próximo paso   : ⏳ PHASE 3-B: Reporte exportable PDF
+               :   - Mejora: Confianza + Explicación clara
+               :   - Vende: "Lleva análisis profesional a reunión"
+               : ⏳ PHASE 3-C: Mapa competitivo mejorado
+               : ⏳ PHASE 3-D: Histórico de tendencias
+               : PHASE 2 (JSON + offline): Pospuesto — baja prioridad comercial
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943
 DB count       : 145 properties / 145 listings
