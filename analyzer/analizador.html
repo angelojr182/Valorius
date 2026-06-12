@@ -1265,15 +1265,6 @@
   var PRECIO_MIN = 10000, PRECIO_MAX = 5000000;
 
   // ─── FALLBACK DE TRES NIVELES ─────────────────────────────
-  function resolverComparables(zoneId, coloniaId, tipo) {
-    var cobCol  = coloniaId ? comparablesColonia.find(function(c){ return c.zone_id===zoneId && c.colonia_id===coloniaId && c.tipo===tipo; }) : null;
-    var cobZona = comparablesZona.find(function(c){ return c.zone_id===zoneId && c.tipo===tipo; });
-    var nCol    = cobCol ? cobCol.n : 0;
-    if (cobCol && nCol >= 3)        return {cob: cobCol,  nivel: 'colonia',  nColonia: nCol};
-    if (cobZona && cobZona.n >= 3)  return {cob: cobZona, nivel: 'zona',     nColonia: nCol};
-    return {cob: cobZona || cobCol, nivel: 'limitado', nColonia: nCol};
-  }
-
   // ─── VALIDACION Y FLUJO ───────────────────────────────────
   window.intentarAnalisis = function() {
     var zoneId    = document.getElementById('selZona').value;
@@ -1354,14 +1345,7 @@
   window.confirmarAnalisisAtipico = function() {
     document.getElementById('alertaAtipica').style.display = 'none';
     pendienteAtipico = false;
-    var zoneId    = document.getElementById('selZona').value;
-    var coloniaId = document.getElementById('selColonia').value;
-    var tipo      = document.getElementById('selTipo').value;
-    var area      = parseFloat(document.getElementById('inpArea').value) || 0;
-    var raw       = document.getElementById('inpPrecio').value.replace(/[^0-9]/g,'');
-    var precio    = parseFloat(raw) || 0;
-    var res       = resolverComparables(zoneId, coloniaId, tipo);
-    ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res);
+    window.intentarAnalisis();
   };
 
   window.cerrarAlerta = function() {
