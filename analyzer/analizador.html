@@ -249,13 +249,13 @@
   <div class="topnav-mobile">
     <div class="tm-logo">V</div>
     <div class="tm-title">Property Analyzer</div>
-    <a href="index.html" class="tm-btn">Dashboard</a>
+    <a href="../index.html" class="tm-btn">Dashboard</a>
   </div>
   <aside class="sidebar">
     <div class="sb-brand"><div class="sb-logo-v">V</div></div>
     <nav class="sb-nav">
-      <a href="index.html" class="sb-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</a>
-      <a href="analizador.html" class="sb-link active"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analizar</a>
+      <a href="../index.html" class="sb-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</a>
+      <a href="./analizador.html" class="sb-link active"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analizar</a>
     </nav>
   </aside>
 
@@ -740,7 +740,7 @@
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="secrets.js?v=1.2"></script>
+  <script src="../secrets.js?v=1.2"></script>
 
   <script>
   // ─── CONFIGURACION ────────────────────────────────────────
@@ -2204,7 +2204,7 @@
       token = localStorage.getItem('valorius_beta_token');
     }
 
-    if (!token) { window.location.href='index.html'; return false; }
+    if (!token) { window.location.href='../index.html'; return false; }
 
     // Validar contra Supabase
     try {
@@ -2215,11 +2215,11 @@
 
       if (!data || !data[0] || !data[0].activo) {
         localStorage.removeItem('valorius_beta_token');
-        window.location.href='index.html'; return false;
+        window.location.href='../index.html'; return false;
       }
       if (new Date(data[0].expira_en) < new Date()) {
         localStorage.removeItem('valorius_beta_token');
-        window.location.href='index.html'; return false;
+        window.location.href='../index.html'; return false;
       }
 
       // Token valido
