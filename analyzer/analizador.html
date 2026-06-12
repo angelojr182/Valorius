@@ -1384,7 +1384,20 @@
     iaoCard.className = 'iao-card ' + data.iaoInt.categoria;
     document.getElementById('iaoIcono').textContent = data.iaoInt.icono;
     document.getElementById('iaoValor').textContent = data.iaoInt.etiqueta;
-    document.getElementById('iaoSub').textContent = data.iaoInt.sub;
+
+    // PHASE 3-A: Mostrar factores de confianza
+    var confidenceFactors = [];
+    confidenceFactors.push(data.n + ' comparable' + (data.n !== 1 ? 's' : ''));
+    confidenceFactors.push('últimos ' + DIAS_COMPARABLES + ' días');
+
+    var dispersión = data.max && data.min ? Math.round(data.max - data.min) : null;
+    if (dispersión) {
+      var dispersiónnivel = dispersión < 200 ? 'baja' : dispersión < 500 ? 'moderada' : 'alta';
+      confidenceFactors.push('dispersión ' + dispersiónnivel);
+    }
+
+    document.getElementById('iaoSub').textContent = confidenceFactors.join(' · ');
+
     var resumen = document.getElementById('resumenRapido');
     resumen.style.display = 'block';
     document.getElementById('resumenTexto').textContent = data.resumen;
