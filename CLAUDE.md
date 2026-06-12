@@ -6,13 +6,32 @@
 > actualizar AUTOMÁTICAMENTE las secciones SESIÓN ACTIVA y LOG DE SESIONES sin que el usuario
 > tenga que pedirlo. Esto es obligatorio en cada sesión.
 > IDIOMA: Responder SIEMPRE en español.
+> PRINCIPIOS: Leer ../memory/principios_arquitectonicos.md antes de cada decisión técnica.
+
+---
+
+## 🏗️ PRINCIPIOS ARQUITECTÓNICOS (NO-NEGOCIABLES)
+
+**Vigentes desde 2026-06-11.** Cada cambio debe validarse contra estos.
+
+1. **Escalabilidad** — Horizontal + vertical sin rediseño. Stateless, APIs idempotentes.
+2. **Alta disponibilidad y resiliencia** — Sistema funciona ante fallos parciales. Fallbacks documentados.
+3. **Performance** — Respuesta < 200ms (API), FCP < 1.5s, TTI < 3s. Bundle < 100KB gzip.
+4. **Seguridad (cada capa, cada cambio)** — Defensa en profundidad. RLS, HTTPS, validaciones estrictas.
+5. **Desacoplamiento** — A cambia sin romper B. Interfaces claras, inyección de dependencias.
+6. **Extensibilidad** — Agregar features sin refactorizar todo. Plugin patterns, backward compatibility.
+7. **Reutilización** — No duplicar esfuerzo. lib/ y components/ son activos reutilizables.
+
+**Checklist antes de cada decisión:** ¿Escalará a 10x? ¿Qué si falla una pieza? ¿Es seguro? ¿Acopla cosas? ¿Reutiliza código?
+
+**Detalles completos:** Ver `/memory/principios_arquitectonicos.md`
 
 ---
 
 ## ⚡ SESIÓN ACTIVA
 ```
-Última sesión  : 2026-06-10
-Último paso    : PHASE 1 PASO 1 COMPLETA — Extracción de lógica a lib/ (5 librerías)
+Última sesión  : 2026-06-11
+Último paso    : Estructura escalable + Auth centralizado (FASE 1 pre-requisito completado)
                : lib/comparable.js (v1.0): experto en seleccionar comparables (CORAZÓN)
                :   filterByDate, filterByArea, detectOutliers, calculateStats, selectComparables
                : lib/constants.js (v1.0): números duros versionados (códigos, no UUIDs)
@@ -26,9 +45,9 @@
                :   analyze (entrada → valida → resuelve → calcula → interpreta → retorna)
                :   resolverComparables (fallback 3 niveles), checkAtipicoRatio
                : Commits: c3e7675, fe0c4c2, 7cb2c42 — PHASE 1 PASO 1
-Próximo paso   : PHASE 1 PASO 2: Integrar librerías en analizador.html (refactorizar HTML)
-               : Luego PHASE 1 PASO 3: Verificar test-cases sigan pasando
-               : Luego: FASE 2 (JSON de datos: zones, colonias, projects)
+Próximo paso   : PHASE 1 PASO 1.6-1.8: Verificar librerías funcionen con nueva auth
+               : Luego PHASE 2: Datos en JSON (zones, colonias, projects)
+               : Luego PHASE 3: Componentes faltantes (ComparableTable, MarketRangeChart, MapPanel)
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
 DB count       : 145 properties / 145 listings
@@ -44,6 +63,26 @@ GitHub         : rama main sincronizada — commit 7cb2c42 (2026-06-10)
 
 ## 📋 LOG DE SESIONES
 ```
+2026-06-11 | FASE PRE-REQUISITO: Estructura escalable + Auth centralizado
+           | ESTRUCTURA MODULAR:
+           |   - Crear /analyzer/ → analizador.html migrado ahí (escalamiento futuro)
+           |   - Crear /login/ centralizado → ambos (analyzer + dashboard futuro) reutilizan
+           |   - Redirect /analizador.html viejo → /analyzer/ (backward compat)
+           | AUTH (Opción 1: Ambos cerrados + misma Supabase):
+           |   - /login/index.html → centralizado, form POST (no GET — seguridad)
+           |   - Limpia credenciales post-error + pre-redireccionamiento
+           |   - Parámetro ?redirect= preserva destino (analyzer/dashboard)
+           |   - analizador.html validarAutenticacion() → redirige a /login si falta sesión
+           | PRINCIPIOS ARQUITECTÓNICOS (grabados):
+           |   - 7 principios no-negociables (memory + CLAUDE.md)
+           |   - Escalabilidad, disponibilidad, performance, seguridad, desacoplamiento,
+           |     extensibilidad, reutilización
+           |   - Checklist de decisión: ¿escalará 10x? ¿es seguro? ¿acopla? ¿reutiliza?
+           | UI FIXES:
+           |   - Remover botón Dashboard de analizador (es independiente hoy)
+           | Commits: 920db47, 2d7d166, 7ede387, cc41108, cce3855, ba5fa97, c0c0cca, cce3855
+           | Próximo: PHASE 1 PASO 1.6-1.8 (verificar test-cases con auth nueva)
+
 2026-06-10 | PHASE 1 PASO 1 COMPLETADA — Extracción de lógica a librerías (5 módulos)
            | lib/comparable.js (v1.0): CORAZÓN del analizador
            |   - ComparableSelector: experto en seleccionar y analizar comparables
