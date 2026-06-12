@@ -2193,8 +2193,11 @@
       // Obtener sesión actual
       const { data: { session }, error } = await supabaseClient.auth.getSession();
 
+      console.log('🔍 Verificando sesión...', { session, error });
+
       if (error || !session) {
         // No hay sesión — redirigir a login con parámetro de retorno
+        console.log('❌ Sin sesión válida, redirigiendo a login');
         window.location.href = '../login/?redirect=analyzer';
         return false;
       }
