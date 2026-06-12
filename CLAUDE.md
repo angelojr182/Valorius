@@ -31,38 +31,25 @@
 ## ⚡ SESIÓN ACTIVA
 ```
 Última sesión  : 2026-06-11
-Último paso    : Estructura escalable + Auth centralizado (FASE 1 pre-requisito completado)
-               : lib/comparable.js (v1.0): experto en seleccionar comparables (CORAZÓN)
-               :   filterByDate, filterByArea, detectOutliers, calculateStats, selectComparables
-               : lib/constants.js (v1.0): números duros versionados (códigos, no UUIDs)
-               :   PRECIOS, RANGOS_AREA, DIAS, COMPARABLES, IPR, OUTLIER, MONEDAS
-               :   getSeveridad, interpretarIPR, interpretarIAO
-               : lib/validator.js (v1.0): validaciones de entrada
-               :   validateInput, validateTipo, validateArea, validatePrecio, validateMoneda
-               : lib/formatter.js (v1.0): formato visual de números
-               :   formatCurrency, formatPricePerSquareMeter, formatPercentage, parseInputPrice
-               : lib/analyzer.js (v1.0): coordinador que orquesta todo
-               :   analyze (entrada → valida → resuelve → calcula → interpreta → retorna)
-               :   resolverComparables (fallback 3 niveles), checkAtipicoRatio
-               : Commits: c3e7675, fe0c4c2, 7cb2c42 — PHASE 1 PASO 1
-Próximo paso   : ⏳ PHASE 1 PASO 1.6-1.8 (ORIGINAL)
-               :   - 1.6: Refactorizar HTML para usar lib/ (< 300 líneas)
-               :   - 1.7: Verificar test-cases (node test-runner.js)
-               :   - 1.8: Prueba manual en navegador
-               : ⏳ PHASE 1 PASO 1.9-1.10 (NUEVO — auditoría)
-               :   - 1.9: Lighthouse + extension points + seguridad
-               :   - 1.10: Validar desacoplamiento
-               : Luego PHASE 2: Datos JSON + resiliencia (caché, fallback, reutilizable)
-               : Luego PHASE 3: 3 componentes + auditoría extensibilidad/performance
+Último paso    : PHASE 1.6-A ✅ COMPLETADA (refactor intentarAnalisis → lib/analyzer.js)
+               : PropertyAnalyzer.analyze() ahora orquesta análisis completo
+               :   - Sin cambios visuales, mismo flujo, wizard intacto
+               :   - Validación local + análisis centralizado
+               :   - Backward compatible: mismo input/output
+               :   - Commit c7edba6 · VERIFICADO Playwright ✅
+               : lib/comparable.js, lib/constants.js, lib/validator.js, lib/formatter.js ✅
+               : lib/analyzer.js: AHORA window.Analyzer = PropertyAnalyzer ✅
+Próximo paso   : ⏳ PHASE 1.6-B (renderAnalisis → componentes)
+               :   - Refactorizar salida (resultado → ConfidenceIndicator, PriceCard, AnalysisSummary)
+               :   - Sin tocar datos, solo UI
+               : ⏳ PHASE 1.6-C (cleanup — eliminar código duplicado)
+               : ⏳ PHASE 1.6-D (reducir HTML < 300 líneas)
+               : ⏳ PHASE 1.7-1.8 (verificar 6 test-cases)
+               : ⏳ PHASE 1.9-1.10 (auditoría + lighthouse)
 Pendiente auth : CERO cambios a DB sin autorización explícita
 Tipo cambio    : analizador lee tasa de core.exchange_rate (dinámica) · última L 26.5943 (2026-06-06)
 DB count       : 145 properties / 145 listings
-Docs           : /docs ACTUALIZADO — INDEX, ADR-0001..0004, RFC-005, PLAN_EVOLUCION, COMO_FUNCIONA,
-               : BUSINESS_RULES, PHASE0_BASELINE
-dim_colonia    : 63 colonias (tras FASE 6 reingeniería) — catálogo en data_dictionary.md
-dim_zone       : 55 zonas · 52 activas (tras FASE 6: +3 nuevas Las Casitas/El Sauce/Villa Elena)
-Seguridad      : RLS en todas las tablas de core (activado 2026-05-27 ss, ADR-0003)
-GitHub         : rama main sincronizada — commit 7cb2c42 (2026-06-10)
+GitHub         : rama main — commit c7edba6 (2026-06-11)
 ```
 
 ---
