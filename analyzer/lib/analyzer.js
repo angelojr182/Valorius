@@ -241,7 +241,13 @@ var PropertyAnalyzer = (function() {
   };
 })();
 
-// Exportar
+// Exportar a window para uso en analizador.html
+if (typeof window !== 'undefined') {
+  window.PropertyAnalyzer = PropertyAnalyzer;
+  window.Analyzer = PropertyAnalyzer;
+}
+
+// Exportar a module para Node.js (tests)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = PropertyAnalyzer;
 }

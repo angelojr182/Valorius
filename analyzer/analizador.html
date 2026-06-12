@@ -1304,10 +1304,31 @@
       return;
     }
 
-    var res = resolverComparables(zoneId, coloniaId, tipo);
-    if (!res.cob || res.cob.n === 0) return alert('Sin propiedades similares registradas para analizar en los ultimos ' + DIAS_COMPARABLES + ' dias.');
+    // PHASE 1.6-A: Delegar análisis a lib/analyzer.js (PropertyAnalyzer)
+    var input = {
+      tipo: tipo,
+      zoneId: zoneId,
+      coloniaId: coloniaId || null,
+      area: area,
+      precio: precio,
+      moneda: monedaActual,
+      tasaLPS: tasaLPS
+    };
 
-    // Alerta contextual
+    var analyzerResult = PropertyAnalyzer.analyze(input, comparablesZona, comparablesColonia);
+
+    if (!analyzerResult.isSuccess) {
+      return alert(analyzerResult.errores.join('\n'));
+    }
+
+    // Adaptar resultado del analyzer al formato esperado por ejecutarAnalisis()
+    var res = {
+      cob: analyzerResult.resultado,
+      nivel: analyzerResult.resultado.nivel,
+      nColonia: analyzerResult.resultado.n
+    };
+
+    // Alerta contextual (mismo código de antes, solo con resultado adaptado)
     if (!pendienteAtipico && res.cob.mediana > 0) {
       var tuPM2 = precio / area;
       var ratio = tuPM2 / res.cob.mediana;
