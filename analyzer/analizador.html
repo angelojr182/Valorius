@@ -2185,15 +2185,22 @@
   var CURRENT_SESSION = null;
 
   async function validarAutenticacion() {
+    // Verificar que secrets.js esté cargado
+    if (!SECRETS || !SECRETS.SURL || !SECRETS.SKEY) {
+      console.error('❌ secrets.js no está cargado correctamente');
+      window.location.href = '../login/?redirect=analyzer';
+      return false;
+    }
+
     // Inicializar Supabase
     const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = createClient(SECRETS.SURL, SECRETS.SKEY);
 
     try {
       // Obtener sesión actual
       const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-      console.log('🔍 Verificando sesión...', { session, error });
+      console.log('🔍 Verificando sesión...', { hasSession: !!session, error });
 
       if (error || !session) {
         // No hay sesión — redirigir a login con parámetro de retorno

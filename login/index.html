@@ -210,9 +210,16 @@
     const urlParams = new URLSearchParams(window.location.search);
     const redirect = urlParams.get('redirect') || 'dashboard';
 
+    // Verificar que secrets.js esté cargado
+    if (!SECRETS || !SECRETS.SURL || !SECRETS.SKEY) {
+      showError('Error de configuración — intenta recargar la página');
+      console.error('secrets.js no está cargado');
+      return;
+    }
+
     // Inicializar Supabase
     const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = createClient(SECRETS.SURL, SECRETS.SKEY);
 
     const form = document.getElementById('loginForm');
     const submitBtn = document.getElementById('submitBtn');
