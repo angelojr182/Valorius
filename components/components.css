@@ -227,6 +227,108 @@
 
 /* ─── RESPONSIVE ────────────────────────────────────── */
 
+/* ─── ANALYSIS SUMMARY ──────────────────────────── */
+
+.analysis-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+}
+
+.analysis-summary-error {
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 4px solid #ef4444;
+  color: #ef4444;
+  font-size: 13px;
+  border-radius: 4px;
+}
+
+.as-veredicto {
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #cbd5e1;
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.05) 0%, rgba(203, 213, 225, 0.02) 100%);
+}
+
+.as-vrd-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.as-vrd-value {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.as-vrd-subtitle {
+  font-size: 13px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.as-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.as-metric {
+  padding: 12px;
+  background: rgba(203, 213, 225, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.as-metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.as-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.as-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.as-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.as-label {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.as-value {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+/* ─── RESPONSIVE ────────────────────────────────────── */
+
 @media (max-width: 640px) {
   .conf-badge {
     font-size: 12px;
@@ -268,5 +370,22 @@
 
   .pc-diff-label {
     font-size: 10px;
+  }
+
+  .as-veredicto {
+    padding: 12px;
+  }
+
+  .as-vrd-value {
+    font-size: 28px;
+  }
+
+  .as-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .as-footer {
+    gap: 12px;
+    font-size: 12px;
   }
 }
