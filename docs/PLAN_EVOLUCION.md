@@ -156,36 +156,66 @@ Cualquier cambio se nota inmediatamente.
 - Porcentaje de IPR (-11%, +5%)
 - Etiqueta de confianza (BAJA/MEDIA/ALTA)
 
-**Paso 1.6: Actualizar `analizador.html` para usar librerías (ORIGINAL)**
-- Import `lib/analyzer.js`
-- Import `lib/constants.js`
-- Import `lib/formatter.js`
-- El HTML SOLO orquesta: recolecta datos → llama analyzer → muestra resultado
-- < 300 líneas
-- ✅ Auth integrado (2026-06-11): /login/ centralizado, POST form, sin credenciales en URL
+**Paso 1.6: Refactorizar `analizador.html` para usar librerías (ORIGINAL)**
 
-**Paso 1.7: Verificar con test-cases (ORIGINAL)**
+⚠️ **ESTRATEGIA:** Subfases progresivas (sin saltos riesgosos)
+
+Criterio: **Mismo resultado, menos lógica inline, sin romper producción.**
+
+**PHASE 1.6-A: intentarAnalisis() usa lib/analyzer.js**
+- Refactor `window.intentarAnalisis()` para delegar a `window.Analyzer.analyze()`
+- Input validation local (InputValidator)
+- Llamada a analyzer.js
+- No tocar UI todavía
+- ✅ Test-cases deben pasar sin cambios visuales
+
+**PHASE 1.6-B: renderAnalisis() monta componentes**
+- Refactor `renderAnalisis()` para montar:
+  - `ConfidenceIndicator` (badge de comparables)
+  - `PriceCard` (tu precio vs mercado)
+  - `AnalysisSummary` (veredicto + gauge + métricas)
+- Mantener mismo resultado visual
+- ✅ Componentes YA existen, solo integrarlos
+
+**PHASE 1.6-C: Eliminar código duplicado**
+- Remover HTML inline que ahora está en componentes
+- Remover funciones viejas de renderizado
+- Simplificar `renderAnalisis()`
+
+**PHASE 1.6-D: Reducir tamaño HTML**
+- Limpiar código muerto
+- Consolidar funciones UI
+- Meta: < 300 líneas (pero secundario)
+
+**Objetivo final (1.6-A + B + C + D):**
+- Mismo análisis, mismo resultado
+- Menos lógica inline
+- Componentes reutilizables
+- HTML manejable
+- Auth integrado (2026-06-11): /login/ centralizado, POST form, sin credenciales en URL
+
+**Paso 1.7: Verificar con test-cases (ORIGINAL — después de cada subfase)**
 ```bash
 node test-runner.js
-# Si todos los tests pasan: ✅ FASE 1 exitosa
+# Si todos los tests pasan: ✅ subfase exitosa
 # Si alguno falla: ❌ Revertir y debuggear
 ```
 
-**Paso 1.8: Prueba manual en navegador (ORIGINAL)**
+**Paso 1.8: Prueba manual en navegador (ORIGINAL — después de cada subfase)**
 - Para cada test-case: ingresa datos, verifica que resultado sea igual a before
 - Compara screenshots con originales
 - Si coinciden: ✅ OK
 
-**Paso 1.9: Auditoría de Principios (NUEVO — bloqueantes)**
+**Paso 1.9: Auditoría de Principios (NUEVO — bloqueantes, después de 1.6-D)**
 - [ ] Medir Lighthouse (FCP < 1.5s, TTI < 3s, score > 80)
 - [ ] Documentar "extension points" en `docs/EXTENSION_GUIDE.md`
   - Cómo agregar nuevo tipo de propiedad
   - Cómo agregar nuevo filtro
   - Cómo agregar nuevo componente
-- [ ] Validar que test-cases pasen CON la nueva auth
+- [ ] Validar que test-cases pasen CON la nueva auth (1.6-A a 1.6-D)
 - [ ] Verificar seguridad: credenciales NO en logs, NO en URL, NO en localStorage sin cipher
 
-**Paso 1.10: Validar Desacoplamiento (NUEVO — refuerzo)**
+**Paso 1.10: Validar Desacoplamiento (NUEVO — refuerzo, después de 1.6-D)**
 - [ ] Verificar: Cambiar constants.js NO rompe tests ✓
 - [ ] Verificar: Remover /login/ NO rompe analizador (solo no autentica) ✓
 - [ ] Verificar: Agregar nuevo componente NO afecta lib/ ✓
@@ -389,12 +419,16 @@ VERIFICACIÓN:
 | 1 | 0: Congelar | 2-3 | Test-cases + baseline | ✅ |
 | 2-3 | 1A: Comparable.js | 4-6 | Lógica de selección | ✅ |
 | 3-4 | 1B: Analyzer.js + Auth | 6-8 | Coordinador + auth | ✅ |
-| 5 | 1.6-1.8: Refactor HTML + tests | 2-3 | Integración librerías + validación | ⏳ NEXT |
-| 5 | 1.9-1.10: Auditoría PHASE 1 | 4-5 | Lighthouse + docs + desacoplamiento | ⏳ NEXT |
-| 6 | 2: Datos JSON + Resiliencia | 7-9 | JSON + caché + fallback + reutilizable | 🔜 |
-| 7-9 | 3: Componentes + Auditoría | 14-16 | 6 componentes + extensibilidad + performance | 🔜 |
-| 10 | 4: Seguridad VPS | 4-6 | CSP + rate limit + httpOnly | 🔜 (VPS) |
-| 11 | Buffer | — | Fixes, optimizaciones, docs final | 🔜 |
+| 5-6 | 1.6-A: intentarAnalisis() | 1-2 | Delega a lib/analyzer.js | ⏳ NEXT |
+| 6 | 1.6-B: renderAnalisis() | 2-3 | Monta componentes | ⏳ |
+| 6 | 1.6-C: Cleanup | 1-2 | Elimina código duplicado | ⏳ |
+| 6 | 1.6-D: Reduce HTML | 1 | < 300 líneas (secundario) | ⏳ |
+| 6 | 1.7-1.8: Tests + manual | 1-2 | Verificación progresiva | ⏳ |
+| 7 | 1.9-1.10: Auditoría PHASE 1 | 4-5 | Lighthouse + docs + desacoplamiento | 🔜 |
+| 8-9 | 2: Datos JSON + Resiliencia | 7-9 | JSON + caché + fallback + reutilizable | 🔜 |
+| 10-12 | 3: Componentes + Auditoría | 14-16 | 6 componentes + extensibilidad + performance | 🔜 |
+| 13 | 4: Seguridad VPS | 4-6 | CSP + rate limit + httpOnly | 🔜 (VPS) |
+| 14 | Buffer | — | Fixes, optimizaciones, docs final | 🔜 |
 
 ---
 
