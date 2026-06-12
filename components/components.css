@@ -236,6 +236,78 @@
   padding: 0;
 }
 
+.as-top-row {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 16px;
+  align-items: start;
+}
+
+.as-gauge-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.as-gauge {
+  width: 100%;
+  height: auto;
+  max-width: 220px;
+}
+
+.gauge-bg {
+  fill: rgba(203, 213, 225, 0.05);
+  stroke: rgba(148, 163, 184, 0.2);
+  stroke-width: 1;
+}
+
+.gauge-zone {
+  stroke: none;
+  opacity: 0.3;
+}
+
+.gauge-bajo {
+  fill: #10b981;
+}
+
+.gauge-rango {
+  fill: #f59e0b;
+}
+
+.gauge-sobre {
+  fill: #ef4444;
+}
+
+.gauge-axis {
+  stroke: rgba(148, 163, 184, 0.3);
+  stroke-width: 1;
+  stroke-dasharray: 2,2;
+}
+
+.gauge-needle {
+  stroke: #e2b05c;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.gauge-center {
+  fill: #e2b05c;
+}
+
+.gauge-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  fill: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.gauge-value {
+  font-size: 12px;
+  font-weight: 700;
+  fill: #e2e8f0;
+}
+
 .analysis-summary-error {
   padding: 12px;
   background: rgba(239, 68, 68, 0.08);
@@ -387,5 +459,21 @@
   .as-footer {
     gap: 12px;
     font-size: 12px;
+  }
+
+  .as-top-row {
+    grid-template-columns: 1fr;
+  }
+
+  .as-gauge-container {
+    max-width: 180px;
+  }
+
+  .gauge-label {
+    font-size: 9px;
+  }
+
+  .gauge-value {
+    font-size: 11px;
   }
 }

@@ -14,12 +14,70 @@ var AnalysisSummary = (function() {
   'use strict';
 
   /**
+   * generateGaugeSVG(ipr)
+   * Genera SVG del gauge circular que muestra IPR.
+   * Decorativo — la fuente de verdad es el veredicto.
+   *
+   * @param {Number} ipr — índice de precio relativo (0-2.0)
+   * @returns {String} SVG HTML
+   */
+  function generateGaugeSVG(ipr) {
+    // Validar IPR
+    var safeIPR = (ipr && typeof ipr === 'number' && !isNaN(ipr)) ? ipr : 1.0;
+    safeIPR = Math.max(0, Math.min(2.0, safeIPR)); // Clamp 0-2.0
+
+    // Convertir IPR (0-2.0) a ángulo (0-180°)
+    // 0 = 0°, 1.0 = 90°, 2.0 = 180°
+    var angle = (safeIPR / 2.0) * 180;
+    var radians = (angle - 90) * Math.PI / 180;
+
+    // Centro del gauge
+    var cx = 110, cy = 110;
+    var radius = 80;
+
+    // Punta de la aguja
+    var px = cx + radius * Math.cos(radians);
+    var py = cy + radius * Math.sin(radians);
+
+    var svg = '';
+    svg += '<svg viewBox="0 0 220 220" class="as-gauge">';
+
+    // Fondo círculo
+    svg += '  <circle cx="110" cy="110" r="100" class="gauge-bg"/>';
+
+    // Zonas coloreadas (0-180°)
+    // BAJO: 0-60° (IPR 0-0.67) — verde
+    svg += '  <path d="M 110,110 L 110,10 A 100,100 0 0,1 186.6,33.4" class="gauge-zone gauge-bajo"/>';
+    // RANGO: 60-120° (IPR 0.67-1.33) — ámbar
+    svg += '  <path d="M 110,110 L 186.6,33.4 A 100,100 0 0,1 33.4,186.6" class="gauge-zone gauge-rango"/>';
+    // SOBRE: 120-180° (IPR 1.33-2.0) — rojo
+    svg += '  <path d="M 110,110 L 33.4,186.6 A 100,100 0 0,1 110,210" class="gauge-zone gauge-sobre"/>';
+
+    // Eje vertical (referencia 1.0)
+    svg += '  <line x1="110" y1="20" x2="110" y2="200" class="gauge-axis"/>';
+
+    // Aguja
+    svg += '  <line x1="110" y1="110" x2="' + px + '" y2="' + py + '" class="gauge-needle"/>';
+    svg += '  <circle cx="110" cy="110" r="6" class="gauge-center"/>';
+
+    // Etiquetas
+    svg += '  <text x="50" y="35" class="gauge-label">BAJO</text>';
+    svg += '  <text x="140" y="185" class="gauge-label">SOBRE</text>';
+    svg += '  <text x="110" y="225" class="gauge-value" text-anchor="middle">IPR ' + safeIPR.toFixed(2) + '</text>';
+
+    svg += '</svg>';
+
+    return svg;
+  }
+
+  /**
    * render(props)
-   * Genera HTML para el resumen de análisis.
+   * Genera HTML para el resumen de análisis CON gauge.
    * IMPORTANTE: Solo presenta datos. NO calcula nada.
    *
    * @param {Object} props — {
    *   veredicto: String,          // 'BAJO' | 'RANGO' | 'SOBRE' (calculado por motor)
+   *   ipr: Number,                // índice precio relativo (0-2.0)
    *   iprInt: Object,             // { categoria, etiqueta } (calculado por motor)
    *   iaoInt: Object,             // { categoria, etiqueta } (calculado por motor)
    *   tuPM2: Number,              // precio/m² del usuario
@@ -39,6 +97,7 @@ var AnalysisSummary = (function() {
     }
 
     var veredicto = props.veredicto || 'NO DISPONIBLE';
+    var ipr = props.ipr || 1.0;
     var iprInt = props.iprInt || {};
     var iaoInt = props.iaoInt || {};
     var tuPM2 = props.tuPM2 || 0;
@@ -70,13 +129,23 @@ var AnalysisSummary = (function() {
     var html = '';
     html += '<div class="analysis-summary">';
 
+    // Veredicto + Gauge en fila
+    html += '  <div class="as-top-row">';
+
     // Veredicto principal
-    html += '  <div class="as-veredicto" style="border-left-color: ' + vrdColor + '">';
-    html += '    <div class="as-vrd-label">Veredicto</div>';
-    html += '    <div class="as-vrd-value" style="color: ' + vrdColor + '">' + veredicto + '</div>';
+    html += '    <div class="as-veredicto" style="border-left-color: ' + vrdColor + '">';
+    html += '      <div class="as-vrd-label">Veredicto</div>';
+    html += '      <div class="as-vrd-value" style="color: ' + vrdColor + '">' + veredicto + '</div>';
     if (iprInt.etiqueta) {
-      html += '    <div class="as-vrd-subtitle">' + iprInt.etiqueta + '</div>';
+      html += '      <div class="as-vrd-subtitle">' + iprInt.etiqueta + '</div>';
     }
+    html += '    </div>';
+
+    // Gauge SVG
+    html += '    <div class="as-gauge-container">';
+    html += generateGaugeSVG(ipr);
+    html += '    </div>';
+
     html += '  </div>';
 
     // Métricas grid
