@@ -156,12 +156,22 @@ Cualquier cambio se nota inmediatamente.
 - Porcentaje de IPR (-11%, +5%)
 - Etiqueta de confianza (BAJA/MEDIA/ALTA)
 
-**Paso 1.6: Actualizar `analizador.html` para usar librerías**
-- Import `lib/analyzer.js`
-- Import `lib/constants.js`
-- Import `lib/formatter.js`
-- El HTML SOLO orquesta: recolecta datos → llama analyzer → muestra resultado
-- < 300 líneas
+**Paso 1.6: Integración con Auth + Auditoría de Principios (NUEVO)**
+
+**Auth integrado (2026-06-11):**
+- ✅ /login/ centralizado
+- ✅ /analyzer/ redirige si no hay sesión
+- ✅ Credenciales NO en URL (POST form)
+- ✅ Campos limpios post-error
+
+**Auditoría de Principios (bloqueantes):**
+- [ ] Medir Lighthouse (FCP < 1.5s, TTI < 3s, score > 80)
+- [ ] Documentar "extension points" (cómo agregar feature sin refactorizar)
+- [ ] Validar que test-cases pasen CON la nueva auth
+
+**Auditoría de Principios (no-bloqueantes, PHASE 2):**
+- [ ] Fallback caché local si Supabase down
+- [ ] Optimizar sesión caching (no revalidar en cada load)
 
 **Paso 1.7: Verificar con test-cases**
 ```bash
@@ -173,6 +183,7 @@ node test-runner.js
 **Paso 1.8: Prueba manual en navegador**
 - Para cada test-case: ingresa datos, verifica que resultado sea igual a before
 - Compara screenshots con originales
+- Verifica que auth redirige correctamente
 - Si coinciden: ✅ OK
 
 **Commit:**
@@ -200,9 +211,9 @@ VERIFICACIÓN:
 
 ---
 
-### FASE 2: Datos de configuración (1-2 semanas, 4-6 horas)
+### FASE 2: Datos de configuración + Resiliencia (1-2 semanas, 6-8 horas)
 
-**Objetivo:** Zonas, colonias, proyectos → JSON, fuera del HTML.
+**Objetivo:** Zonas, colonias, proyectos → JSON. Agregar fallbacks ante fallos.
 
 **Qué hacer:**
 
@@ -220,16 +231,27 @@ VERIFICACIÓN:
 - Llenar dropdowns dinámicamente (sin hardcoding)
 - Cuando selecciona zona → llenar colonias de esa zona
 
-**Paso 2.3: Verificar con test-cases**
+**Paso 2.3: Auditoría no-bloqueante: Resiliencia**
+- [ ] Cachear listings en localStorage al primer load exitoso
+- [ ] Si fetch falla → usar datos de caché (modo degradado)
+- [ ] Mostrar banner "Modo offline — datos cacheados"
+- [ ] Optimizar sesión caching: no revalidar en cada load, solo si token expira
+
+**Paso 2.4: Verificar con test-cases**
 ```bash
 node test-runner.js
 # Todos deben seguir pasando
 ```
 
-**Paso 2.4: Prueba manual**
+**Paso 2.5: Prueba manual**
 - Selecciona zona → se llenan colonias correctas ✅
 - Cambias de zona → cambian colonias ✅
 - Análisis funciona igual ✅
+- (BONUS) Desactiva WiFi → analizador funciona con caché ✅
+
+**Paso 2.6: Auditoría: Inventario de reutilizable**
+- [ ] Crear `docs/REUTILIZABLE.md` (qué módulos pueden usar cada librería)
+- [ ] Documentar sem-versioning (v1.0 compatible con ...)
 
 **Commit:**
 ```
@@ -251,20 +273,43 @@ VERIFICACIÓN:
 
 ---
 
-### FASE 3: Componentes visuales (3-4 semanas, 10-12 horas)
+### FASE 3: Componentes visuales + Auditoría (3-4 semanas, 12-14 horas)
 
 **Objetivo:** HTML modular, reutilizable, sin caos.
 
 **NOTA:** Solo después de FASE 1 y 2. Espera a que esté claro cómo importar.
 
+**Estado actual:** 3/6 componentes completos (ConfidenceIndicator, PriceCard, AnalysisSummary)
+
 **Qué hacer:**
-- [ ] Crear `components/AnalysisSummary.html` (gauge + veredicto)
-- [ ] Crear `components/PriceCard.html` (precio usuario, m², IPR)
-- [ ] Crear `components/ConfidenceIndicator.html` (score visual)
+
+**Paso 3.1: Terminar componentes faltantes**
 - [ ] Crear `components/ComparableTable.html` (tabla comparables)
 - [ ] Crear `components/MarketRangeChart.html` (gráfico p25/med/p75)
 - [ ] Crear `components/MapPanel.html` (Leaflet interactivo)
-- [ ] Actualizar `analizador.html` para usar componentes
+- [ ] Actualizar `analizador.html` para usar todos los componentes
+
+**Paso 3.2: Auditoría de Extensibilidad**
+- [ ] Verificar: ¿Podemos agregar nuevo componente sin romper existentes?
+- [ ] Verificar: ¿Puedo extender ConfidenceIndicator sin editar el módulo?
+- [ ] Documentar patrón de componentes (props → render)
+
+**Paso 3.3: Auditoría de Performance**
+- [ ] Re-medir Lighthouse (debe mantener score > 80)
+- [ ] Verificar bundle size con 6 componentes (< 100KB gzip)
+- [ ] Lazy load componentes grandes (MapPanel) si necesario
+
+**Paso 3.4: Verificar con test-cases**
+```bash
+node test-runner.js
+# Todos deben seguir pasando
+```
+
+**Paso 3.5: Prueba manual**
+- Todos los componentes rendean correctamente ✅
+- Interacciones funcionan (hover, click) ✅
+- Responsive en móvil ✅
+- Análisis funciona igual que antes ✅
 
 **Commit:**
 ```
@@ -288,16 +333,49 @@ VERIFICACIÓN:
 
 ---
 
-## TIMELINE
+### FASE 4: Seguridad + Auditoría final (1-2 semanas, 4-6 horas) — VPS only
 
-| Semana | FASE | Horas | Resultado |
-|---|---|---|---|
-| 1 | 0: Congelar | 2-3 | Test-cases + comportamiento documentado |
-| 2-3 | 1A: Comparable.js | 4-6 | Lógica de selección extraída |
-| 3-4 | 1B: Analyzer.js | 4-6 | Coordinador + validator + formatter |
-| 5 | 2: Datos JSON | 4-6 | Zonas/colonias/proyectos en JSON |
-| 6-8 | 3: Componentes | 10-12 | HTML modular |
-| 9 | Buffer | — | Fixes, optimizaciones, validación final |
+**Objetivo:** Preparar para VPS. Auditoría final de principios.
+
+**Nota:** GitHub Pages no permite custom headers. Hacer cuando migres a VPS (8-12 meses).
+
+**Qué hacer:**
+
+**Paso 4.1: Seguridad (VPS)**
+- [ ] Agregar CSP headers (bloquear XSS)
+- [ ] Cambiar localStorage → httpOnly cookies
+- [ ] Rate limiting en /login/ (Supabase)
+- [ ] Auditoría de CORS
+
+**Paso 4.2: Performance (Final)**
+- [ ] Medir Lighthouse final (score > 80)
+- [ ] Verificar bundle gzip < 100KB
+- [ ] Tests de carga (load testing)
+
+**Paso 4.3: Documentación final**
+- [ ] Actualizar REUTILIZABLE.md
+- [ ] Crear SECURITY.md (qué está protegido, cómo)
+- [ ] Crear EXTENSION_GUIDE.md (cómo agregar features)
+
+**Paso 4.4: Preparar para producción VPS**
+- [ ] Environment variables (.env)
+- [ ] Docker setup (opcional pero recomendado)
+- [ ] CI/CD pipeline (GitHub Actions)
+
+---
+
+## TIMELINE ACTUALIZADO
+
+| Semana | FASE | Horas | Resultado | Status |
+|---|---|---|---|---|
+| 1 | 0: Congelar | 2-3 | Test-cases + comportamiento | ✅ |
+| 2-3 | 1A: Comparable.js | 4-6 | Lógica de selección | ✅ |
+| 3-4 | 1B: Analyzer.js + Auth | 6-8 | Coordinador + auth centralizado | ✅ |
+| 5 | 1.6: Auditoría (bloqueante) | 3-4 | Lighthouse + extension points | ⏳ |
+| 6 | 2: Datos JSON + Resiliencia | 6-8 | JSON + fallback caché | 🔜 |
+| 7-9 | 3: Componentes + Auditoría | 12-14 | 6 componentes + extensibilidad | 🔜 |
+| 10 | 4: Seguridad VPS | 4-6 | CSP + rate limit + httpOnly | 🔜 (VPS) |
+| 11 | Buffer | — | Fixes, optimizaciones, docs | 🔜 |
 
 ---
 
@@ -307,18 +385,35 @@ VERIFICACIÓN:
 ✅ **Zero dinero gastado**  
 ✅ **Cero cambios visuales** (usuario no nota diferencia)  
 ✅ **100% funcional** (igual que antes)  
-✅ **Documentado**  
-✅ **Testeado**  
-✅ **Listo para escalar gradualmente**  
+✅ **Documentado** (extension guides, reutilización)  
+✅ **Testeado** (test-cases + Lighthouse)  
+✅ **Seguro** (defensa en profundidad)  
+✅ **Resiliente** (fallbacks, caché)  
+✅ **Escalable** (sin rediseño hasta 10k usuarios)  
+✅ **Listo para VPS** (8-12 meses)  
 
 ---
 
-## PRÓXIMOS PASOS DESPUÉS (SI QUIERES)
+## AUDITORÍA DE PRINCIPIOS (Integrada)
 
-- **FASE 4:** Tests automáticos (Vitest)
-- **FASE 5:** Documentación técnica completa
-- **FASE 6:** Dashboard simple (estadísticas)
-- **FUTURE:** Migración a Next.js/React (si necesitas)
+| Principio | FASE 1.6 | FASE 2 | FASE 3 | FASE 4 |
+|-----------|----------|--------|--------|--------|
+| 1. Escalabilidad | Lighthouse ✓ | JSON ✓ | Componentes ✓ | Load test |
+| 2. Disponibilidad | — | Caché fallback ✓ | — | — |
+| 3. Performance | Medición ✓ | Optimizar | Re-medir ✓ | Final ✓ |
+| 4. Seguridad | Form POST ✓ | — | — | CSP + httpOnly ✓ |
+| 5. Desacoplamiento | ✓ | ✓ | ✓ | ✓ |
+| 6. Extensibilidad | Docs ✓ | Inventario | Patrón ✓ | Guides ✓ |
+| 7. Reutilización | Verificar | Inventario ✓ | — | Docs ✓ |
+
+---
+
+## PRÓXIMOS PASOS DESPUÉS (OPCIONAL)
+
+- **FASE 5:** Dashboard (React/Vue) + integración analizador
+- **FASE 6:** Tests automáticos (Vitest)
+- **FASE 7:** Reporting + exportación (PDF, Excel)
+- **FUTURE:** Migración a Next.js (si necesitas SSR/API)
 
 ---
 
