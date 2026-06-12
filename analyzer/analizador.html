@@ -1388,7 +1388,7 @@
     // PHASE 3-A: Mostrar factores de confianza
     var confidenceFactors = [];
     confidenceFactors.push(data.n + ' comparable' + (data.n !== 1 ? 's' : ''));
-    confidenceFactors.push('últimos ' + DIAS_COMPARABLES + ' días');
+    confidenceFactors.push('ultimos 100 dias');
 
     var dispersión = data.max && data.min ? Math.round(data.max - data.min) : null;
     if (dispersión) {
@@ -1396,7 +1396,10 @@
       confidenceFactors.push('dispersión ' + dispersiónnivel);
     }
 
-    document.getElementById('iaoSub').textContent = confidenceFactors.join(' · ');
+    var iaoSubEl = document.getElementById('iaoSub');
+    if (iaoSubEl) {
+      iaoSubEl.textContent = confidenceFactors.join(' · ');
+    }
 
     var resumen = document.getElementById('resumenRapido');
     resumen.style.display = 'block';
