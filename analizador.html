@@ -1408,7 +1408,7 @@
       document.getElementById('vrdDescripcion').textContent =
         'Se detectaron ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + ' activa' + (n>1?'s':'') + ' en ' + zona + ' en los ultimos ' + DIAS_COMPARABLES + ' dias. El analisis es orientativo y no debe usarse como referencia definitiva.';
     } else {
-      document.getElementById('vrdTitulo').textContent = iprInt.label;
+      document.getElementById('vrdTitulo').textContent = iprInt.etiqueta;
       var absDesv = Math.abs(Math.round(desv));
       var dirV = desv > 0 ? 'por encima' : 'por debajo';
       var descV;
@@ -1910,7 +1910,7 @@
       pdf.setFontSize(6); pdf.setTextColor(...nivelClr); pdf.setFont('helvetica','bold');
       pdf.text('NIVEL: '+nivelStr,W-M-5,y+7,{align:'right'});
       pdf.setFontSize(20); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
-      pdf.text(d.iprInt.label,M+8,y+20);
+      pdf.text(d.iprInt.etiqueta,M+8,y+20);
       pdf.setFontSize(26); pdf.setTextColor(...iprColor); pdf.setFont('helvetica','bold');
       var pdfDesvTxt = Math.round(d.desv)===0 ? '0%' : (d.signo+Math.round(d.desv)+'%');
       pdf.text((d.modoLimitado?'~':'')+pdfDesvTxt,W-M-5,y+22,{align:'right'});
