@@ -100,6 +100,7 @@ var AnalyzerConstants = (function() {
     if (!ipr) {
       return {
         categoria: 'ref',
+        cat: 'ref',
         clase: 'vrd-ref',
         etiqueta: 'Referencia limitada',
         color: [100, 116, 139]  // slate
@@ -109,6 +110,7 @@ var AnalyzerConstants = (function() {
     if (ipr < IPR_THRESHOLDS.BAJO) {
       return {
         categoria: 'bajo',
+        cat: 'bajo',
         clase: 'vrd-bajo',
         etiqueta: 'Por debajo del mercado observable',
         color: [16, 185, 129]  // green
@@ -118,6 +120,7 @@ var AnalyzerConstants = (function() {
     if (ipr <= IPR_THRESHOLDS.ALTO) {
       return {
         categoria: 'rango',
+        cat: 'rango',
         clase: 'vrd-rango',
         etiqueta: 'Dentro del rango observable',
         color: [226, 176, 92]  // amber
@@ -126,6 +129,7 @@ var AnalyzerConstants = (function() {
 
     return {
       categoria: 'sobre',
+      cat: 'sobre',
       clase: 'vrd-sobre',
       etiqueta: 'Por encima del mercado observable',
       color: [239, 68, 68]  // red

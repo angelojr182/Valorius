@@ -1408,13 +1408,14 @@
   }
 
   function renderPriceCard(data) {
-    var gaugeColor = data.iprInt.cat==='bajo' ? '#10b981' : data.iprInt.cat==='sobre' ? '#ef4444' : '#fbbf24';
+    var iprCategoria = (data.iprInt && (data.iprInt.cat || data.iprInt.categoria)) || 'rango';
+    var gaugeColor = iprCategoria==='bajo' ? '#10b981' : iprCategoria==='sobre' ? '#ef4444' : '#fbbf24';
     var absDesvR = Math.round(Math.abs(data.desv));
     var esNeutral = absDesvR === 0;
     var signoComp = esNeutral ? '' : (data.desv > 0 ? '+' : '-');
     var gaugeLabelTx = esNeutral ? 'en el precio de mercado'
                      : data.desv > 0  ? 'sobre el precio de mercado'
-                     : 'bajo el precio de mercado';
+                     : 'debajo del precio de mercado';
     document.getElementById('lblGaugeVal').textContent = esNeutral ? (data.modoLimitado ? '~0%' : '0%') : (data.modoLimitado ? '~' : '') + signoComp + absDesvR + '%';
     document.getElementById('lblGaugeVal').style.color = gaugeColor;
     document.getElementById('lblGaugeLabel').textContent = gaugeLabelTx;
@@ -1424,7 +1425,7 @@
       document.getElementById('gaugeFill').style.strokeDashoffset = 200;
       document.getElementById('gaugeFill').style.stroke = '#334155';
     } else {
-      var gradId = data.iprInt.cat==='bajo' ? 'gradBajo' : data.iprInt.cat==='sobre' ? 'gradSobre' : 'gradRango';
+      var gradId = iprCategoria==='bajo' ? 'gradBajo' : iprCategoria==='sobre' ? 'gradSobre' : 'gradRango';
       document.getElementById('gaugeFill').style.stroke = 'url(#' + gradId + ')';
       var arcPct = Math.min(Math.max(Math.abs(data.desv)/50, 0.05), 0.98);
       document.getElementById('gaugeFill').style.strokeDashoffset = 283 - (213*arcPct);
@@ -1455,7 +1456,7 @@
     document.getElementById('rlRango').textContent = '$' + uBajo.toLocaleString() + ' – $' + uSobre.toLocaleString() + '/m²';
     document.getElementById('rlSobre').textContent = 'mas de $' + uSobre.toLocaleString() + '/m²';
     ['rlRowBajo','rlRowRango','rlRowSobre'].forEach(function(id){ document.getElementById(id).classList.remove('activa'); });
-    var rowAct = data.iprInt.cat==='bajo' ? 'rlRowBajo' : data.iprInt.cat==='sobre' ? 'rlRowSobre' : 'rlRowRango';
+    var rowAct = iprCategoria==='bajo' ? 'rlRowBajo' : iprCategoria==='sobre' ? 'rlRowSobre' : 'rlRowRango';
     if (!data.modoLimitado) document.getElementById(rowAct).classList.add('activa');
     var tt = document.getElementById('specTooltip');
     tt.textContent = '$' + data.tuPM2.toLocaleString() + '/m2';
@@ -1487,6 +1488,7 @@
     // IPR + IAO — delegar a AnalyzerConstants
     var ipr    = tuPM2 / mediana;
     var iprInt = modoLimitado ? AnalyzerConstants.interpretarIPR(null) : AnalyzerConstants.interpretarIPR(ipr);
+    var iprCategoria = (iprInt && (iprInt.cat || iprInt.categoria)) || 'rango';
     var iaoInt = AnalyzerConstants.interpretarIAO(n);
 
     lastData = {zona, colonia, zonaLabel, zone_id: zoneId, colonia_id: coloniaId, tipo, area, precio,
@@ -1507,9 +1509,9 @@
     } else {
       if (absDesv === 0) {
         descripcion = 'Tu precio coincide con el precio de mercado en ' + zonaLabel + '.';
-      } else if (iprInt.cat === 'rango') {
+      } else if (iprCategoria === 'rango') {
         descripcion = 'Tu precio esta ' + absDesv + '% ' + dirV + ' del precio de mercado en ' + zonaLabel + ', todavia dentro del rango habitual del mercado.';
-      } else if (iprInt.cat === 'bajo') {
+      } else if (iprCategoria === 'bajo') {
         descripcion = 'Tu precio esta ' + absDesv + '% por debajo del precio de mercado en ' + zonaLabel + '.';
       } else {
         descripcion = 'Tu precio esta ' + absDesv + '% por encima del precio de mercado en ' + zonaLabel + '.';
@@ -1521,9 +1523,9 @@
       resumen = 'Pocas propiedades similares registradas en la zona. Los valores son orientativos: complementa con una inspeccion directa del mercado antes de decidir.';
     } else if (Math.round(desv) === 0) {
       resumen = 'Precio en linea con el mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta para decidir.';
-    } else if (iprInt.cat === 'bajo') {
+    } else if (iprCategoria === 'bajo') {
       resumen = 'Precio por debajo del mercado. Puede ser una oportunidad. Recomendacion: inspecciona el inmueble y verifica que no haya un problema detras antes de avanzar.';
-    } else if (iprInt.cat === 'sobre') {
+    } else if (iprCategoria === 'sobre') {
       resumen = 'Precio por encima del mercado. Recomendacion: negocia con datos; propiedades similares se ofrecen alrededor de $' + Math.round(mediana).toLocaleString() + '/m2.';
     } else {
       resumen = 'Precio razonable. No muestra una ganga clara, pero esta levemente ' + (desv>0?'por encima':'por debajo') + ' del mercado. Recomendacion: compara acabados, parqueos, mantenimiento y ubicacion exacta antes de ofertar.';
@@ -1535,9 +1537,9 @@
       explicacion = 'Referencia basada en ' + n + ' propiedad' + (n>1?'es':'') + ' similar' + (n>1?'es':'') + '. Analisis orientativo.';
     } else if (esNeutral) {
       explicacion = 'Esta propiedad esta justo en el precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
-    } else if (iprInt.cat === 'rango') {
+    } else if (iprCategoria === 'rango') {
       explicacion = 'Esta propiedad esta ligeramente ' + dirV + ' del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '. La diferencia es pequena, por lo que se considera dentro del rango normal.';
-    } else if (iprInt.cat === 'bajo') {
+    } else if (iprCategoria === 'bajo') {
       explicacion = 'Esta propiedad esta ' + absDesvR + '% por debajo del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
     } else {
       explicacion = 'Esta propiedad esta ' + absDesvR + '% por encima del precio de ' + tipoPlural + ' similares en ' + zonaLabel + '.';
@@ -1546,9 +1548,9 @@
     var advertencia;
     if (modoLimitado) {
       advertencia = 'La zona cuenta con pocas propiedades similares, asi que la referencia es orientativa. Conviene complementar con informacion directa del mercado antes de decidir.';
-    } else if (iprInt.cat === 'bajo') {
+    } else if (iprCategoria === 'bajo') {
       advertencia = 'El precio esta por debajo del mercado. Puede ser una oportunidad, pero revisa si hay una razon detras (estado, ubicacion exacta o urgencia del vendedor) antes de avanzar. Son precios de oferta, no de cierre.';
-    } else if (iprInt.cat === 'sobre') {
+    } else if (iprCategoria === 'sobre') {
       advertencia = 'El precio esta por encima del mercado. Justificalo con ventajas reales (mejores acabados, vista, amenidades, mas parqueos) o negocia hacia abajo. Son precios de oferta, no de cierre.';
     } else {
       advertencia = 'El precio esta dentro del rango esperado. Antes de decidir, revisa si la propiedad tiene ventajas reales: mejor torre, mas parqueos, mejores acabados, vista, amenidades o ubicacion interna. Si no tiene ventajas claras, negocia.';
@@ -1579,7 +1581,7 @@
 
     registrarEvento('analisis_completado', {
       zona: zona, tipo_inmueble: tipo,
-      ipr_categoria: iprInt.cat, n_comparables: n,
+      ipr_categoria: iprCategoria, n_comparables: n,
       evento_metadata: {precio: precio, area: area, desv: Math.round(desv), modoLimitado: modoLimitado, nivel: nivel}
     });
 
