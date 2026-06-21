@@ -1596,6 +1596,7 @@
   const downloadButton = document.getElementById('btnDownloadReport');
   const pages = document.querySelectorAll('.page');
   let currentReport = null;
+  let exportViewPrepared = false;
 
   if (reportMode) toolbar.classList.add('visible');
 
@@ -2114,6 +2115,26 @@
     };
   }
 
+  function destroyChartsForExport() {
+    ['comparablesChart', 'priceDonut', 'areaDonut', 'activityChart', 'evolutionChart', 'radarChart'].forEach(function (chartId) {
+      var chartInstance = Chart.getChart(chartId);
+      if (chartInstance) {
+        try {
+          chartInstance.destroy();
+        } catch (error) {
+          console.warn('No fue posible destruir chart para exportación:', chartId, error);
+        }
+      }
+    });
+  }
+
+  function prepareStaticExportView() {
+    if (exportViewPrepared) return;
+    freezeLiveCanvasesForExport(document);
+    destroyChartsForExport();
+    exportViewPrepared = true;
+  }
+
   async function downloadReport() {
     if (!currentReport) return;
 
@@ -2123,7 +2144,7 @@
 
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      var restoreCanvases = freezeLiveCanvasesForExport(document);
+      prepareStaticExportView();
       buildStaticMapMarkup(currentReport);
       document.body.classList.add('pdf-export-mode');
       await new Promise(function (resolve) { setTimeout(resolve, 180); });
@@ -2190,7 +2211,6 @@
       status.textContent = 'No fue posible generar el PDF. Revisa la consola.';
       alert(error.message || 'No fue posible generar el PDF.');
     } finally {
-      if (typeof restoreCanvases === 'function') restoreCanvases();
       document.body.classList.remove('pdf-export-mode');
       downloadButton.disabled = false;
       downloadButton.textContent = 'Descargar PDF';
