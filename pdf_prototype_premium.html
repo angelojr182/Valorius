@@ -1939,10 +1939,14 @@
     metrics[3].querySelector('.metric-desc').textContent =
       'Rango entre ' + money(report.marketContext.precioMinimo) + ' y ' + money(report.marketContext.precioMaximo) + ' por m².';
 
+    ['activityChart', 'evolutionChart', 'radarChart'].forEach(function (chartId) {
+      var chartInstance = Chart.getChart(chartId);
+      if (chartInstance) chartInstance.destroy();
+    });
     const historicalGrid = page.querySelector('div[style*="grid-template-columns:1fr 1fr"]');
-    if (historicalGrid) historicalGrid.style.display = 'none';
+    if (historicalGrid) historicalGrid.remove();
     const radar = document.getElementById('radarChart');
-    if (radar && radar.closest('.chart-box')) radar.closest('.chart-box').style.display = 'none';
+    if (radar && radar.closest('.chart-box')) radar.closest('.chart-box').remove();
 
     const mapTitle = page.querySelector('#mapContainer').closest('.chart-box').querySelector('.chart-lbl');
     mapTitle.textContent = 'Mapa Competitivo — ' + report.property.zonaLabel;
