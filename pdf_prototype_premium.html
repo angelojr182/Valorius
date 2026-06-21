@@ -2031,6 +2031,39 @@
     if (receiver) receiver.postMessage({ type: 'VALORIUS_REPORT_APPLIED' }, '*');
   }
 
+  function sanitizeClonedCanvases(clonedDocument) {
+    var canvases = Array.from(clonedDocument.querySelectorAll('canvas'));
+
+    canvases.forEach(function (canvas) {
+      var width = canvas.width || canvas.offsetWidth || canvas.clientWidth || 0;
+      var height = canvas.height || canvas.offsetHeight || canvas.clientHeight || 0;
+      var chartBox = canvas.closest('.chart-box');
+
+      if (width < 2 || height < 2) {
+        if (chartBox) {
+          chartBox.remove();
+        } else {
+          canvas.remove();
+        }
+        return;
+      }
+
+      try {
+        var image = clonedDocument.createElement('img');
+        image.src = canvas.toDataURL('image/png');
+        image.alt = '';
+        image.style.display = 'block';
+        image.style.width = '100%';
+        image.style.height = '100%';
+        image.style.objectFit = 'contain';
+        image.style.pointerEvents = 'none';
+        canvas.replaceWith(image);
+      } catch (error) {
+        console.warn('No fue posible congelar un canvas para exportación:', error);
+      }
+    });
+  }
+
   async function downloadReport() {
     if (!currentReport) return;
 
@@ -2088,6 +2121,7 @@
             if (clonedStaticMap) {
               clonedStaticMap.style.display = 'block';
             }
+            sanitizeClonedCanvases(clonedDocument);
           }
         });
 
