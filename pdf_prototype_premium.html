@@ -2064,6 +2064,52 @@
     });
   }
 
+  function freezeLiveCanvasesForExport(rootDocument) {
+    var replacements = [];
+    var canvases = Array.from((rootDocument || document).querySelectorAll('canvas'));
+
+    canvases.forEach(function (canvas) {
+      var parent = canvas.parentNode;
+      if (!parent) return;
+
+      var placeholder = (rootDocument || document).createComment('valorius-canvas-placeholder');
+      var width = canvas.width || canvas.offsetWidth || canvas.clientWidth || 0;
+      var height = canvas.height || canvas.offsetHeight || canvas.clientHeight || 0;
+
+      if (width < 2 || height < 2) {
+        parent.replaceChild(placeholder, canvas);
+        replacements.push({ placeholder: placeholder, original: canvas });
+        return;
+      }
+
+      try {
+        var image = (rootDocument || document).createElement('img');
+        image.src = canvas.toDataURL('image/png');
+        image.alt = '';
+        image.width = Math.max(1, canvas.clientWidth || canvas.width || 1);
+        image.height = Math.max(1, canvas.clientHeight || canvas.height || 1);
+        image.style.display = 'block';
+        image.style.width = '100%';
+        image.style.height = '100%';
+        image.style.objectFit = 'contain';
+        image.style.pointerEvents = 'none';
+        parent.replaceChild(image, canvas);
+        replacements.push({ placeholder: image, original: canvas });
+      } catch (error) {
+        parent.replaceChild(placeholder, canvas);
+        replacements.push({ placeholder: placeholder, original: canvas });
+        console.warn('No fue posible congelar un canvas vivo para exportación:', error);
+      }
+    });
+
+    return function restoreCanvases() {
+      replacements.reverse().forEach(function (entry) {
+        if (!entry.placeholder.parentNode) return;
+        entry.placeholder.parentNode.replaceChild(entry.original, entry.placeholder);
+      });
+    };
+  }
+
   async function downloadReport() {
     if (!currentReport) return;
 
@@ -2073,6 +2119,7 @@
 
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      var restoreCanvases = freezeLiveCanvasesForExport(document);
       buildStaticMapMarkup(currentReport);
       document.body.classList.add('pdf-export-mode');
       await new Promise(function (resolve) { setTimeout(resolve, 180); });
@@ -2139,6 +2186,7 @@
       status.textContent = 'No fue posible generar el PDF. Revisa la consola.';
       alert(error.message || 'No fue posible generar el PDF.');
     } finally {
+      if (typeof restoreCanvases === 'function') restoreCanvases();
       document.body.classList.remove('pdf-export-mode');
       downloadButton.disabled = false;
       downloadButton.textContent = 'Descargar PDF';
