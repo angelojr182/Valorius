@@ -745,6 +745,7 @@
   <script>
   // ─── CONFIGURACION ────────────────────────────────────────
   const ANALIZADOR_VERSION = 'FASE 2-D (2026-05-29 — mapa contexto de mercado)';
+  const REPORT_TEMPLATE_VERSION = '20260622.2205';
 
   // ─── COORDENADAS POR ZONA — poblado desde core.dim_zone en init ──
   // Clave: zone_id (UUID). Cargado en window.onload desde dim_zone?select=zone_id,lat,lng
@@ -1974,7 +1975,8 @@
         analyzerVersion: ANALIZADOR_VERSION
       });
 
-      var preview = window.open('../pdf_prototype_premium.html?mode=report', '_blank');
+      var previewUrl = '../pdf_prototype_premium.html?mode=report&v=' + REPORT_TEMPLATE_VERSION;
+      var preview = window.open(previewUrl, '_blank');
       if (!preview) throw new Error('El navegador bloqueó la ventana de vista previa.');
 
       var delivered = false;
