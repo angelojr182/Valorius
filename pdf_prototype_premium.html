@@ -10,7 +10,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="analyzer/lib/premium-pdf-renderer.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -2142,17 +2141,6 @@
       '_' + currentReport.property.tipo + '.pdf';
   }
 
-  async function downloadVectorFallback() {
-    if (typeof PremiumPDFRenderer !== 'function') {
-      throw new Error('No está disponible el generador compatible de PDF.');
-    }
-
-    status.textContent = 'Generando una versión compatible del reporte…';
-    const renderer = new PremiumPDFRenderer(currentReport);
-    const pdf = await renderer.render();
-    pdf.save(getReportFilename());
-  }
-
   async function downloadReport() {
     if (!currentReport) return;
 
@@ -2193,6 +2181,11 @@
           imageTimeout: 10000,
           removeContainer: true,
           foreignObjectRendering: false,
+          // Los gráficos visibles ya se convierten en imágenes antes de exportar.
+          // Esto evita que un canvas interno sin dimensiones bloquee el PDF en Edge.
+          ignoreElements: function (element) {
+            return element && element.tagName === 'CANVAS';
+          },
           scrollX: 0,
           scrollY: -window.scrollY,
           width: pageWidth,
@@ -2222,15 +2215,9 @@
       pdf.save(getReportFilename());
       status.textContent = 'PDF descargado correctamente.';
     } catch (error) {
-      console.warn('La captura premium no fue compatible con este navegador. Se usa el generador vectorial.', error);
-      try {
-        await downloadVectorFallback();
-        status.textContent = 'PDF descargado correctamente.';
-      } catch (fallbackError) {
-        console.error('No fue posible descargar el PDF:', fallbackError);
-        status.textContent = 'No fue posible generar el PDF. Revisa la consola.';
-        alert(fallbackError.message || 'No fue posible generar el PDF.');
-      }
+      console.error('No fue posible descargar el PDF:', error);
+      status.textContent = 'No fue posible generar el PDF. Revisa la consola.';
+      alert(error.message || 'No fue posible generar el PDF.');
     } finally {
       document.body.classList.remove('pdf-export-mode');
       downloadButton.disabled = false;
