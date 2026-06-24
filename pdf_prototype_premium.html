@@ -2141,18 +2141,47 @@
       '_' + currentReport.property.tipo + '.pdf';
   }
 
+  function protectZeroSizedCanvasPatterns() {
+    if (!window.CanvasRenderingContext2D) return function() {};
+
+    var prototype = window.CanvasRenderingContext2D.prototype;
+    var originalCreatePattern = prototype.createPattern;
+    if (typeof originalCreatePattern !== 'function') return function() {};
+
+    prototype.createPattern = function(image, repetition) {
+      var isCanvas = image && typeof image.getContext === 'function' &&
+        typeof image.width !== 'undefined' && typeof image.height !== 'undefined';
+
+      if (isCanvas && (Number(image.width) < 1 || Number(image.height) < 1)) {
+        var safeCanvas = (this.canvas && this.canvas.ownerDocument ? this.canvas.ownerDocument : document)
+          .createElement('canvas');
+        safeCanvas.width = 1;
+        safeCanvas.height = 1;
+        return originalCreatePattern.call(this, safeCanvas, repetition);
+      }
+
+      return originalCreatePattern.call(this, image, repetition);
+    };
+
+    return function() {
+      prototype.createPattern = originalCreatePattern;
+    };
+  }
+
   async function downloadReport() {
     if (!currentReport) return;
 
     downloadButton.disabled = true;
     downloadButton.textContent = 'Generando PDF…';
     status.textContent = 'Preparando las 4 páginas con sus colores y gráficos…';
+    var restoreCanvasPatterns = null;
 
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       prepareStaticExportView();
       buildStaticMapMarkup(currentReport);
       document.body.classList.add('pdf-export-mode');
+      restoreCanvasPatterns = protectZeroSizedCanvasPatterns();
       await new Promise(function (resolve) { setTimeout(resolve, 180); });
 
       const jsPDF = window.jspdf && window.jspdf.jsPDF;
@@ -2219,6 +2248,7 @@
       status.textContent = 'No fue posible generar el PDF. Revisa la consola.';
       alert(error.message || 'No fue posible generar el PDF.');
     } finally {
+      if (restoreCanvasPatterns) restoreCanvasPatterns();
       document.body.classList.remove('pdf-export-mode');
       downloadButton.disabled = false;
       downloadButton.textContent = 'Descargar PDF';
