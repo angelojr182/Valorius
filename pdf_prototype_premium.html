@@ -332,7 +332,7 @@
     }
     #staticMapExport {
       display: none;
-      height: 320px;
+      height: 250px;
       margin: 20px 0;
       border-radius: 10px;
       overflow: hidden;
@@ -347,6 +347,22 @@
       width: 100%;
       height: 100%;
       display: block;
+    }
+    .map-reading { min-height: 42px; }
+    .map-panel .chart-note { margin-bottom: 0; }
+
+    @media (max-width: 860px) {
+      body { padding: 20px 0; }
+      .container { width: 100%; }
+      .page { min-height: auto; padding: 38px 26px 64px; }
+      .report-toolbar { border-radius: 0; }
+      #mapContainer, #staticMapExport { height: 240px; }
+    }
+    @media (max-width: 620px) {
+      .page { padding: 30px 18px 58px; }
+      .map-range-legend { grid-template-columns: repeat(2, 1fr) !important; }
+      .map-panel .chart-note { font-size: 11px; }
+      .report-toolbar { align-items: flex-start; flex-direction: column; }
     }
     .leaflet-container { font-family: 'DM Sans', sans-serif; }
     .leaflet-popup-content-wrapper { border-radius: 8px; }
@@ -692,9 +708,11 @@
     }
     body.pdf-export-mode .page {
       width: 794px;
+      height: 1123px;
       min-height: 1123px;
+      padding: 54px 56px 74px;
       box-sizing: border-box;
-      overflow: visible;
+      overflow: hidden;
       page-break-after: always;
     }
     body.pdf-export-mode .page::after {
@@ -705,6 +723,7 @@
     }
     body.pdf-export-mode #staticMapExport {
       display: block;
+      height: 250px;
     }
     body.pdf-export-mode .chart-fixed {
       overflow: visible;
@@ -1036,17 +1055,17 @@
     </div>
 
     <!-- MAPA COMPETITIVO -->
-    <div class="chart-box lux-dark">
+    <div class="chart-box lux-dark map-panel">
       <div class="chart-head">
         <div class="chart-lbl">Mapa Competitivo — Anillo Periférico</div>
         <span class="chart-tag">Geografía</span>
       </div>
       <div id="mapContainer"></div>
       <div id="staticMapExport" aria-hidden="true"></div>
-      <p class="chart-note">
+      <p class="chart-note map-reading">
         <strong>Lectura del mapa:</strong> Las burbujas muestran zonas competitivas. El tamaño indica disponibilidad de referencias (más grande = más datos). Tu precio se destaca en verde.
       </p>
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-top: 16px;">
+      <div class="map-range-legend" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-top: 16px;">
         <div style="background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03)); border: 1px solid rgba(16,185,129,0.15); border-radius: 6px; padding: 12px 10px; text-align: center;">
           <div style="width: 16px; height: 16px; background: #10b981; border-radius: 50%; margin: 0 auto 8px;"></div>
           <div style="font-size: 10px; font-weight: 700; color: #0c4a6e; text-transform: uppercase; letter-spacing: 0.5px;">Bajo</div>
@@ -1625,7 +1644,7 @@
 
   function buildStaticMapMarkup(report) {
     const exportMap = document.getElementById('staticMapExport');
-    if (!exportMap) return;
+    if (!exportMap) return [];
 
     const points = (report.mapContext || []).filter(function (zone) {
       return Number.isFinite(zone.lat) && Number.isFinite(zone.lng);
@@ -1634,7 +1653,7 @@
       exportMap.innerHTML =
         '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font:600 14px DM Sans,sans-serif;">' +
         'Mapa no disponible para esta zona.</div>';
-      return;
+      return [];
     }
 
     const values = points.map(function (zone) { return Number(zone.precioPerM2) || 0; }).filter(Boolean).sort(function (a, b) { return a - b; });
@@ -1651,9 +1670,10 @@
     const latSpan = Math.max(0.01, maxLat - minLat);
     const lngSpan = Math.max(0.01, maxLng - minLng);
     const width = 760;
-    const height = 320;
-    const padX = 54;
-    const padY = 34;
+    const height = 250;
+    const padX = 48;
+    const padY = 32;
+    const maxPoints = 6;
 
     function priceColor(price, isTarget) {
       if (isTarget) return '#0dd88a';
@@ -1664,61 +1684,87 @@
 
     function project(zone) {
       const x = padX + ((zone.lng - minLng) / lngSpan) * (width - padX * 2);
-      const y = padY + (1 - ((zone.lat - minLat) / latSpan)) * (height - padY * 2);
-      return { x: clamp(x, padX, width - padX), y: clamp(y, padY, height - padY) };
+      const y = padY + (1 - ((zone.lat - minLat) / latSpan)) * (height - padY * 2 - 18);
+      return { x: clamp(x, padX, width - padX), y: clamp(y, padY, height - padY - 18) };
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    const displayPoints = points.map(function (zone) {
+      return Object.assign({}, zone);
+    }).sort(function (left, right) {
+      if (left.isTarget !== right.isTarget) return left.isTarget ? -1 : 1;
+      return (right.numeroComparables || 0) - (left.numeroComparables || 0);
+    }).slice(0, maxPoints);
+    const placed = [];
+
+    function placeWithoutOverlap(coords) {
+      const offsets = [[0, 0], [26, -18], [-26, -18], [26, 18], [-26, 18], [0, -34], [0, 34], [42, 0], [-42, 0]];
+      for (let index = 0; index < offsets.length; index += 1) {
+        const candidate = {
+          x: clamp(coords.x + offsets[index][0], padX, width - padX),
+          y: clamp(coords.y + offsets[index][1], padY, height - padY - 18)
+        };
+        const clear = placed.every(function (existing) {
+          const dx = existing.x - candidate.x;
+          const dy = existing.y - candidate.y;
+          return Math.sqrt(dx * dx + dy * dy) >= 34;
+        });
+        if (clear) {
+          placed.push(candidate);
+          return candidate;
+        }
+      }
+      const fallback = {
+        x: clamp(coords.x + placed.length * 10, padX, width - padX),
+        y: clamp(coords.y + placed.length * 8, padY, height - padY - 18)
+      };
+      placed.push(fallback);
+      return fallback;
     }
 
-    const pointMarkup = points.map(function (zone) {
-      const coords = project(zone);
+    const pointMarkup = displayPoints.map(function (zone, index) {
+      const coords = placeWithoutOverlap(project(zone));
       const color = priceColor(Number(zone.precioPerM2) || 0, zone.isTarget);
-      const radius = zone.isTarget ? 11 : clamp(5 + Math.sqrt(zone.numeroComparables || 1) * 1.8, 6, 14);
-      const labelY = coords.y - radius - 9;
-      const label = escapeHtml(zone.isTarget ? 'Tu propiedad' : zone.zona);
+      const radius = zone.isTarget ? 14 : clamp(8 + Math.sqrt(zone.numeroComparables || 1) * 1.1, 9, 13);
+      const number = index + 1;
       return [
-        zone.isTarget ? '<circle cx="' + coords.x + '" cy="' + coords.y + '" r="' + (radius + 5) + '" fill="rgba(13,216,138,0.14)"></circle>' : '',
-        '<circle cx="' + coords.x + '" cy="' + coords.y + '" r="' + radius + '" fill="' + color + '" stroke="#fffdf9" stroke-width="' + (zone.isTarget ? 3 : 2) + '"></circle>',
-        zone.isTarget ? '<circle cx="' + coords.x + '" cy="' + coords.y + '" r="' + (radius + 1.5) + '" fill="none" stroke="#15313a" stroke-width="2"></circle>' : '',
-        '<text x="' + coords.x + '" y="' + labelY + '" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="' + (zone.isTarget ? 11 : 10) + '" font-weight="' + (zone.isTarget ? 700 : 600) + '" fill="#334155">' + label + '</text>'
+        zone.isTarget ? '<circle cx="' + coords.x + '" cy="' + coords.y + '" r="' + (radius + 6) + '" fill="rgba(13,216,138,0.16)"></circle>' : '',
+        '<circle cx="' + coords.x + '" cy="' + coords.y + '" r="' + radius + '" fill="' + color + '" stroke="#fffdf9" stroke-width="3"></circle>',
+        '<text x="' + coords.x + '" y="' + (coords.y + 4) + '" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10" font-weight="800" fill="#ffffff">' + number + '</text>',
+        zone.isTarget ? '<text x="' + coords.x + '" y="' + (coords.y - radius - 10) + '" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="10" font-weight="800" fill="#0f766e">TÚ</text>' : ''
       ].join('');
     }).join('');
 
     exportMap.innerHTML = [
-      '<svg viewBox="0 0 760 320" role="img" aria-label="Mapa competitivo de mercado">',
+      '<svg viewBox="0 0 760 250" role="img" aria-label="Vista comparativa de zonas del mercado">',
       '<defs>',
       '<linearGradient id="mapGrid" x1="0" y1="0" x2="1" y2="1">',
       '<stop offset="0%" stop-color="#ffffff" stop-opacity="0.92"></stop>',
       '<stop offset="100%" stop-color="#f3efe7" stop-opacity="0.96"></stop>',
       '</linearGradient>',
       '</defs>',
-      '<rect x="0" y="0" width="760" height="320" rx="10" fill="url(#mapGrid)"></rect>',
-      '<path d="M34 245 C160 185, 236 215, 344 168 S555 111, 726 144" fill="none" stroke="rgba(183,138,69,0.18)" stroke-width="18" stroke-linecap="round"></path>',
-      '<path d="M58 72 C145 102, 251 72, 352 116 S561 196, 701 82" fill="none" stroke="rgba(83,107,142,0.10)" stroke-width="12" stroke-linecap="round"></path>',
-      '<path d="M108 278 C214 210, 312 230, 440 256 S615 254, 688 214" fill="none" stroke="rgba(49,95,98,0.10)" stroke-width="8" stroke-linecap="round"></path>',
+      '<rect x="0" y="0" width="760" height="250" rx="10" fill="url(#mapGrid)"></rect>',
+      '<path d="M34 190 C160 145, 236 165, 344 126 S555 82, 726 110" fill="none" stroke="rgba(183,138,69,0.18)" stroke-width="16" stroke-linecap="round"></path>',
+      '<path d="M58 58 C145 82, 251 58, 352 92 S561 156, 701 62" fill="none" stroke="rgba(83,107,142,0.10)" stroke-width="11" stroke-linecap="round"></path>',
+      '<path d="M108 218 C214 164, 312 182, 440 202 S615 202, 688 170" fill="none" stroke="rgba(49,95,98,0.10)" stroke-width="8" stroke-linecap="round"></path>',
       '<g stroke="rgba(71,85,105,0.08)" stroke-width="1">',
-      '<line x1="126" y1="28" x2="126" y2="292"></line>',
-      '<line x1="252" y1="28" x2="252" y2="292"></line>',
-      '<line x1="378" y1="28" x2="378" y2="292"></line>',
-      '<line x1="504" y1="28" x2="504" y2="292"></line>',
-      '<line x1="630" y1="28" x2="630" y2="292"></line>',
-      '<line x1="28" y1="88" x2="732" y2="88"></line>',
-      '<line x1="28" y1="160" x2="732" y2="160"></line>',
-      '<line x1="28" y1="232" x2="732" y2="232"></line>',
+      '<line x1="126" y1="24" x2="126" y2="218"></line>',
+      '<line x1="252" y1="24" x2="252" y2="218"></line>',
+      '<line x1="378" y1="24" x2="378" y2="218"></line>',
+      '<line x1="504" y1="24" x2="504" y2="218"></line>',
+      '<line x1="630" y1="24" x2="630" y2="218"></line>',
+      '<line x1="28" y1="76" x2="732" y2="76"></line>',
+      '<line x1="28" y1="132" x2="732" y2="132"></line>',
+      '<line x1="28" y1="188" x2="732" y2="188"></line>',
       '</g>',
       pointMarkup,
-      '<rect x="526" y="20" width="200" height="64" rx="8" fill="rgba(255,255,255,0.82)" stroke="rgba(183,138,69,0.22)"></rect>',
-      '<text x="544" y="40" font-family="DM Sans, sans-serif" font-size="9" font-weight="700" fill="#80643a" letter-spacing="1.4">LECTURA DEL MAPA</text>',
-      '<text x="544" y="58" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" fill="#334155">Cada punto resume una zona comparable.</text>',
-      '<text x="544" y="74" font-family="DM Sans, sans-serif" font-size="10" fill="#64748b">El color indica nivel de precio y el tamaño la cantidad de referencias.</text>',
+      '<line x1="28" y1="226" x2="732" y2="226" stroke="rgba(183,138,69,0.18)"></line>',
+      '<text x="40" y="243" font-family="DM Sans, sans-serif" font-size="10" font-weight="600" fill="#64748b">Puntos numerados: consulta las zonas bajo el mapa. Posiciones orientativas, no ubicaciones exactas.</text>',
       '</svg>'
     ].join('');
+
+    return displayPoints.map(function (zone, index) {
+      return { number: index + 1, zona: zone.zona || 'Zona sin nombre', isTarget: Boolean(zone.isTarget) };
+    });
   }
 
   function verdictCopy(report) {
@@ -1949,9 +1995,19 @@
     const radar = document.getElementById('radarChart');
     if (radar && radar.closest('.chart-box')) radar.closest('.chart-box').remove();
 
-    const mapTitle = page.querySelector('#mapContainer').closest('.chart-box').querySelector('.chart-lbl');
+    const mapBox = document.getElementById('mapContainer').closest('.chart-box');
+    const mapTitle = mapBox.querySelector('.chart-lbl');
     mapTitle.textContent = 'Mapa Competitivo — ' + report.property.zonaLabel;
-    buildStaticMapMarkup(report);
+    const mapItems = buildStaticMapMarkup(report);
+    const mapReading = mapBox.querySelector('.map-reading');
+    if (mapReading) {
+      const zones = mapItems.map(function (item) {
+        return item.number + '. ' + item.zona + (item.isTarget ? ' (tu zona)' : '');
+      });
+      mapReading.textContent = zones.length
+        ? 'Lectura del mapa: cada punto numerado representa una zona comparable. Zonas mostradas: ' + zones.join(' · ') + '.'
+        : 'Lectura del mapa: no hay coordenadas suficientes para mostrar zonas comparables.';
+    }
 
     if (window.valoriusMap && report.mapContext.length) {
       window.valoriusMap.eachLayer(function (layer) {
@@ -1976,7 +2032,6 @@
       setTimeout(function () { window.valoriusMap.invalidateSize(); }, 100);
     }
 
-    const mapBox = document.getElementById('mapContainer').closest('.chart-box');
     const legend = mapBox.querySelector('div[style*="grid-template-columns"]');
     if (legend && legend.children.length === 4) {
       const ranges = [
