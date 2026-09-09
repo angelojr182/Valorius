@@ -45,6 +45,14 @@
         precio: num(lastData.precio),
         moneda: 'USD'
       },
+      territory: lastData.territory ? {
+        unitId: lastData.territory.unitId || '',
+        nameOfficial: lastData.territory.nameOfficial || '',
+        type: lastData.territory.type || '',
+        municipalityCode: lastData.territory.municipalityCode || '',
+        status: lastData.territory.status || '',
+        source: lastData.territory.source || ''
+      } : null,
       result: {
         veredicto: category,
         etiqueta: lastData.iprInt && lastData.iprInt.etiqueta || '',
