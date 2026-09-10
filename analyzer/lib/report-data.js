@@ -13,11 +13,12 @@
     return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
   }
 
-  // Territorial context is preloaded independently from market analysis.
-  // It is resolved only from property_id -> territorial_unit_id and never
-  // inferred from zone, colonia, name, coordinates, or proximity.
+  // Territorial context is resolved through the canonical adapter only.
+  // No territory is inferred from zone, colonia, name, coordinates, proximity,
+  // or geometry. The adapter resolves property_id -> territorial_unit_id -> unit.
   var TERRITORY_CONTEXT = null;
   var TERRITORY_CONTEXT_READY = false;
+  var TERRITORY_CONTEXT_PROMISE = null;
 
   function getPropertyIdFromUrl() {
     try {
@@ -27,72 +28,85 @@
     }
   }
 
+  function loadTerritorialAdapter() {
+    if (typeof window === 'undefined') return Promise.resolve(null);
+    if (window.TerritorialAdapter) return Promise.resolve(window.TerritorialAdapter);
+
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'lib/territorial-adapter.js';
+      script.async = false;
+      script.onload = function () {
+        if (window.TerritorialAdapter) resolve(window.TerritorialAdapter);
+        else reject(new Error('TerritorialAdapter no fue registrado.'));
+      };
+      script.onerror = function () {
+        reject(new Error('No fue posible cargar TerritorialAdapter.'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  function createTerritorialAdapter(TerritorialAdapter) {
+    var surl = (typeof SECRETS !== 'undefined' && SECRETS.SURL) || '';
+    var skey = (typeof SECRETS !== 'undefined' && SECRETS.SKEY) || '';
+
+    if (!surl || !skey || typeof fetch !== 'function') {
+      return null;
+    }
+
+    var headers = {
+      'apikey': skey,
+      'Authorization': 'Bearer ' + skey,
+      'Accept': 'application/json'
+    };
+
+    return new TerritorialAdapter({
+      fetchProperty: function (propertyId) {
+        return fetch(
+          surl + '/rest/v1/property?property_id=eq.' + encodeURIComponent(propertyId) + '&select=property_id,territorial_unit_id&limit=1',
+          { headers: headers }
+        ).then(function (response) {
+          return response.json().then(function (data) {
+            return { ok: response.ok, data: data };
+          });
+        });
+      },
+      fetchTerritory: function (unitId) {
+        return fetch(
+          surl + '/functions/v1/territory-context?unit_id=' + encodeURIComponent(unitId),
+          { headers: headers }
+        ).then(function (response) {
+          return response.json().then(function (payload) {
+            return {
+              ok: response.ok && payload && payload.ok === true,
+              data: payload && Array.isArray(payload.data) ? payload.data : []
+            };
+          });
+        });
+      }
+    });
+  }
+
   async function preloadTerritoryContext() {
     var propertyId = getPropertyIdFromUrl();
-    if (!propertyId || typeof fetch !== 'function') {
+    if (!propertyId) {
       TERRITORY_CONTEXT_READY = true;
       return null;
     }
 
     try {
-      var surl = (typeof SECRETS !== 'undefined' && SECRETS.SURL) || '';
-      var skey = (typeof SECRETS !== 'undefined' && SECRETS.SKEY) || '';
-      if (!surl || !skey) {
+      var TerritorialAdapter = await loadTerritorialAdapter();
+      var adapter = createTerritorialAdapter(TerritorialAdapter);
+      if (!adapter) {
         TERRITORY_CONTEXT_READY = true;
         return null;
       }
 
-      var headers = {
-        'apikey': skey,
-        'Authorization': 'Bearer ' + skey,
-        'Accept': 'application/json'
-      };
-
-      var propertyResponse = await fetch(
-        surl + '/rest/v1/property?property_id=eq.' + encodeURIComponent(propertyId) + '&select=property_id,territorial_unit_id&limit=1',
-        { headers: headers }
-      );
-      if (!propertyResponse.ok) {
-        TERRITORY_CONTEXT_READY = true;
-        return null;
-      }
-
-      var properties = await propertyResponse.json();
-      var territorialUnitId = Array.isArray(properties) && properties.length
-        ? properties[0].territorial_unit_id
-        : null;
-
-      if (!territorialUnitId) {
-        TERRITORY_CONTEXT_READY = true;
-        return null;
-      }
-
-      var territoryResponse = await fetch(
-        surl + '/functions/v1/territory-context?unit_id=' + encodeURIComponent(territorialUnitId),
-        { headers: headers }
-      );
-      if (!territoryResponse.ok) {
-        TERRITORY_CONTEXT_READY = true;
-        return null;
-      }
-
-      var territoryPayload = await territoryResponse.json();
-      var row = territoryPayload && territoryPayload.ok === true && Array.isArray(territoryPayload.data)
-        ? territoryPayload.data[0]
-        : null;
-
-      if (row) {
-        TERRITORY_CONTEXT = Object.freeze({
-          unitId: row.unit_id || territorialUnitId,
-          nameOfficial: row.name_official || '',
-          type: row.type || '',
-          municipalityCode: row.municipality_code || '',
-          status: row.status || '',
-          source: row.source || ''
-        });
-      }
+      TERRITORY_CONTEXT = await adapter.resolve(propertyId);
     } catch (e) {
-      console.warn('[Valorius] No fue posible precargar territorio:', e);
+      console.warn('[Valorius] No fue posible resolver territorio:', e);
+      TERRITORY_CONTEXT = null;
     }
 
     TERRITORY_CONTEXT_READY = true;
@@ -100,11 +114,13 @@
   }
 
   if (typeof window !== 'undefined') {
+    TERRITORY_CONTEXT_PROMISE = preloadTerritoryContext();
+
     window.ValoriusTerritoryContext = {
       get: function () { return TERRITORY_CONTEXT; },
-      isReady: function () { return TERRITORY_CONTEXT_READY; }
+      isReady: function () { return TERRITORY_CONTEXT_READY; },
+      ready: function () { return TERRITORY_CONTEXT_PROMISE; }
     };
-    preloadTerritoryContext();
   }
 
   function ReportDataBuilder() {}
