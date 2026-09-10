@@ -13,124 +13,6 @@
     return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
   }
 
-  // Territorial context is resolved through the canonical adapter only.
-  // No territory is inferred from zone, colonia, name, coordinates, proximity,
-  // or geometry. The adapter resolves property_id -> territorial_unit_id -> unit.
-  var TERRITORY_CONTEXT = null;
-  var TERRITORY_CONTEXT_READY = false;
-  var TERRITORY_CONTEXT_PROMISE = null;
-
-  function getPropertyIdFromUrl() {
-    try {
-      return new URLSearchParams(window.location.search).get('property_id') || null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function loadTerritorialAdapter() {
-    if (typeof window === 'undefined') return Promise.resolve(null);
-    if (window.TerritorialAdapter) return Promise.resolve(window.TerritorialAdapter);
-
-    return new Promise(function (resolve, reject) {
-      var script = document.createElement('script');
-      script.src = 'lib/territorial-adapter.js';
-      script.async = false;
-      script.onload = function () {
-        if (window.TerritorialAdapter) resolve(window.TerritorialAdapter);
-        else reject(new Error('TerritorialAdapter no fue registrado.'));
-      };
-      script.onerror = function () {
-        reject(new Error('No fue posible cargar TerritorialAdapter.'));
-      };
-      document.head.appendChild(script);
-    });
-  }
-
-  function createTerritorialAdapter(TerritorialAdapter) {
-    var surl = (typeof SECRETS !== 'undefined' && SECRETS.SURL) || '';
-    var skey = (typeof SECRETS !== 'undefined' && SECRETS.SKEY) || '';
-
-    if (!surl || !skey || typeof fetch !== 'function') {
-      return null;
-    }
-
-    var headers = {
-      'apikey': skey,
-      'Authorization': 'Bearer ' + skey,
-      'Accept': 'application/json'
-    };
-
-    return new TerritorialAdapter({
-      fetchProperty: function (propertyId) {
-        return fetch(
-          surl + '/rest/v1/property?property_id=eq.' + encodeURIComponent(propertyId) + '&select=property_id,territorial_unit_id&limit=1',
-          { headers: headers }
-        ).then(function (response) {
-          return response.json().then(function (data) {
-            return { ok: response.ok, data: data };
-          });
-        });
-      },
-      fetchTerritory: function (unitId) {
-        return fetch(
-          surl + '/functions/v1/territory-context?unit_id=' + encodeURIComponent(unitId),
-          { headers: headers }
-        ).then(function (response) {
-          return response.json().then(function (payload) {
-            return {
-              ok: response.ok && payload && payload.ok === true,
-              data: payload && Array.isArray(payload.data) ? payload.data : []
-            };
-          });
-        });
-      }
-    });
-  }
-
-  async function preloadTerritoryContext() {
-    var propertyId = getPropertyIdFromUrl();
-    if (!propertyId) {
-      TERRITORY_CONTEXT_READY = true;
-      return null;
-    }
-
-    try {
-      var TerritorialAdapter = await loadTerritorialAdapter();
-      var adapter = createTerritorialAdapter(TerritorialAdapter);
-      if (!adapter) {
-        TERRITORY_CONTEXT_READY = true;
-        return null;
-      }
-
-      TERRITORY_CONTEXT = await adapter.resolve(propertyId);
-    } catch (e) {
-      console.warn('[Valorius] No fue posible resolver territorio:', e);
-      TERRITORY_CONTEXT = null;
-    }
-
-    TERRITORY_CONTEXT_READY = true;
-    return TERRITORY_CONTEXT;
-  }
-
-  if (typeof window !== 'undefined') {
-    window.ValoriusTerritoryContext = {
-      get: function () { return TERRITORY_CONTEXT; },
-      isReady: function () { return TERRITORY_CONTEXT_READY; },
-      ready: function () {
-        if (TERRITORY_CONTEXT_PROMISE) return TERRITORY_CONTEXT_PROMISE;
-        TERRITORY_CONTEXT_PROMISE = preloadTerritoryContext();
-        return TERRITORY_CONTEXT_PROMISE;
-      }
-    };
-
-    // report-data.js is loaded in <head>, before secrets.js is guaranteed to exist.
-    // Resolve territory only after the page has loaded all analyzer dependencies.
-    window.addEventListener('load', function () {
-      TERRITORY_CONTEXT_PROMISE = preloadTerritoryContext();
-    }, { once: true });
-  }
-
   function ReportDataBuilder() {}
 
   ReportDataBuilder.prototype.build = function (lastData, comparables, context) {
@@ -141,9 +23,9 @@
     comparables = Array.isArray(comparables) ? comparables : [];
     context = context || {};
 
-    // Territory is contextual only. It never changes zone/colonia selection,
-    // comparable filtering, statistics, IPR, or any market metric.
-    var territory = lastData.territory || TERRITORY_CONTEXT || null;
+    // Territory is contextual only. It must already be resolved in lastData.
+    // No territory is inferred or queried here.
+    var territory = lastData.territory || null;
 
     var category = String(
       lastData.iprInt && (lastData.iprInt.cat || lastData.iprInt.categoria) || 'rango'
