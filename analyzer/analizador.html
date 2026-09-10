@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="components/components.css?v=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="lib/territorial-adapter.js"></script>
   <script src="lib/report-data.js"></script>
   <style>
     /* ── Tooltips ⓘ ─────────────────────────────────────── */
@@ -825,6 +826,50 @@
       setTimeout(function(){ marcarAyudaVista(); }, 8000);
     };
   });
+
+  // ─── TERRITORIO CANÓNICO ─────────────────────────────────
+  async function resolveTerritoryForCurrentProperty() {
+    var propertyId = new URLSearchParams(window.location.search).get('property_id') || null;
+    if (!propertyId || !window.TerritorialAdapter) return null;
+
+    var surl = (typeof SECRETS !== 'undefined' && SECRETS.SURL) || '';
+    var skey = (typeof SECRETS !== 'undefined' && SECRETS.SKEY) || '';
+    if (!surl || !skey) return null;
+
+    var headers = {
+      apikey: skey,
+      Authorization: 'Bearer ' + skey,
+      Accept: 'application/json'
+    };
+
+    var adapter = new window.TerritorialAdapter({
+      fetchProperty: function(propertyId) {
+        return fetch(
+          surl + '/rest/v1/property?property_id=eq.' +
+          encodeURIComponent(propertyId) +
+          '&select=property_id,territorial_unit_id&limit=1',
+          {headers: headers}
+        ).then(async function(response) {
+          return { ok: response.ok, data: await response.json() };
+        });
+      },
+      fetchTerritory: function(unitId) {
+        return fetch(
+          surl + '/functions/v1/territory-context?unit_id=' +
+          encodeURIComponent(unitId),
+          {headers: headers}
+        ).then(async function(response) {
+          var payload = await response.json();
+          return {
+            ok: response.ok && payload && payload.ok === true,
+            data: payload && Array.isArray(payload.data) ? payload.data : []
+          };
+        });
+      }
+    });
+
+    return adapter.resolve(propertyId);
+  }
 
   // ─── FETCH ────────────────────────────────────────────────
   async function azFetch(ep) {
@@ -1913,7 +1958,7 @@
   };
   */
 
-  window.generarPDF = function() {
+  window.generarPDF = async function() {
     if (!lastData) {
       alert('Completa el análisis antes de preparar el reporte.');
       return;
@@ -1924,6 +1969,13 @@
     btn.textContent = 'Preparando vista previa...';
 
     try {
+      try {
+        lastData.territory = await resolveTerritoryForCurrentProperty();
+      } catch (e) {
+        console.warn('[Valorius] No fue posible resolver territorio:', e);
+        lastData.territory = null;
+      }
+
       var grupo = null;
       if (lastData.nivel === 'colonia') {
         grupo = comparablesColonia.find(function(item) {
