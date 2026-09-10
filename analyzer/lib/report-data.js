@@ -114,13 +114,21 @@
   }
 
   if (typeof window !== 'undefined') {
-    TERRITORY_CONTEXT_PROMISE = preloadTerritoryContext();
-
     window.ValoriusTerritoryContext = {
       get: function () { return TERRITORY_CONTEXT; },
       isReady: function () { return TERRITORY_CONTEXT_READY; },
-      ready: function () { return TERRITORY_CONTEXT_PROMISE; }
+      ready: function () {
+        if (TERRITORY_CONTEXT_PROMISE) return TERRITORY_CONTEXT_PROMISE;
+        TERRITORY_CONTEXT_PROMISE = preloadTerritoryContext();
+        return TERRITORY_CONTEXT_PROMISE;
+      }
     };
+
+    // report-data.js is loaded in <head>, before secrets.js is guaranteed to exist.
+    // Resolve territory only after the page has loaded all analyzer dependencies.
+    window.addEventListener('load', function () {
+      TERRITORY_CONTEXT_PROMISE = preloadTerritoryContext();
+    }, { once: true });
   }
 
   function ReportDataBuilder() {}
