@@ -842,13 +842,20 @@
       Accept: 'application/json'
     };
 
+    var propertyHeaders = {
+      apikey: skey,
+      Authorization: 'Bearer ' + skey,
+      Accept: 'application/json',
+      'Accept-Profile': 'core'
+    };
+
     var adapter = new window.TerritorialAdapter({
       fetchProperty: function(propertyId) {
         return fetch(
           surl + '/rest/v1/property?property_id=eq.' +
           encodeURIComponent(propertyId) +
           '&select=property_id,territorial_unit_id&limit=1',
-          {headers: headers}
+          {headers: propertyHeaders}
         ).then(async function(response) {
           return { ok: response.ok, data: await response.json() };
         });
