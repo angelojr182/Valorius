@@ -756,7 +756,7 @@
       document.getElementById('resumenLista').textContent  = 'Zona: ' + colonia + ' · ' + document.getElementById('tipo_inmueble').value + ' · $' + precio.toLocaleString();
       resumen.style.display = 'block';
 
-      setTimeout(limpiarFormulario, 2000);
+      window.location.href = 'analizador.html?property_id=' + encodeURIComponent(propId);
 
     } catch(e) {
       console.error(e);

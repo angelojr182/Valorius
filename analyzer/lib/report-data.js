@@ -23,6 +23,10 @@
     comparables = Array.isArray(comparables) ? comparables : [];
     context = context || {};
 
+    // Territory is contextual only. It must already be resolved in lastData.
+    // No territory is inferred or queried here.
+    var territory = lastData.territory || null;
+
     var category = String(
       lastData.iprInt && (lastData.iprInt.cat || lastData.iprInt.categoria) || 'rango'
     ).toUpperCase();
@@ -45,6 +49,14 @@
         precio: num(lastData.precio),
         moneda: 'USD'
       },
+      territory: territory ? {
+        unitId: territory.unitId || '',
+        nameOfficial: territory.nameOfficial || '',
+        type: territory.type || '',
+        municipalityCode: territory.municipalityCode || '',
+        status: territory.status || '',
+        source: territory.source || ''
+      } : null,
       result: {
         veredicto: category,
         etiqueta: lastData.iprInt && lastData.iprInt.etiqueta || '',
