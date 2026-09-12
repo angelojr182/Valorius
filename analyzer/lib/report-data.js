@@ -74,7 +74,7 @@
       confidence: {
         nivel: confidence,
         numeroComparables: num(lastData.n),
-        periodoDias: 100,
+        periodoDias: 365,
         dispersion: dispersion
       },
       comparables: comparables.map(function (item) {
@@ -111,7 +111,7 @@
         };
       }),
       methodology: {
-        periodoDias: 100,
+        periodoDias: 365,
         minimoComparables: 3,
         areaMin: comparables.length ? Math.min.apply(null, comparables.map(function (item) { return num(item.area); })) : 0,
         areaMax: comparables.length ? Math.max.apply(null, comparables.map(function (item) { return num(item.area); })) : 0
