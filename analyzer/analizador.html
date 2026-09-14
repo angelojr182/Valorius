@@ -501,7 +501,7 @@
   <div class="vrd-titulo" id="vrdTitulo">--</div>
   <div class="vrd-descripcion" id="vrdDescripcion">--</div>
   <div class="vrd-ipr-badge">
-    Basado en <span id="vrdComparables" style="color:#94a3b8">--</span> propiedades similares activas en los ultimos 100 dias
+    Basado en <span id="vrdComparables" style="color:#94a3b8">--</span> propiedades similares activas en los ultimos 12 meses
   </div>
 </div>
 
@@ -589,7 +589,7 @@
       <span class="info-icon" data-tip="contexto">ⓘ</span>
       <div class="info-tooltip" id="tip-contexto">
         <div class="info-tooltip-title">Comparacion con propiedades similares</div>
-        <div class="info-tooltip-body">Muestra el rango de precios por m2 de propiedades activas del mismo tipo en la misma zona. Los puntos representan propiedades detectadas en los ultimos 100 dias. Son precios de oferta publicados, no precios de cierre.</div>
+        <div class="info-tooltip-body">Muestra el rango de precios por m2 de propiedades activas del mismo tipo en la misma zona. Los puntos representan propiedades detectadas en los ultimos 12 meses. Son precios de oferta publicados, no precios de cierre.</div>
       </div>
     </div>
     <p class="chart-guia" id="chartGuia">Cada punto representa una propiedad similar activa en esta zona.</p>
@@ -640,7 +640,7 @@
           <span class="info-icon" data-tip="iao">ⓘ</span>
           <div class="info-tooltip" id="tip-iao">
             <div class="info-tooltip-title">Actividad observable en la zona</div>
-            <div class="info-tooltip-body">Indica que tan activo esta el mercado para este tipo de propiedad en esta zona. Se calcula con base en la cantidad de propiedades similares detectadas en los ultimos 100 dias. Alta actividad significa mas opciones disponibles y mayor contexto de referencia.</div>
+            <div class="info-tooltip-body">Indica que tan activo esta el mercado para este tipo de propiedad en esta zona. Se calcula con base en la cantidad de propiedades similares detectadas en los ultimos 12 meses. Alta actividad significa mas opciones disponibles y mayor contexto de referencia.</div>
           </div>
         </div>
         <div class="iao-valor" id="iaoValor">--</div>
@@ -698,7 +698,7 @@
             <span class="info-icon" data-tip="rango">ⓘ</span>
             <div class="info-tooltip" id="tip-rango">
               <div class="info-tooltip-title">Rango de precios observados</div>
-              <div class="info-tooltip-body">El precio minimo y maximo por m2 detectado entre propiedades similares activas en la zona en los ultimos 100 dias. Muestra la amplitud del mercado observable. Son precios de oferta publicados, no precios de transaccion cerrada.</div>
+              <div class="info-tooltip-body">El precio minimo y maximo por m2 detectado entre propiedades similares activas en la zona en los ultimos 12 meses. Muestra la amplitud del mercado observable. Son precios de oferta publicados, no precios de transaccion cerrada.</div>
             </div>
           </span>
           <span class="metrica-descripcion">Amplitud de precios observados en propiedades similares.</span>
@@ -752,7 +752,7 @@
   // Clave: zone_id (UUID). Cargado en window.onload desde dim_zone?select=zone_id,lat,lng
   var GEO_DICT = {};
   console.log('%c[Valorius] Analizador cargado — ' + ANALIZADOR_VERSION, 'color:#e2b05c;font-weight:bold');
-  const DIAS_COMPARABLES = 100;
+  const DIAS_COMPARABLES = 365;
   const UMBRAL_ATIPICO   = 1.8;
 
   const AZ_SURL = typeof SECRETS !== 'undefined' ? SECRETS.SURL : '';
@@ -1442,7 +1442,7 @@
     // PHASE 3-A: Mostrar factores de confianza
     var confidenceFactors = [];
     confidenceFactors.push(data.n + ' comparable' + (data.n !== 1 ? 's' : ''));
-    confidenceFactors.push('ultimos 100 dias');
+    confidenceFactors.push('ultimos 12 meses');
 
     var dispersión = data.max && data.min ? Math.round(data.max - data.min) : null;
     if (dispersión) {
