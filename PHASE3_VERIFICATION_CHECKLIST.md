@@ -11,6 +11,7 @@
 - [x] No calcula IAO, IPR, medianas, percentiles ni comparables.
 - [x] Toma el punto de presentación existente `#iaoCard` mediante el entry point de `renderConfidenceIndicator`.
 - [x] El renderer previo se conserva únicamente como compatibilidad para el resto del bloque de métricas; la tarjeta IAO visible queda a cargo del componente.
+- [x] El hook de producción se instala después de la carga del documento, cuando el entry point legacy ya existe.
 - [x] Maneja datos ausentes sin romper el flujo.
 
 ## PHASE 3-B: PriceCard — CERRADA
@@ -20,6 +21,7 @@
 - [x] Recibe `userPriceM2`, `areaM2`, `totalPrice`, `medianPriceM2` y `deviationPct` ya calculados.
 - [x] Presenta la tarjeta de precio de la propiedad.
 - [x] Se integra en el flujo productivo desde el entry point existente `renderPriceCard`.
+- [x] El hook de producción se instala después de la carga del documento, cuando el entry point legacy ya existe.
 - [x] El valor legacy `#lblTuPrecio` queda oculto para evitar duplicación visual.
 - [x] El gauge, referencia, rango y umbrales existentes permanecen sin cambio funcional.
 - [x] Las clases `.price-card` y `.pc-*` permanecen en `components/components.css`.
@@ -30,8 +32,8 @@
 - [x] `AnalysisSummary.js` expone `render()`, `mount()` y `update()`.
 - [x] Presenta únicamente el veredicto y contexto ya calculados.
 - [x] No calcula IPR, IAO, medianas, percentiles ni clasificación de negocio.
-- [x] El entry point existente `renderAnalysisSummary` delega al componente.
-- [x] La clase visual se alinea con los selectores existentes `.veredicto-principal.vrd-*`.
+- [x] El entry point existente `renderAnalysisSummary` delega al componente mediante hook de producción instalado tras la carga del documento.
+- [x] La clase visual conserva los selectores existentes `.veredicto-principal` y las categorías `bajo`, `rango`, `sobre`.
 - [x] El contenido se escapa antes de insertarse en el DOM.
 - [x] No modifica `analyzer.js`, `comparable.js`, Supabase ni el esquema de base de datos.
 
@@ -56,4 +58,4 @@
 **PHASE 3-B:** CERRADA  
 **PHASE 3-C:** CERRADA  
 
-La integración queda implementada sin cambiar el motor de negocio ni el contrato territorial. El siguiente trabajo de seguridad sobre credenciales/RLS permanece como workstream separado.
+La integración queda implementada mediante hooks sobre los entry points existentes, sin cambiar el motor de negocio ni el contrato territorial. El siguiente trabajo de seguridad sobre credenciales/RLS permanece como workstream separado.
