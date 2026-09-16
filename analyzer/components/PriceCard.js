@@ -8,7 +8,7 @@
  * Props: userPriceM2, areaM2, totalPrice, medianPriceM2, deviationPct
  * Métodos: render(), mount(), update()
  *
- * v1.2 — PHASE 3-B FINAL
+ * v1.3 — PHASE 3-B FINAL
  */
 var PriceCard = (function() {
   'use strict';
@@ -39,25 +39,35 @@ var PriceCard = (function() {
 if (typeof module !== 'undefined' && module.exports) module.exports = PriceCard;
 if (typeof window !== 'undefined') {
   window.PriceCard = PriceCard;
-  if (typeof window.renderPriceCard === 'function') {
-    var legacyRenderPriceCard = window.renderPriceCard;
-    window.renderPriceCard = function(data) {
-      legacyRenderPriceCard(data);
-      var valueEl = document.getElementById('lblTuPrecio');
-      if (!valueEl || !valueEl.parentNode) return;
-      var host = document.getElementById('priceCardContainer');
-      if (!host) {
-        host = document.createElement('div'); host.id = 'priceCardContainer'; host.className = 'price-card-host'; host.style.width = '100%';
-        valueEl.parentNode.insertBefore(host, valueEl.nextSibling);
-      }
-      valueEl.style.display = 'none';
-      PriceCard.mount('priceCardContainer', {
-        userPriceM2: data.tuPM2,
-        areaM2: data.areaM2 != null ? data.areaM2 : data.area,
-        totalPrice: data.totalPrice != null ? data.totalPrice : data.precio,
-        medianPriceM2: data.medianPriceM2 != null ? data.medianPriceM2 : data.mediana,
-        deviationPct: data.deviationPct != null ? data.deviationPct : data.desv
-      });
-    };
+  function installProductionHook() {
+    if (typeof window.renderPriceCard === 'function' && !window.renderPriceCard.__priceCardComponent) {
+      var legacyRenderPriceCard = window.renderPriceCard;
+      var wrapped = function(data) {
+        legacyRenderPriceCard(data);
+        var valueEl = document.getElementById('lblTuPrecio');
+        if (!valueEl || !valueEl.parentNode) return;
+        var host = document.getElementById('priceCardContainer');
+        if (!host) {
+          host = document.createElement('div');
+          host.id = 'priceCardContainer';
+          host.className = 'price-card-host';
+          host.style.width = '100%';
+          valueEl.parentNode.insertBefore(host, valueEl.nextSibling);
+        }
+        valueEl.style.display = 'none';
+        PriceCard.mount('priceCardContainer', {
+          userPriceM2: data && data.tuPM2,
+          areaM2: data && data.areaM2 != null ? data.areaM2 : (data && data.area),
+          totalPrice: data && data.totalPrice != null ? data.totalPrice : (data && data.precio),
+          medianPriceM2: data && data.medianPriceM2 != null ? data.medianPriceM2 : (data && data.mediana),
+          deviationPct: data && data.deviationPct != null ? data.deviationPct : (data && data.desv)
+        });
+      };
+      wrapped.__priceCardComponent = true;
+      wrapped.__legacyRenderPriceCard = legacyRenderPriceCard;
+      window.renderPriceCard = wrapped;
+    }
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installProductionHook);
+  else installProductionHook();
 }
