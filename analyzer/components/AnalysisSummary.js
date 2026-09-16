@@ -7,13 +7,13 @@
  * Props: { modoLimitado, nivelZona, n, iprInt, descripcion }
  * Métodos: render(), mount(), update()
  *
- * v1.2 — PHASE 3-C FINAL
+ * v1.3 — PHASE 3-C FINAL
  */
 var AnalysisSummary = (function() {
   'use strict';
   var ALLOWED_CATEGORIES = { bajo: true, rango: true, sobre: true, ref: true };
   function escapeHTML(value) {
-    return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
   }
   function getContextLabel(props) {
     if (props.modoLimitado) return 'Análisis orientativo';
@@ -26,7 +26,6 @@ var AnalysisSummary = (function() {
       return '<div class="analysis-summary-error">Error: datos faltantes</div>';
     }
     var iprInt = props.iprInt || {};
-    var categoria = ALLOWED_CATEGORIES[iprInt.categoria] ? iprInt.categoria : '';
     var titulo = props.modoLimitado ? 'Referencia basada en pocas propiedades similares' : (iprInt.etiqueta || 'Resultado no disponible');
     var descripcion = props.descripcion || '';
     var n = Number.isFinite(Number(props.n)) ? Number(props.n) : 0;
@@ -42,7 +41,7 @@ var AnalysisSummary = (function() {
     if (!element) { console.error('[AnalysisSummary] Elemento no encontrado:', elementId); return; }
     var iprInt = (props && props.iprInt) || {};
     var categoria = ALLOWED_CATEGORIES[iprInt.categoria] ? iprInt.categoria : '';
-    element.className = 'veredicto-principal' + (categoria ? ' vrd-' + categoria : '');
+    element.className = 'veredicto-principal' + (categoria ? ' ' + categoria : '');
     element.style.display = 'block';
     element.innerHTML = render(props);
   }
@@ -52,7 +51,15 @@ var AnalysisSummary = (function() {
 if (typeof module !== 'undefined' && module.exports) module.exports = AnalysisSummary;
 if (typeof window !== 'undefined') {
   window.AnalysisSummary = AnalysisSummary;
-  if (typeof window.renderAnalysisSummary === 'function') {
-    window.renderAnalysisSummary = function(data) { AnalysisSummary.mount('veredictoPanel', data); };
+  function installProductionHook() {
+    if (typeof window.renderAnalysisSummary === 'function' && !window.renderAnalysisSummary.__analysisSummaryComponent) {
+      var legacy = window.renderAnalysisSummary;
+      var wrapped = function(data) { AnalysisSummary.mount('veredictoPanel', data); };
+      wrapped.__analysisSummaryComponent = true;
+      wrapped.__legacyRenderAnalysisSummary = legacy;
+      window.renderAnalysisSummary = wrapped;
+    }
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installProductionHook);
+  else installProductionHook();
 }
