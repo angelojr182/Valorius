@@ -4,12 +4,12 @@
  * NO calcula IAO ni métricas de negocio.
  * Props: { n, modoLimitado, nivel, iaoInt, dispersion }
  * Métodos: render(), mount(), update()
- * v1.1 — PHASE 3-A FINAL
+ * v1.2 — PHASE 3-A FINAL
  */
 var ConfidenceIndicator = (function() {
   'use strict';
   function escapeHTML(value) {
-    return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
   }
   function render(props) {
     if (!props) { console.warn('[ConfidenceIndicator] Props vacíos'); return '<div class="iao-card"><div class="iao-contenido"><div class="iao-valor">Datos no disponibles</div></div></div>'; }
@@ -37,13 +37,29 @@ var ConfidenceIndicator = (function() {
 if (typeof module !== 'undefined' && module.exports) module.exports = ConfidenceIndicator;
 if (typeof window !== 'undefined') {
   window.ConfidenceIndicator = ConfidenceIndicator;
-  if (typeof window.renderConfidenceIndicator === 'function') {
-    var legacyRenderConfidenceIndicator = window.renderConfidenceIndicator;
-    window.renderConfidenceIndicator = function(data) {
-      legacyRenderConfidenceIndicator(data);
-      var dispersion = null;
-      if (data && data.max && data.min) { var spread = Math.round(data.max - data.min); dispersion = spread < 200 ? 'baja' : spread < 500 ? 'moderada' : 'alta'; }
-      ConfidenceIndicator.mount('iaoCard', { n: data && data.n, modoLimitado: data && data.modoLimitado, nivel: data && data.nivelZona ? 'limitado' : '', iaoInt: data && data.iaoInt, dispersion: dispersion });
-    };
+  function installProductionHook() {
+    if (typeof window.renderConfidenceIndicator === 'function' && !window.renderConfidenceIndicator.__confidenceIndicatorComponent) {
+      var legacyRenderConfidenceIndicator = window.renderConfidenceIndicator;
+      var wrapped = function(data) {
+        legacyRenderConfidenceIndicator(data);
+        var dispersion = null;
+        if (data && data.max && data.min) {
+          var spread = Math.round(data.max - data.min);
+          dispersion = spread < 200 ? 'baja' : spread < 500 ? 'moderada' : 'alta';
+        }
+        ConfidenceIndicator.mount('iaoCard', {
+          n: data && data.n,
+          modoLimitado: data && data.modoLimitado,
+          nivel: data && data.nivelZona ? 'limitado' : '',
+          iaoInt: data && data.iaoInt,
+          dispersion: dispersion
+        });
+      };
+      wrapped.__confidenceIndicatorComponent = true;
+      wrapped.__legacyRenderConfidenceIndicator = legacyRenderConfidenceIndicator;
+      window.renderConfidenceIndicator = wrapped;
+    }
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installProductionHook);
+  else installProductionHook();
 }
