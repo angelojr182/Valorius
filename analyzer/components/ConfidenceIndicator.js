@@ -34,7 +34,13 @@ var ConfidenceIndicator = (function() {
 
     var html = '<div class="iao-card ' + escapeHTML(cardClass) + '">';
     html += '<div class="iao-icono">' + escapeHTML(icono) + '</div><div class="iao-contenido">';
-    html += '<div class="iao-titulo">Actividad en la zona</div><div class="iao-valor">' + escapeHTML(etiqueta) + '</div>';
+    html += '<div class="iao-titulo info-wrap">Actividad en la zona';
+    html += '<span class="info-icon" data-tip="iao">ⓘ</span>';
+    html += '<div class="info-tooltip" id="tip-iao">';
+    html += '<div class="info-tooltip-title">Actividad observable en la zona</div>';
+    html += '<div class="info-tooltip-body">Indica que tan activo esta el mercado para este tipo de propiedad en esta zona. Se calcula con base en la cantidad de propiedades similares detectadas en los ultimos 12 meses. Alta actividad significa mas opciones disponibles y mayor contexto de referencia.</div>';
+    html += '</div></div>';
+    html += '<div class="iao-valor">' + escapeHTML(etiqueta) + '</div>';
     html += '<div class="iao-sub">' + escapeHTML(factores.join(' · '));
     if (nivel === 'limitado') html += ' · referencia a nivel zona';
     html += '</div></div></div>';
