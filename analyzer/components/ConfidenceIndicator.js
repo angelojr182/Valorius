@@ -47,7 +47,15 @@ var ConfidenceIndicator = (function() {
       console.error('[ConfidenceIndicator] Elemento no encontrado:', elementId);
       return;
     }
-    element.innerHTML = render(props);
+
+    var html = render(props);
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    var card = wrapper.firstElementChild;
+    if (!card) return;
+
+    element.className = card.className;
+    element.innerHTML = card.innerHTML;
   }
 
   function update(elementId, props) {
