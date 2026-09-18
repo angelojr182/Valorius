@@ -42,9 +42,9 @@
 - [x] Se eliminaron referencias `legacyRender*` e `installProductionHook`.
 - [x] Se eliminó el cálculo de dispersión del antiguo renderer de ConfidenceIndicator.
 - [x] La copia definitiva supera `node --check` sobre sus scripts inline.
-- [ ] Sincronizar el HTML definitivo con `feat/territorial-context` en GitHub.
-- [ ] Ejecutar comparación final contra `main` después de sincronizar el HTML.
-- [ ] Confirmar que los únicos archivos modificados son los esperados.
+- [x] Sincronizar el HTML definitivo con `feat/territorial-context` en GitHub.
+- [x] Ejecutar comparación final contra `main` después de sincronizar el HTML.
+- [x] Confirmar que los únicos archivos modificados son los esperados.
 
 ## Regresión y seguridad
 
@@ -60,6 +60,6 @@
 **PHASE 3-A:** CERRADA  
 **PHASE 3-B:** CERRADA  
 **PHASE 3-C:** CERRADA  
-**Integración GitHub:** PENDIENTE DE SINCRONIZACIÓN DEL HTML DEFINITIVO
+**Integración GitHub:** SINCRONIZADA Y VERIFICADA
 
-La implementación de los componentes y la integración definitiva están validadas en la copia de trabajo. El cierre formal de PHASE 3 queda condicionado únicamente a sincronizar `analyzer/analizador.html` en `feat/territorial-context` y repetir la comparación final contra `main`. No se modifica el motor de negocio ni el contrato territorial.
+La implementación de los componentes y la integración definitiva están validadas en la copia de trabajo. El HTML definitivo ya está sincronizado en `feat/territorial-context` y la comparación contra `main` confirma únicamente los cinco archivos esperados. El cierre formal de PHASE 3 queda pendiente de la validación de regresión visual. No se modifica el motor de negocio ni el contrato territorial.
