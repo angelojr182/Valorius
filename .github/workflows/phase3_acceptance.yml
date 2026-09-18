@@ -1,0 +1,75 @@
+name: Phase 3 Acceptance Tests
+
+on:
+  push:
+    branches:
+      - feat/territorial-context
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax check inline JavaScript
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("analyzer/analizador.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script(?![^>]*src=)[^>]*>(.*?)</script>", html, flags=re.S|re.I)
+          if not scripts:
+              raise SystemExit("No inline script blocks found")
+          for i, code in enumerate(scripts, 1):
+              Path(f"/tmp/inline_{i}.js").write_text(code, encoding="utf-8")
+          print(f"Found {len(scripts)} inline script block(s)")
+          PY
+          for f in /tmp/inline_*.js; do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Browser regression smoke test
+        shell: bash
+        run: |
+          python3 -m http.server 4173 --directory . >/tmp/valorius-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 2
+          cat > /tmp/smoke.mjs <<'JS'
+          import { chromium } from "playwright";
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage();
+          const errors = [];
+          page.on("pageerror", e => errors.push("pageerror: " + e.message));
+          page.on("console", m => { if (m.type() === "error") errors.push("console: " + m.text()); });
+          const response = await page.goto("http://127.0.0.1:4173/analyzer/analizador.html", { waitUntil: "domcontentloaded", timeout: 30000 });
+          console.log("HTTP:", response?.status());
+          await page.waitForTimeout(3000);
+          console.log("Final URL:", page.url());
+          const title = await page.title();
+          console.log("Title:", title);
+          const componentIds = ["veredictoPanel", "iaoCard", "priceCardContainer"];
+          for (const id of componentIds) {
+            console.log(id + " exists:", await page.locator("#" + id).count() > 0);
+          }
+          if (errors.length) {
+            console.error("Browser errors:");
+            for (const e of errors) console.error(e);
+            process.exit(1);
+          }
+          await browser.close();
+          JS
+          node /tmp/smoke.mjs
