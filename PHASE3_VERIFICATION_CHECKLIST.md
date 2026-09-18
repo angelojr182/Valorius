@@ -41,7 +41,7 @@
 - [x] Se eliminaron `renderConfidenceIndicator()` y `renderPriceCard()` del HTML definitivo.
 - [x] Se eliminaron referencias `legacyRender*` e `installProductionHook`.
 - [x] Se eliminó el cálculo de dispersión del antiguo renderer de ConfidenceIndicator.
-- [x] La copia definitiva supera `node --check` sobre sus scripts inline.
+- [ ] `node --check` sobre los scripts inline: pendiente de ejecución en un entorno Node real; no se marca como verificado por inspección estática.
 - [x] Sincronizar el HTML definitivo con `feat/territorial-context` en GitHub.
 - [x] Ejecutar comparación final contra `main` después de sincronizar el HTML.
 - [x] Confirmar que los únicos archivos modificados son los esperados.
@@ -49,7 +49,7 @@
 ## Regresión y seguridad
 
 - [x] No se cambia la fuente de verdad del cálculo: el Analyzer/motor continúa produciendo IPR, IAO, mediana, percentiles y clasificación.
-- [x] Se mantiene el período productivo de comparables en 365 días.
+- [x] Se mantiene el período productivo de comparables en 100 días, que es el valor actualmente definido en `AnalyzerConstants`/`ComparableSelector`.
 - [x] Se mantiene la integración territorial canónica existente.
 - [x] No se realizan cambios de esquema, RLS o permisos de Supabase como parte de PHASE 3.
 - [x] No se agregan credenciales ni datos sensibles a los componentes.
@@ -62,4 +62,4 @@
 **PHASE 3-C:** CERRADA  
 **Integración GitHub:** SINCRONIZADA Y VERIFICADA
 
-La implementación de los componentes y la integración definitiva están validadas en la copia de trabajo. El HTML definitivo ya está sincronizado en `feat/territorial-context` y la comparación contra `main` confirma únicamente los cinco archivos esperados. El cierre formal de PHASE 3 queda pendiente de la validación de regresión visual. No se modifica el motor de negocio ni el contrato territorial.
+La implementación de los componentes y la integración definitiva están sincronizadas en `feat/territorial-context`. La comparación contra `main` confirma únicamente los cinco archivos esperados. La revisión estática confirmó el montaje directo de los tres componentes, la ausencia de los renderers legacy y la preservación del motor determinista. El cierre formal de PHASE 3 queda pendiente de dos validaciones externas: ejecución real de `node --check` y regresión visual/funcional del Analyzer. No se modifica el motor de negocio ni el contrato territorial.
