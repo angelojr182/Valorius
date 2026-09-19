@@ -41,10 +41,10 @@
 - [x] Se eliminaron `renderConfidenceIndicator()` y `renderPriceCard()` del HTML definitivo.
 - [x] Se eliminaron referencias `legacyRender*` e `installProductionHook`.
 - [x] Se eliminó el cálculo de dispersión del antiguo renderer de ConfidenceIndicator.
-- [ ] `node --check` sobre los scripts inline: pendiente de ejecución en un entorno Node real; no se marca como verificado por inspección estática.
+- [x] `node --check` real ejecutado en GitHub Actions sobre los tres componentes y los 15 bloques de JavaScript inline del Analyzer.
 - [x] Sincronizar el HTML definitivo con `feat/territorial-context` en GitHub.
 - [x] Ejecutar comparación final contra `main` después de sincronizar el HTML.
-- [x] Confirmar que los únicos archivos modificados son los esperados.
+- [x] Confirmar que los únicos archivos funcionales de PHASE 3 modificados son los esperados; el workflow de aceptación usado para pruebas fue temporal y se eliminó tras la validación.
 
 ## Regresión y seguridad
 
@@ -62,4 +62,4 @@
 **PHASE 3-C:** CERRADA  
 **Integración GitHub:** SINCRONIZADA Y VERIFICADA
 
-La implementación de los componentes y la integración definitiva están sincronizadas en `feat/territorial-context`. La comparación contra `main` confirma únicamente los cinco archivos esperados. La revisión estática confirmó el montaje directo de los tres componentes, la ausencia de los renderers legacy y la preservación del motor determinista. El cierre formal de PHASE 3 queda pendiente de dos validaciones externas: ejecución real de `node --check` y regresión visual/funcional del Analyzer. No se modifica el motor de negocio ni el contrato territorial.
+La implementación de los componentes y la integración definitiva están sincronizadas en `feat/territorial-context`. La validación automatizada ejecutó `node --check` real sobre los tres componentes y los 15 bloques inline del Analyzer, todos sin errores. La regresión en navegador confirmó el comportamiento del control de autenticación y ejecutó los tres componentes en un fixture aislado con sus puntos de montaje, clases y datos representativos. El workflow temporal de aceptación fue eliminado después de la prueba. La validación visual de un Analyzer completamente autenticado no se ejecutó porque el entorno de pruebas no dispone de una sesión de usuario; por tanto, no se presenta esa parte como validación end-to-end. No se modifica el motor de negocio ni el contrato territorial.
