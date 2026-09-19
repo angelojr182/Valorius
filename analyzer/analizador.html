@@ -648,21 +648,9 @@
       </div>
     </div>
 
-    <div class="metricas-lista">
+    <div id="priceCardContainer" class="price-card-host" style="width:100%;margin-bottom:12px;"></div>
 
-      <div class="metrica">
-        <div class="metrica-izquierda">
-          <span class="metrica-label info-wrap">PRECIO DE ESTA PROPIEDAD
-            <span class="info-icon" data-tip="pm2">ⓘ</span>
-            <div class="info-tooltip" id="tip-pm2">
-              <div class="info-tooltip-title">Tu precio por m2</div>
-              <div class="info-tooltip-body">Precio total dividido entre los metros cuadrados de construccion. Permite comparar propiedades de distintos tamanios en igualdad de condiciones, independientemente de si una es mas grande o mas pequena.</div>
-            </div>
-          </span>
-          <span class="metrica-descripcion">Precio implicito por metro cuadrado de la propiedad evaluada.</span>
-        </div>
-        <span id="lblTuPrecio" class="metrica-valor precio">--</span>
-      </div>
+    <div class="metricas-lista">
 
       <div class="metrica">
         <div class="metrica-izquierda">
@@ -1418,49 +1406,11 @@
   }
 
   // PHASE 1.6-B: Componentes de renderizado modular
-  function renderAnalysisSummary(data) {
-    var vPanel = document.getElementById('veredictoPanel');
-    vPanel.className = 'veredicto-principal ' + data.iprInt.categoria;
-    vPanel.style.display = 'block';
-    document.getElementById('vrdEtiqueta').textContent = data.modoLimitado
-      ? 'Analisis orientativo'
-      : data.nivelZona ? 'Analisis por zona (colonia sin suficientes referencias)'
-      : 'Resultado del analisis';
-    document.getElementById('vrdComparables').textContent = data.n;
-    document.getElementById('vrdTitulo').textContent = data.modoLimitado
-      ? 'Referencia basada en pocas propiedades similares'
-      : data.iprInt.etiqueta;
-    document.getElementById('vrdDescripcion').textContent = data.descripcion;
-  }
+  
 
-  function renderConfidenceIndicator(data) {
-    var iaoCard = document.getElementById('iaoCard');
-    iaoCard.className = 'iao-card ' + data.iaoInt.categoria;
-    document.getElementById('iaoIcono').textContent = data.iaoInt.icono;
-    document.getElementById('iaoValor').textContent = data.iaoInt.etiqueta;
+  
 
-    // PHASE 3-A: Mostrar factores de confianza
-    var confidenceFactors = [];
-    confidenceFactors.push(data.n + ' comparable' + (data.n !== 1 ? 's' : ''));
-    confidenceFactors.push('ultimos 12 meses');
-
-    var dispersión = data.max && data.min ? Math.round(data.max - data.min) : null;
-    if (dispersión) {
-      var dispersiónnivel = dispersión < 200 ? 'baja' : dispersión < 500 ? 'moderada' : 'alta';
-      confidenceFactors.push('dispersión ' + dispersiónnivel);
-    }
-
-    var iaoSubEl = document.getElementById('iaoSub');
-    if (iaoSubEl) {
-      iaoSubEl.textContent = confidenceFactors.join(' · ');
-    }
-
-    var resumen = document.getElementById('resumenRapido');
-    resumen.style.display = 'block';
-    document.getElementById('resumenTexto').textContent = data.resumen;
-  }
-
-  function renderPriceCard(data) {
+  function renderMarketPosition(data) {
     var iprCategoria = (data.iprInt && (data.iprInt.cat || data.iprInt.categoria)) || 'rango';
     var gaugeColor = iprCategoria==='bajo' ? '#10b981' : iprCategoria==='sobre' ? '#ef4444' : '#fbbf24';
     var absDesvR = Math.round(Math.abs(data.desv));
@@ -1489,7 +1439,6 @@
       document.getElementById('gaugeBulb').style.filter = 'drop-shadow(0 0 6px ' + gaugeColor + ')';
     }
     document.getElementById('lblExplanation').textContent = data.explicacion;
-    document.getElementById('lblTuPrecio').textContent = '$' + data.tuPM2.toLocaleString();
     document.getElementById('lblMediana').textContent = '$' + Math.round(data.mediana).toLocaleString() + (data.modoLimitado?'*':'');
     document.getElementById('lblRango').textContent = '$' + Math.round(data.min).toLocaleString() + ' - $' + Math.round(data.max).toLocaleString() + '/m2';
     if (data.modoLimitado) {
@@ -1618,9 +1567,21 @@
       desv: desv, mediana: mediana, p25: p25, p75: p75, min: min, max: max, tuPM2: tuPM2
     };
 
-    renderAnalysisSummary(componentData);
-    renderConfidenceIndicator(componentData);
-    renderPriceCard(componentData);
+    AnalysisSummary.mount('veredictoPanel', componentData);
+    ConfidenceIndicator.mount('iaoCard', {
+      n: n,
+      modoLimitado: modoLimitado,
+      nivel: nivelZona ? 'limitado' : '',
+      iaoInt: iaoInt
+    });
+    PriceCard.mount('priceCardContainer', {
+      userPriceM2: tuPM2,
+      areaM2: area,
+      totalPrice: precio,
+      medianPriceM2: mediana,
+      deviationPct: desv
+    });
+    renderMarketPosition(componentData);
     renderChart(min, mediana, max, tuPM2, cob.items || []);
 
     // ── MAPA DE CONTEXTO ──────────────────────────────────────
