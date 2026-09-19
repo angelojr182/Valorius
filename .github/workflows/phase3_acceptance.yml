@@ -1,0 +1,136 @@
+name: Phase 3 acceptance
+
+on:
+  push:
+    branches:
+      - feat/territorial-context
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate required files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f analyzer/analizador.html
+          test -f analyzer/components/AnalysisSummary.js
+          test -f analyzer/components/ConfidenceIndicator.js
+          test -f analyzer/components/PriceCard.js
+          grep -q "AnalysisSummary.mount" analyzer/analizador.html
+          grep -q "ConfidenceIndicator.mount" analyzer/analizador.html
+          grep -q "PriceCard.mount" analyzer/analizador.html
+          ! grep -q "renderAnalysisSummary\|renderConfidenceIndicator\|renderPriceCard\|installProductionHook" analyzer/analizador.html
+
+      - name: Syntax check component modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check analyzer/components/AnalysisSummary.js
+          node --check analyzer/components/ConfidenceIndicator.js
+          node --check analyzer/components/PriceCard.js
+
+      - name: Extract and syntax check inline JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("analyzer/analizador.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>", html, re.S | re.I)
+          if not scripts:
+              raise SystemExit("No inline scripts found")
+          for i, script in enumerate(scripts, 1):
+              Path(f"/tmp/valorius-inline-{i}.js").write_text(script, encoding="utf-8")
+          print(f"Extracted {len(scripts)} inline script block(s)")
+          PY
+          for f in /tmp/valorius-inline-*.js; do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Browser regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory . >/tmp/valorius-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          sleep 2
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch({headless: true});
+            const page = await browser.newPage();
+            const pageErrors = [];
+            const consoleErrors = [];
+
+            page.on('pageerror', e => pageErrors.push(String(e)));
+            page.on('console', msg => {
+              if (msg.type() === 'error') consoleErrors.push(msg.text());
+            });
+
+            const response = await page.goto(
+              'http://127.0.0.1:4173/analyzer/analizador.html',
+              { waitUntil: 'domcontentloaded', timeout: 30000 }
+            );
+
+            if (!response || !response.ok()) {
+              throw new Error('Analyzer HTTP response invalid: ' + (response && response.status()));
+            }
+
+            await page.waitForTimeout(3000);
+
+            const result = await page.evaluate(() => ({
+              title: document.title,
+              veredictoPanel: !!document.getElementById('veredictoPanel'),
+              iaoCard: !!document.getElementById('iaoCard'),
+              priceCardContainer: !!document.getElementById('priceCardContainer')
+            }));
+
+            console.log(JSON.stringify(result, null, 2));
+            console.log('pageErrors:', JSON.stringify(pageErrors));
+            console.log('consoleErrors:', JSON.stringify(consoleErrors));
+
+            if (result.title !== 'Property Analyzer — Valorius') throw new Error('Unexpected page title');
+            if (!result.veredictoPanel || !result.iaoCard || !result.priceCardContainer) {
+              throw new Error('Required Phase 3 component mount points are missing');
+            }
+            if (pageErrors.length) throw new Error('Browser page errors detected');
+            await browser.close();
+          })().catch(err => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Upload diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-acceptance-diagnostics
+          path: |
+            /tmp/valorius-http.log
+            /tmp/valorius-inline-*.js
+          if-no-files-found: ignore
