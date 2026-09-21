@@ -62,7 +62,8 @@
       type: row.type || '',
       municipalityCode: row.municipality_code || '',
       status: row.status || '',
-      source: row.source || ''
+      source: row.source || '',
+      territoryGis: row.territory_gis != null ? row.territory_gis : null
     });
   };
 
