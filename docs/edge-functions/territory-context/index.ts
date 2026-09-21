@@ -38,13 +38,15 @@ Deno.serve(async (req: Request) => {
     if (!Array.isArray(units) || !units.length) return json({ ok: true, data: [] });
 
     const unit = units[0];
-    const [typeResponse, sourceResponse] = await Promise.all([
+    const [typeResponse, sourceResponse, gisResponse] = await Promise.all([
       fetch(`${supabaseUrl}/rest/v1/territorial_unit_type?type_id=eq.${encodeURIComponent(unit.type_id)}&select=type_key,name,level&limit=1`, { headers }),
-      fetch(`${supabaseUrl}/rest/v1/data_source?source_id=eq.${encodeURIComponent(unit.source_id)}&select=source_key,name,institution,version&limit=1`, { headers })
+      fetch(`${supabaseUrl}/rest/v1/data_source?source_id=eq.${encodeURIComponent(unit.source_id)}&select=source_key,name,institution,version&limit=1`, { headers }),
+      fetch(`${supabaseUrl}/rest/v1/rpc/get_territory_gis?p_unit_id=${encodeURIComponent(unitId)}`, { headers }).catch(() => null)
     ]);
 
     const types = typeResponse.ok ? await typeResponse.json() : [];
     const sources = sourceResponse.ok ? await sourceResponse.json() : [];
+    const territoryGis = gisResponse?.ok ? await gisResponse.json().catch(() => null) : null;
 
     return json({
       ok: true,
@@ -54,7 +56,8 @@ Deno.serve(async (req: Request) => {
         type: types[0] ? (types[0].name || types[0].type_key || "") : "",
         municipality_code: unit.municipality_code,
         status: unit.status,
-        source: sources[0] ? (sources[0].source_key || sources[0].name || "") : ""
+        source: sources[0] ? (sources[0].source_key || sources[0].name || "") : "",
+        territory_gis: territoryGis
       }]
     });
   } catch (_error) {
