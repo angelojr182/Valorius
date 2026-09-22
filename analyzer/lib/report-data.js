@@ -57,6 +57,16 @@
         status: territory.status || '',
         source: territory.source || ''
       } : null,
+      territoryGis: territory && territory.territoryGis ? {
+        amenaza_inundacion: Array.isArray(territory.territoryGis.amenaza_inundacion)
+          ? territory.territoryGis.amenaza_inundacion : [],
+        amenaza_ladera: Array.isArray(territory.territoryGis.amenaza_ladera)
+          ? territory.territoryGis.amenaza_ladera : [],
+        areas_protegidas: Array.isArray(territory.territoryGis.areas_protegidas)
+          ? territory.territoryGis.areas_protegidas : [],
+        pu_zonas: Array.isArray(territory.territoryGis.pu_zonas)
+          ? territory.territoryGis.pu_zonas : []
+      } : null,
       result: {
         veredicto: category,
         etiqueta: lastData.iprInt && lastData.iprInt.etiqueta || '',
