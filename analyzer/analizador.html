@@ -815,6 +815,124 @@
     };
   });
 
+
+  // ─── CONTEXTO TERRITORIAL + GIS (solo presentación) ─────────
+  function escapeTerritoryHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderTerritorialContext(territory) {
+    var panel = document.getElementById('territorialContextPanel');
+    if (!panel) {
+      panel = document.createElement('section');
+      panel.id = 'territorialContextPanel';
+      panel.className = 'panel';
+      panel.style.display = 'none';
+      panel.style.marginTop = '16px';
+      var mapPanel = document.getElementById('mapContextPanel');
+      if (mapPanel && mapPanel.parentNode) {
+        mapPanel.parentNode.insertBefore(panel, mapPanel);
+      } else {
+        var main = document.querySelector('main');
+        if (main) main.appendChild(panel);
+      }
+    }
+
+    if (!territory) {
+      panel.style.display = 'block';
+      panel.innerHTML =
+        '<div class="panel-title">Contexto territorial</div>' +
+        '<p style="margin:8px 0 0;color:#64748b;font-size:11px;line-height:1.5;">' +
+        'No hay una unidad territorial canónica disponible para esta propiedad.' +
+        '</p>';
+      return;
+    }
+
+    var gis = territory.territoryGis || {};
+    var inundacion = Array.isArray(gis.amenaza_inundacion) ? gis.amenaza_inundacion : [];
+    var ladera = Array.isArray(gis.amenaza_ladera) ? gis.amenaza_ladera : [];
+    var protegidas = Array.isArray(gis.areas_protegidas) ? gis.areas_protegidas : [];
+    var pu = Array.isArray(gis.pu_zonas) ? gis.pu_zonas : [];
+
+    function itemList(items, formatter, emptyText) {
+      if (!items.length) return '<div style="color:#64748b;">' + emptyText + '</div>';
+      return '<ul style="margin:5px 0 0;padding-left:16px;">' +
+        items.map(function(item) {
+          return '<li style="margin:3px 0;">' + formatter(item) + '</li>';
+        }).join('') +
+        '</ul>';
+    }
+
+    var html =
+      '<div class="panel-title">Contexto territorial</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">' +
+        '<span style="font-size:10px;color:#94a3b8;">Unidad: <b style="color:#e2e8f0;">' +
+          escapeTerritoryHtml(territory.nameOfficial || territory.unitId) + '</b></span>' +
+        '<span style="font-size:10px;color:#64748b;">' +
+          escapeTerritoryHtml(territory.type || '') + '</span>' +
+        '<span style="font-size:10px;color:#64748b;">Fuente: ' +
+          escapeTerritoryHtml(territory.source || '—') + '</span>' +
+      '</div>' +
+      '<p style="margin:10px 0 12px;color:#64748b;font-size:10px;line-height:1.5;">' +
+        'Las intersecciones GIS corresponden a la unidad territorial asociada a la propiedad. ' +
+        'No representan la ubicación exacta del inmueble.' +
+      '</p>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;">' +
+        '<div style="padding:10px;border:1px solid rgba(100,116,139,.18);border-radius:8px;">' +
+          '<div style="font-size:10px;font-weight:700;color:#cbd5e1;">Amenaza de inundación</div>' +
+          '<div style="font-size:10px;color:#94a3b8;">' +
+            itemList(inundacion, function(item) {
+              return 'Clasificación: <b>' + escapeTerritoryHtml(item.amenaza || 'sin dato') + '</b>';
+            }, 'Sin intersecciones registradas.') +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:10px;border:1px solid rgba(100,116,139,.18);border-radius:8px;">' +
+          '<div style="font-size:10px;font-weight:700;color:#cbd5e1;">Amenaza de ladera</div>' +
+          '<div style="font-size:10px;color:#94a3b8;">' +
+            itemList(ladera, function(item) {
+              var extra = [];
+              if (item.area_m2 != null) extra.push('Área: ' + escapeTerritoryHtml(item.area_m2) + ' m²');
+              if (item.volumen_m3 != null) extra.push('Volumen: ' + escapeTerritoryHtml(item.volumen_m3) + ' m³');
+              return 'Clasificación: <b>' + escapeTerritoryHtml(item.amenaza || 'sin dato') + '</b>' +
+                (extra.length ? ' · ' + extra.join(' · ') : '');
+            }, 'Sin intersecciones registradas.') +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:10px;border:1px solid rgba(100,116,139,.18);border-radius:8px;">' +
+          '<div style="font-size:10px;font-weight:700;color:#cbd5e1;">Áreas protegidas</div>' +
+          '<div style="font-size:10px;color:#94a3b8;">' +
+            itemList(protegidas, function(item) {
+              var parts = [];
+              if (item.nombre) parts.push('<b>' + escapeTerritoryHtml(item.nombre) + '</b>');
+              if (item.categoria) parts.push('Categoría: ' + escapeTerritoryHtml(item.categoria));
+              if (item.zona) parts.push('Zona: ' + escapeTerritoryHtml(item.zona));
+              return parts.join(' · ') || 'Intersección sin atributos descriptivos.';
+            }, 'Sin intersecciones registradas.') +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:10px;border:1px solid rgba(100,116,139,.18);border-radius:8px;">' +
+          '<div style="font-size:10px;font-weight:700;color:#cbd5e1;">Zonas de planificación urbana</div>' +
+          '<div style="font-size:10px;color:#94a3b8;">' +
+            itemList(pu, function(item) {
+              var parts = [];
+              if (item.zona) parts.push('Zona: <b>' + escapeTerritoryHtml(item.zona) + '</b>');
+              if (item.sub_zona) parts.push('Subzona: ' + escapeTerritoryHtml(item.sub_zona));
+              if (item.pertenece) parts.push('Plan: ' + escapeTerritoryHtml(item.pertenece));
+              return parts.join(' · ') || 'Intersección sin atributos descriptivos.';
+            }, 'Sin intersecciones registradas.') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    panel.innerHTML = html;
+    panel.style.display = 'block';
+  }
+
   // ─── TERRITORIO CANÓNICO ─────────────────────────────────
   async function resolveTerritoryForCurrentProperty() {
     var propertyId = new URLSearchParams(window.location.search).get('property_id') || null;
@@ -1584,6 +1702,16 @@
     renderMarketPosition(componentData);
     renderChart(min, mediana, max, tuPM2, cob.items || []);
 
+    // El contexto territorial se carga aparte del análisis comercial.
+    // No bloquea ni modifica las métricas determinísticas.
+    resolveTerritoryForCurrentProperty().then(function(territory) {
+      lastData.territory = territory;
+      renderTerritorialContext(territory);
+    }).catch(function(error) {
+      console.warn('[Valorius] Contexto territorial no disponible:', error);
+      renderTerritorialContext(null);
+    });
+
     // ── MAPA DE CONTEXTO ──────────────────────────────────────
     var proyectoId = document.getElementById('selProyecto').value;
     var proyNombre = '';
@@ -1937,11 +2065,13 @@
     btn.textContent = 'Preparando vista previa...';
 
     try {
-      try {
-        lastData.territory = await resolveTerritoryForCurrentProperty();
-      } catch (e) {
-        console.warn('[Valorius] No fue posible resolver territorio:', e);
-        lastData.territory = null;
+      if (!lastData.territory) {
+        try {
+          lastData.territory = await resolveTerritoryForCurrentProperty();
+        } catch (e) {
+          console.warn('[Valorius] No fue posible resolver territorio:', e);
+          lastData.territory = null;
+        }
       }
 
       var grupo = null;
