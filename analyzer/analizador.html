@@ -745,10 +745,11 @@
 
   const AZ_SURL = typeof SECRETS !== 'undefined' ? SECRETS.SURL : '';
   const AZ_SKEY = typeof SECRETS !== 'undefined' ? SECRETS.SKEY  : '';
-  const AZ_HDRS = {
+  var AZ_HDRS = {
     'apikey': AZ_SKEY, 'Authorization': 'Bearer ' + AZ_SKEY,
     'Content-Type': 'application/json', 'Accept-Profile': 'core'
   };
+  var SUPABASE_CLIENT = null;
 
   let comparablesZona = [], comparablesColonia = [];
   let todosLosComparables = [];  // alias de comparablesZona
@@ -826,13 +827,13 @@
 
     var headers = {
       apikey: skey,
-      Authorization: 'Bearer ' + skey,
+      Authorization: AZ_HDRS.Authorization,
       Accept: 'application/json'
     };
 
     var propertyHeaders = {
       apikey: skey,
-      Authorization: 'Bearer ' + skey,
+      Authorization: AZ_HDRS.Authorization,
       Accept: 'application/json',
       'Accept-Profile': 'core'
     };
@@ -2047,11 +2048,13 @@
 
     // Inicializar Supabase
     const { createClient } = supabase;
-    const supabaseClient = createClient(SECRETS.SURL, SECRETS.SKEY);
+    if (!SUPABASE_CLIENT) {
+      SUPABASE_CLIENT = createClient(SECRETS.SURL, SECRETS.SKEY);
+    }
 
     try {
       // Obtener sesión actual
-      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      const { data: { session }, error } = await SUPABASE_CLIENT.auth.getSession();
 
       console.log('🔍 Verificando sesión...', { hasSession: !!session, error });
 
@@ -2062,9 +2065,18 @@
         return false;
       }
 
-      // Sesión válida
+      // Sesión válida: las consultas REST protegidas usan el JWT del usuario,
+      // no la anon key como identidad de acceso.
       CURRENT_USER = session.user;
       CURRENT_SESSION = session;
+      AZ_HDRS.Authorization = 'Bearer ' + session.access_token;
+
+      SUPABASE_CLIENT.auth.onAuthStateChange(function(event, refreshedSession) {
+        if (refreshedSession && refreshedSession.access_token) {
+          CURRENT_SESSION = refreshedSession;
+          AZ_HDRS.Authorization = 'Bearer ' + refreshedSession.access_token;
+        }
+      });
 
       console.log('✅ Usuario autenticado:', CURRENT_USER.email);
       return true;
