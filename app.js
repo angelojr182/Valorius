@@ -60,11 +60,12 @@ const Utils = {
 
 class DataService {
   static get headers() {
-    // Las queries usan la anon key que tiene acceso al schema 'core'.
-    // El JWT del usuario autenticado se usa SOLO para validar la sesión en AuthService.
+    // El acceso a datos del Dashboard requiere el JWT de la sesión autenticada.
+    // La anon key se mantiene únicamente como apikey pública de Supabase.
+    const token = localStorage.getItem('valorius_token') || CONFIG.SKEY;
     return {
       'apikey': CONFIG.SKEY,
-      'Authorization': 'Bearer ' + CONFIG.SKEY,
+      'Authorization': 'Bearer ' + token,
       'Content-Type': 'application/json',
       'Accept-Profile': 'core',
       'Content-Profile': 'core'
