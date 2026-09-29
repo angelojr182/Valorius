@@ -754,6 +754,22 @@ class AuthService {
 window.AuthService = AuthService;
 
 async function AppInit() {
+  // Sincronizar el token que usa el Dashboard con la sesión real de Supabase.
+  // Esto permite renovar una sesión existente antes de consultar las tablas
+  // protegidas, sin volver a utilizar la anon key como Authorization.
+  try {
+    if (typeof supabase !== 'undefined' && CONFIG.SURL && CONFIG.SKEY) {
+      const client = supabase.createClient(CONFIG.SURL, CONFIG.SKEY);
+      const { data: { session } } = await client.auth.getSession();
+      if (session && session.access_token) {
+        localStorage.setItem('valorius_token', session.access_token);
+        localStorage.setItem('valorius_user', JSON.stringify(session.user));
+      }
+    }
+  } catch (e) {
+    console.warn('No fue posible sincronizar la sesión Supabase:', e);
+  }
+
   const loginWrap = document.getElementById('loginWrap');
   const dashboardWrap = document.getElementById('dashboardWrap');
   const loginForm = document.getElementById('loginForm');
