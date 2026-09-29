@@ -321,6 +321,11 @@
         }
 
         if (data.session) {
+          // Mantener compatibilidad con el Dashboard existente, que usa
+          // valorius_token para autorizar sus consultas REST protegidas.
+          localStorage.setItem('valorius_token', data.session.access_token);
+          localStorage.setItem('valorius_user', JSON.stringify(data.user));
+
           // Login exitoso
           console.log('✅ Login exitoso:', data.user.email);
           loading.classList.remove('show');
