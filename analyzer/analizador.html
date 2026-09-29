@@ -2072,6 +2072,11 @@
           return false;
         }
         AZ_HDRS.Authorization = 'Bearer ' + accessToken;
+        // El login propio del Dashboard conserva el access token, pero no
+        // necesariamente expone un objeto session de Supabase en esta página.
+        // El token ya es suficiente para las consultas REST protegidas.
+        CURRENT_USER = { email: 'sesion autenticada' };
+        CURRENT_SESSION = null;
         console.log('✅ JWT recuperado desde valorius_token');
       }
 
