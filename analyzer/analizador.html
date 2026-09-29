@@ -2053,23 +2053,30 @@
     }
 
     try {
-      // Obtener sesión actual
+      // Primero intentamos la sesión administrada por Supabase JS.
       const { data: { session }, error } = await SUPABASE_CLIENT.auth.getSession();
 
       console.log('🔍 Verificando sesión...', { hasSession: !!session, error });
 
-      if (error || !session) {
-        // No hay sesión — redirigir a login con parámetro de retorno
-        console.log('❌ Sin sesión válida, redirigiendo a login');
-        window.location.href = LOGIN_URL;
-        return false;
+      if (session && !error) {
+        CURRENT_USER = session.user;
+        CURRENT_SESSION = session;
+        AZ_HDRS.Authorization = 'Bearer ' + session.access_token;
+      } else {
+        // Compatibilidad con el login propio del Dashboard, que conserva
+        // el access token en valorius_token.
+        const accessToken = localStorage.getItem('valorius_token');
+        if (!accessToken) {
+          console.log('❌ Sin sesión válida, redirigiendo a login');
+          window.location.href = LOGIN_URL;
+          return false;
+        }
+        AZ_HDRS.Authorization = 'Bearer ' + accessToken;
+        console.log('✅ JWT recuperado desde valorius_token');
       }
 
       // Sesión válida: las consultas REST protegidas usan el JWT del usuario,
       // no la anon key como identidad de acceso.
-      CURRENT_USER = session.user;
-      CURRENT_SESSION = session;
-      AZ_HDRS.Authorization = 'Bearer ' + session.access_token;
 
       SUPABASE_CLIENT.auth.onAuthStateChange(function(event, refreshedSession) {
         if (refreshedSession && refreshedSession.access_token) {
