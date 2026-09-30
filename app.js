@@ -72,17 +72,37 @@ class DataService {
     };
   }
 
+  static showDiagnostic(message) {
+    try {
+      let box = document.getElementById('valorius-diagnostic');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'valorius-diagnostic';
+        box.style.cssText = 'position:fixed;left:10px;right:10px;bottom:10px;z-index:99999;background:#fff1f2;color:#7f1d1d;border:1px solid #fecdd3;border-radius:8px;padding:10px;font:12px/1.4 monospace;max-height:35vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,.15)';
+        document.body.appendChild(box);
+      }
+      box.textContent = 'Diagnóstico Valorius: ' + message;
+    } catch (_) {}
+  }
+
   static async fetchCount(endpoint) {
     try {
       const res = await fetch(CONFIG.SURL + endpoint, { 
         method: 'HEAD',
         headers: { ...this.headers, 'Prefer': 'count=exact' } 
       });
+      if (!res.ok) {
+        const body = await res.text();
+        console.error('[Valorius Dashboard] HTTP', res.status, endpoint, body);
+        this.showDiagnostic('HTTP ' + res.status + ' · ' + endpoint + ' · ' + body.slice(0, 500));
+        return 0;
+      }
       const range = res.headers.get('content-range');
       if (!range) return 0;
       return parseInt(range.split('/')[1]) || 0;
     } catch (e) {
-      console.warn(`Count Error on ${endpoint}:`, e);
+      console.error('[Valorius Dashboard] FETCH', endpoint, e);
+      this.showDiagnostic('FETCH · ' + endpoint + ' · ' + (e && e.message ? e.message : e));
       return 0;
     }
   }
@@ -90,10 +110,17 @@ class DataService {
   static async fetchData(endpoint) {
     try {
       const res = await fetch(CONFIG.SURL + endpoint, { headers: this.headers });
+      if (!res.ok) {
+        const body = await res.text();
+        console.error('[Valorius Dashboard] HTTP', res.status, endpoint, body);
+        this.showDiagnostic('HTTP ' + res.status + ' · ' + endpoint + ' · ' + body.slice(0, 500));
+        return [];
+      }
       const data = await res.json();
       return Array.isArray(data) ? data : [];
     } catch (e) {
-      console.warn(`Data Error on ${endpoint}:`, e);
+      console.error('[Valorius Dashboard] FETCH', endpoint, e);
+      this.showDiagnostic('FETCH · ' + endpoint + ' · ' + (e && e.message ? e.message : e));
       return [];
     }
   }
