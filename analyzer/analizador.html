@@ -868,13 +868,35 @@
   }
 
   // ─── FETCH ────────────────────────────────────────────────
+  function mostrarDiagnosticoFrontend(mensaje) {
+    try {
+      var box = document.getElementById('valorius-diagnostic');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'valorius-diagnostic';
+        box.style.cssText = 'position:fixed;left:10px;right:10px;bottom:10px;z-index:99999;background:#fff1f2;color:#7f1d1d;border:1px solid #fecdd3;border-radius:8px;padding:10px;font:12px/1.4 monospace;max-height:35vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,.15)';
+        document.body.appendChild(box);
+      }
+      box.textContent = 'Diagnóstico Valorius: ' + mensaje;
+    } catch (_) {}
+  }
+
   async function azFetch(ep) {
     try {
       var r = await fetch(AZ_SURL + ep, {headers: AZ_HDRS});
-      if (!r.ok) return null;
+      if (!r.ok) {
+        var body = await r.text();
+        console.error('[Valorius Analyzer] HTTP', r.status, ep, body);
+        mostrarDiagnosticoFrontend('HTTP ' + r.status + ' · ' + ep + ' · ' + body.slice(0, 500));
+        return null;
+      }
       var d = await r.json();
       return Array.isArray(d) ? d : null;
-    } catch(e) { return null; }
+    } catch(e) {
+      console.error('[Valorius Analyzer] FETCH', ep, e);
+      mostrarDiagnosticoFrontend('FETCH · ' + ep + ' · ' + (e && e.message ? e.message : e));
+      return null;
+    }
   }
 
   // ─── DROPDOWNS ────────────────────────────────────────────
