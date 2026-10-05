@@ -2168,6 +2168,35 @@
       });
 
       console.log('[Valorius] Sesión Supabase válida; consultas REST autenticadas como usuario:', CURRENT_USER.email || CURRENT_USER.id);
+
+      // Diagnóstico temporal: no muestra ni registra el JWT.
+      // Verifica que el token validado pueda autenticar una consulta REST real.
+      try {
+        var authDiag = {
+          session: !!session,
+          token: !!session.access_token,
+          user: !!CURRENT_USER,
+          authorizationHeader: !!(AZ_HDRS && AZ_HDRS.Authorization),
+          authorizationBearer: !!(AZ_HDRS && /^Bearer\\s+[^\\s]+$/.test(AZ_HDRS.Authorization || ''))
+        };
+        console.log('[Valorius AUTH DIAG]', authDiag);
+
+        var diagResponse = await fetch(
+          AZ_SURL + '/rest/v1/listing?select=property_id&limit=1',
+          { headers: AZ_HDRS }
+        );
+        authDiag.postgrestStatus = diagResponse.status;
+        authDiag.postgrestOk = diagResponse.ok;
+        console.log('[Valorius AUTH DIAG] PostgREST:', diagResponse.status, diagResponse.ok ? 'OK' : 'ERROR');
+
+        if (!diagResponse.ok) {
+          var diagBody = await diagResponse.text();
+          console.error('[Valorius AUTH DIAG] PostgREST body:', diagBody.slice(0, 300));
+        }
+      } catch (diagError) {
+        console.error('[Valorius AUTH DIAG] FETCH ERROR:', diagError);
+      }
+
       return true;
     } catch (e) {
       console.error('[Valorius] Error en autenticación:', e);
