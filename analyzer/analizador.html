@@ -2136,6 +2136,27 @@
 
       CURRENT_USER = userResult.data.user;
 
+      // Diagnóstico temporal de autenticación. No expone el JWT.
+      try {
+        var diagSession = await SUPABASE_CLIENT.auth.getSession();
+        var diagTokenOk = !!(diagSession && diagSession.data && diagSession.data.session && diagSession.data.session.access_token);
+        var diagHeaderOk = !!(AZ_HDRS && AZ_HDRS.Authorization && AZ_HDRS.Authorization.indexOf('Bearer ') === 0);
+        console.log('[Valorius AuthDiag] SESSION:', diagTokenOk ? 'OK' : 'NULL');
+        console.log('[Valorius AuthDiag] JWT:', diagTokenOk ? 'OK' : 'MISSING');
+        console.log('[Valorius AuthDiag] AUTH HEADER:', diagHeaderOk ? 'OK' : 'MISSING');
+
+        var diagResponse = await fetch(AZ_SURL + '/rest/v1/listing?select=property_id&limit=1', {
+          headers: AZ_HDRS
+        });
+        console.log('[Valorius AuthDiag] POSTGREST:', diagResponse.status);
+        if (!diagResponse.ok) {
+          var diagBody = await diagResponse.text();
+          console.log('[Valorius AuthDiag] BODY:', diagBody.slice(0, 300));
+        }
+      } catch (diagError) {
+        console.log('[Valorius AuthDiag] ERROR:', diagError && diagError.message ? diagError.message : diagError);
+      }
+
       SUPABASE_CLIENT.auth.onAuthStateChange(function(event, refreshedSession) {
         if (refreshedSession && refreshedSession.access_token) {
           CURRENT_SESSION = refreshedSession;
