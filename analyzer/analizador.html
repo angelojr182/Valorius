@@ -881,21 +881,24 @@
     } catch (_) {}
   }
 
-  async function azFetch(ep) {
+  // Las consultas del Analyzer pasan por supabase-js para que el cliente
+  // adjunte automáticamente el JWT de la sesión autenticada.
+  async function azDbSelect(table, columns, configure) {
     try {
-      var r = await fetch(AZ_SURL + ep, {headers: AZ_HDRS});
-      if (!r.ok) {
-        var body = await r.text();
-        console.error('[Valorius Analyzer] HTTP', r.status, ep, body);
-        mostrarDiagnosticoFrontend('HTTP ' + r.status + ' · ' + ep + ' · ' + body.slice(0, 500));
-        return null;
+      if (!SUPABASE_CLIENT) throw new Error('Cliente Supabase no inicializado');
+      var query = SUPABASE_CLIENT.schema('core').from(table).select(columns);
+      if (typeof configure === 'function') query = configure(query);
+      var result = await query;
+      if (result.error) {
+        console.error('[Valorius Analyzer] DB', table, result.error);
+        mostrarDiagnosticoFrontend('DB · ' + table + ' · ' + result.error.message);
+        return [];
       }
-      var d = await r.json();
-      return Array.isArray(d) ? d : null;
+      return Array.isArray(result.data) ? result.data : [];
     } catch(e) {
-      console.error('[Valorius Analyzer] FETCH', ep, e);
-      mostrarDiagnosticoFrontend('FETCH · ' + ep + ' · ' + (e && e.message ? e.message : e));
-      return null;
+      console.error('[Valorius Analyzer] DB', table, e);
+      mostrarDiagnosticoFrontend('DB · ' + table + ' · ' + (e && e.message ? e.message : e));
+      return [];
     }
   }
 
@@ -2136,27 +2139,6 @@
 
       CURRENT_USER = userResult.data.user;
 
-      // Diagnóstico temporal de autenticación. No expone el JWT.
-      try {
-        var diagSession = await SUPABASE_CLIENT.auth.getSession();
-        var diagTokenOk = !!(diagSession && diagSession.data && diagSession.data.session && diagSession.data.session.access_token);
-        var diagHeaderOk = !!(AZ_HDRS && AZ_HDRS.Authorization && AZ_HDRS.Authorization.indexOf('Bearer ') === 0);
-        console.log('[Valorius AuthDiag] SESSION:', diagTokenOk ? 'OK' : 'NULL');
-        console.log('[Valorius AuthDiag] JWT:', diagTokenOk ? 'OK' : 'MISSING');
-        console.log('[Valorius AuthDiag] AUTH HEADER:', diagHeaderOk ? 'OK' : 'MISSING');
-
-        var diagResponse = await fetch(AZ_SURL + '/rest/v1/listing?select=property_id&limit=1', {
-          headers: AZ_HDRS
-        });
-        console.log('[Valorius AuthDiag] POSTGREST:', diagResponse.status);
-        if (!diagResponse.ok) {
-          var diagBody = await diagResponse.text();
-          console.log('[Valorius AuthDiag] BODY:', diagBody.slice(0, 300));
-        }
-      } catch (diagError) {
-        console.log('[Valorius AuthDiag] ERROR:', diagError && diagError.message ? diagError.message : diagError);
-      }
-
       SUPABASE_CLIENT.auth.onAuthStateChange(function(event, refreshedSession) {
         if (refreshedSession && refreshedSession.access_token) {
           CURRENT_SESSION = refreshedSession;
@@ -2168,34 +2150,6 @@
       });
 
       console.log('[Valorius] Sesión Supabase válida; consultas REST autenticadas como usuario:', CURRENT_USER.email || CURRENT_USER.id);
-
-      // Diagnóstico temporal: no muestra ni registra el JWT.
-      // Verifica que el token validado pueda autenticar una consulta REST real.
-      try {
-        var authDiag = {
-          session: !!session,
-          token: !!session.access_token,
-          user: !!CURRENT_USER,
-          authorizationHeader: !!(AZ_HDRS && AZ_HDRS.Authorization),
-          authorizationBearer: !!(AZ_HDRS && /^Bearer\\s+[^\\s]+$/.test(AZ_HDRS.Authorization || ''))
-        };
-        console.log('[Valorius AUTH DIAG]', authDiag);
-
-        var diagResponse = await fetch(
-          AZ_SURL + '/rest/v1/listing?select=property_id&limit=1',
-          { headers: AZ_HDRS }
-        );
-        authDiag.postgrestStatus = diagResponse.status;
-        authDiag.postgrestOk = diagResponse.ok;
-        console.log('[Valorius AUTH DIAG] PostgREST:', diagResponse.status, diagResponse.ok ? 'OK' : 'ERROR');
-
-        if (!diagResponse.ok) {
-          var diagBody = await diagResponse.text();
-          console.error('[Valorius AUTH DIAG] PostgREST body:', diagBody.slice(0, 300));
-        }
-      } catch (diagError) {
-        console.error('[Valorius AUTH DIAG] FETCH ERROR:', diagError);
-      }
 
       return true;
     } catch (e) {
@@ -2228,11 +2182,25 @@
     var fecha=new Date(); fecha.setDate(fecha.getDate()-DIAS_COMPARABLES);
     var fechaISO=fecha.toISOString().split('T')[0];
     var results = await Promise.all([
-      azFetch('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,habitaciones,banos,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
-      azFetch('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
-      azFetch('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto'),
-      azFetch('/rest/v1/dim_zone?select=zone_id,zona,lat,lng&activo=eq.true'),
-      azFetch('/rest/v1/exchange_rate?select=tasa_usd_hnl,fecha&order=fecha.desc&limit=1')
+      azDbSelect(
+        'listing',
+        'area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,habitaciones,banos,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))',
+        function(q) {
+          return q.gte('fecha_registro', fechaISO).gt('area_construccion', 0).gt('precio_original', 0);
+        }
+      ),
+      azDbSelect('dim_colonia', 'colonia_id,zone_id,colonia', function(q) {
+        return q.eq('activo', true).order('colonia');
+      }),
+      azDbSelect('dim_proyecto', 'proyecto_id,proyecto,zone_id,colonia_id', function(q) {
+        return q.eq('activo', true).order('proyecto');
+      }),
+      azDbSelect('dim_zone', 'zone_id,zona,lat,lng', function(q) {
+        return q.eq('activo', true);
+      }),
+      azDbSelect('exchange_rate', 'tasa_usd_hnl,fecha', function(q) {
+        return q.order('fecha', { ascending: false }).limit(1);
+      })
     ]);
     var rows=results[0]||[];
     azColonias  = results[1]||[];
