@@ -2083,6 +2083,7 @@
       // La API debe recibir un JWT emitido por Auth y vigente.
       var sessionResult = await SUPABASE_CLIENT.auth.getSession();
       var session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+      var tokenSource = 'supabase-session';
 
       if (!session || !session.access_token) {
         // Intentar una renovación antes de declarar la sesión inválida.
@@ -2090,8 +2091,26 @@
         session = refreshed && refreshed.data ? refreshed.data.session : null;
       }
 
+      // Compatibilidad segura con el flujo de login existente:
+      // el login también guarda valorius_token. No se confía en él ciegamente;
+      // primero se valida directamente contra Supabase Auth.
       if (!session || !session.access_token) {
-        console.warn('[Valorius] Analyzer sin sesión Supabase; redirigiendo a login');
+        var storedToken = null;
+        try { storedToken = localStorage.getItem('valorius_token'); } catch (e) {}
+        if (storedToken) {
+          var storedUserResult = await SUPABASE_CLIENT.auth.getUser(storedToken);
+          if (!storedUserResult.error && storedUserResult.data && storedUserResult.data.user) {
+            session = {
+              access_token: storedToken,
+              user: storedUserResult.data.user
+            };
+            tokenSource = 'validated-localStorage-token';
+          }
+        }
+      }
+
+      if (!session || !session.access_token) {
+        console.warn('[Valorius] Analyzer sin sesión/token válido de Supabase; redirigiendo a login');
         window.location.href = LOGIN_URL;
         return false;
       }
@@ -2099,13 +2118,16 @@
       CURRENT_SESSION = session;
       CURRENT_USER = session.user || null;
 
-      // El JWT del usuario es la identidad para PostgREST.
+      // El JWT validado del usuario es la identidad para PostgREST.
       AZ_HDRS = Object.assign({}, AZ_HDRS, {
         Authorization: 'Bearer ' + session.access_token
       });
 
-      // Validación adicional: confirma que el JWT sigue siendo aceptado por Auth.
-      var userResult = await SUPABASE_CLIENT.auth.getUser(session.access_token);
+      // Validación adicional para sesiones nativas; para el fallback ya se validó
+      // el mismo JWT con getUser().
+      var userResult = tokenSource === 'validated-localStorage-token'
+        ? { data: { user: session.user }, error: null }
+        : await SUPABASE_CLIENT.auth.getUser(session.access_token);
       if (userResult.error || !userResult.data || !userResult.data.user) {
         console.warn('[Valorius] JWT no válido o expirado; redirigiendo a login');
         window.location.href = LOGIN_URL;
