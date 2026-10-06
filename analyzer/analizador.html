@@ -886,7 +886,7 @@
   async function azDbSelect(table, columns, configure) {
     try {
       if (!SUPABASE_CLIENT) throw new Error('Cliente Supabase no inicializado');
-      var query = SUPABASE_CLIENT.schema('core').from(table).select(columns);
+      var query = SUPABASE_CLIENT.from(table).select(columns);
       if (typeof configure === 'function') query = configure(query);
       var result = await query;
       if (result.error) {
@@ -2073,10 +2073,14 @@
     const { createClient } = supabase;
     if (!SUPABASE_CLIENT) {
       SUPABASE_CLIENT = createClient(SECRETS.SURL, SECRETS.SKEY, {
+        db: { schema: 'core' },
         auth: {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: false
+        },
+        accessToken: async function() {
+          return CURRENT_SESSION ? CURRENT_SESSION.access_token : null;
         }
       });
     }
