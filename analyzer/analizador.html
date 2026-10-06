@@ -881,23 +881,31 @@
     } catch (_) {}
   }
 
-  // Las consultas del Analyzer pasan por supabase-js para que el cliente
-  // adjunte automáticamente el JWT de la sesión autenticada.
-  async function azDbSelect(table, columns, configure) {
+  // Las lecturas del Analyzer usan REST directamente con el JWT
+  // validado en validarAutenticacion(). Así el Authorization enviado
+  // es explícitamente el access_token del usuario y no la anon key.
+  async function azDbSelect(ep) {
     try {
-      if (!SUPABASE_CLIENT) throw new Error('Cliente Supabase no inicializado');
-      var query = SUPABASE_CLIENT.from(table).select(columns);
-      if (typeof configure === 'function') query = configure(query);
-      var result = await query;
-      if (result.error) {
-        console.error('[Valorius Analyzer] DB', table, result.error);
-        mostrarDiagnosticoFrontend('DB · ' + table + ' · ' + result.error.message);
+      var token = CURRENT_SESSION && CURRENT_SESSION.access_token;
+      if (!token || token === AZ_SKEY) {
+        throw new Error('Sesión autenticada no disponible para Data API');
+      }
+      var headers = Object.assign({}, AZ_HDRS, {
+        Authorization: 'Bearer ' + token,
+        'Accept-Profile': 'core'
+      });
+      var response = await fetch(AZ_SURL + ep, {headers: headers});
+      if (!response.ok) {
+        var body = await response.text();
+        console.error('[Valorius Analyzer] DB HTTP', response.status, ep, body);
+        mostrarDiagnosticoFrontend('DB HTTP ' + response.status + ' · ' + ep + ' · ' + body.slice(0, 300));
         return [];
       }
-      return Array.isArray(result.data) ? result.data : [];
+      var data = await response.json();
+      return Array.isArray(data) ? data : [];
     } catch(e) {
-      console.error('[Valorius Analyzer] DB', table, e);
-      mostrarDiagnosticoFrontend('DB · ' + table + ' · ' + (e && e.message ? e.message : e));
+      console.error('[Valorius Analyzer] DB', e);
+      mostrarDiagnosticoFrontend('DB · ' + (e && e.message ? e.message : e));
       return [];
     }
   }
@@ -2186,25 +2194,11 @@
     var fecha=new Date(); fecha.setDate(fecha.getDate()-DIAS_COMPARABLES);
     var fechaISO=fecha.toISOString().split('T')[0];
     var results = await Promise.all([
-      azDbSelect(
-        'listing',
-        'area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,habitaciones,banos,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))',
-        function(q) {
-          return q.gte('fecha_registro', fechaISO).gt('area_construccion', 0).gt('precio_original', 0);
-        }
-      ),
-      azDbSelect('dim_colonia', 'colonia_id,zone_id,colonia', function(q) {
-        return q.eq('activo', true).order('colonia');
-      }),
-      azDbSelect('dim_proyecto', 'proyecto_id,proyecto,zone_id,colonia_id', function(q) {
-        return q.eq('activo', true).order('proyecto');
-      }),
-      azDbSelect('dim_zone', 'zone_id,zona,lat,lng', function(q) {
-        return q.eq('activo', true);
-      }),
-      azDbSelect('exchange_rate', 'tasa_usd_hnl,fecha', function(q) {
-        return q.order('fecha', { ascending: false }).limit(1);
-      })
+      azDbSelect('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,habitaciones,banos,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
+      azDbSelect('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
+      azDbSelect('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto'),
+      azDbSelect('/rest/v1/dim_zone?select=zone_id,zona,lat,lng&activo=eq.true'),
+      azDbSelect('/rest/v1/exchange_rate?select=tasa_usd_hnl,fecha&order=fecha.desc&limit=1')
     ]);
     var rows=results[0]||[];
     azColonias  = results[1]||[];
