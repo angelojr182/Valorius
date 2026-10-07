@@ -129,3 +129,19 @@ Las revocaciones de privilegios sobre las tablas internas ya fueron verificadas 
 ### 6. Regla de no eliminación
 
 Ninguna función, tabla, vista o flujo se considerará obsoleto únicamente por su apariencia o por no tener referencias en el repositorio. Antes de desactivar o eliminar se debe comprobar dependencia externa, propósito y efecto sobre producción.
+
+
+### 7. Corrección GIS validada — 2026-10-07
+
+Durante la validación de `geo.get_territory_gis(text)` se detectó un fallo real de resolución de función: el procedimiento tenía `search_path=pg_catalog,geo`, mientras que las funciones PostGIS `ST_Intersects` están instaladas en `core`.
+
+Corrección aplicada:
+- Se mantuvo el `search_path` restringido.
+- Se calificó explícitamente `ST_Intersects` como `core.ST_Intersects`.
+- No se modificaron tablas, datos, RLS, grants ni el contrato JSON de GIS.
+- La función fue ejecutada después de la migración y devolvió correctamente las cuatro estructuras esperadas: `amenaza_inundacion`, `amenaza_ladera`, `areas_protegidas` y `pu_zonas`.
+
+Migración registrada en:
+`docs/database/migration_fix_get_territory_gis.sql`
+
+Estado: **CORREGIDO Y VALIDADO**.
