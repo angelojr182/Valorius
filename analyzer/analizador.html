@@ -698,6 +698,20 @@
   </section>
 </div>
 
+
+<!-- CONTEXTO TERRITORIAL GIS -->
+<section class="panel map-ctx-panel" id="territoryGisPanel" style="display:none;margin-top:16px;">
+  <div class="map-ctx-header">
+    <div>
+      <div class="panel-title">Contexto territorial</div>
+      <p class="map-ctx-desc">Información GIS asociada a la unidad territorial canónica de la propiedad. Es contexto de inversión y no modifica el resultado comercial del análisis.</p>
+    </div>
+    <span class="map-ctx-badge" id="territoryGisStatus"></span>
+  </div>
+  <div id="territoryGisContent" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;"></div>
+  <p class="map-ctx-nota" id="territoryGisSource" style="margin-top:12px;">--</p>
+</section>
+
 <!-- MAPA DE CONTEXTO DE MERCADO -->
 <section class="panel map-ctx-panel" id="mapContextPanel" style="display:none;">
   <div class="map-ctx-header">
@@ -865,6 +879,55 @@
     });
 
     return adapter.resolve(propertyId);
+  }
+
+
+  async function renderTerritoryGisContext() {
+    var panel = document.getElementById('territoryGisPanel');
+    var content = document.getElementById('territoryGisContent');
+    var status = document.getElementById('territoryGisStatus');
+    var source = document.getElementById('territoryGisSource');
+    if (!panel || !content || !status || !source) return;
+
+    panel.style.display = 'none';
+    content.innerHTML = '';
+    status.textContent = '';
+    source.textContent = '--';
+
+    try {
+      var territory = await resolveTerritoryForCurrentProperty();
+      if (!territory || !territory.territoryGis) return;
+
+      lastData.territory = territory;
+      var gis = territory.territoryGis || {};
+      var items = [
+        {label:'Amenaza de inundación', key:'amenaza_inundacion'},
+        {label:'Amenaza de ladera', key:'amenaza_ladera'},
+        {label:'Áreas protegidas', key:'areas_protegidas'},
+        {label:'PU / zonas', key:'pu_zonas'}
+      ];
+
+      items.forEach(function(item) {
+        var value = Array.isArray(gis[item.key]) ? gis[item.key] : [];
+        var card = document.createElement('div');
+        card.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:12px;min-height:76px;';
+        card.innerHTML = '<div style="font-size:11px;color:#94a3b8;margin-bottom:7px;">' + item.label + '</div>' +
+          '<div style="font-size:22px;font-weight:600;color:#e5e7eb;">' + value.length + '</div>' +
+          '<div style="font-size:11px;color:#64748b;">elemento' + (value.length === 1 ? '' : 's') + ' intersectado' + (value.length === 1 ? '' : 's') + '</div>';
+        content.appendChild(card);
+      });
+
+      var total = items.reduce(function(sum, item) {
+        var value = Array.isArray(gis[item.key]) ? gis[item.key] : [];
+        return sum + value.length;
+      }, 0);
+      status.textContent = total + ' elementos GIS';
+      source.textContent = 'Unidad territorial: ' + (territory.nameOfficial || territory.unitId || '--') +
+        ' · Fuente: ' + (territory.source || 'territorial-context');
+      panel.style.display = 'block';
+    } catch (e) {
+      console.warn('[Valorius] No fue posible renderizar contexto GIS:', e);
+    }
   }
 
   // ─── FETCH ────────────────────────────────────────────────
@@ -1445,7 +1508,7 @@
   function ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res) {
     var btn = document.getElementById('cardNext');
     btn.disabled = true; btn.textContent = 'Analizando...';
-    try { renderAnalisis(zoneId, coloniaId, tipo, area, precio, res); }
+    try { renderAnalisis(zoneId, coloniaId, tipo, area, precio, res); renderTerritoryGisContext(); }
     catch(e) { console.error(e); alert('No fue posible completar el analisis. Intenta de nuevo.'); }
     finally  { wizRender(); }
   }
