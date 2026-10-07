@@ -868,19 +868,6 @@
   }
 
   // ─── FETCH ────────────────────────────────────────────────
-  function mostrarDiagnosticoFrontend(mensaje) {
-    try {
-      var box = document.getElementById('valorius-diagnostic');
-      if (!box) {
-        box = document.createElement('div');
-        box.id = 'valorius-diagnostic';
-        box.style.cssText = 'position:fixed;left:10px;right:10px;bottom:10px;z-index:99999;background:#fff1f2;color:#7f1d1d;border:1px solid #fecdd3;border-radius:8px;padding:10px;font:12px/1.4 monospace;max-height:35vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,.15)';
-        document.body.appendChild(box);
-      }
-      box.textContent = 'Diagnóstico Valorius: ' + mensaje;
-    } catch (_) {}
-  }
-
   // Las lecturas del Analyzer usan REST directamente con el JWT
   // validado en validarAutenticacion(). Así el Authorization enviado
   // es explícitamente el access_token del usuario y no la anon key.
@@ -898,14 +885,12 @@
       if (!response.ok) {
         var body = await response.text();
         console.error('[Valorius Analyzer] DB HTTP', response.status, ep, body);
-        mostrarDiagnosticoFrontend('DB HTTP ' + response.status + ' · ' + ep + ' · ' + body.slice(0, 300));
         return [];
       }
       var data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch(e) {
       console.error('[Valorius Analyzer] DB', e);
-      mostrarDiagnosticoFrontend('DB · ' + (e && e.message ? e.message : e));
       return [];
     }
   }
