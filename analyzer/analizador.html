@@ -1416,11 +1416,13 @@
       }
     }
     ejecutarAnalisis(zoneId, coloniaId, tipo, area, precio, res);
+    pendienteAtipico = false;
   };
 
   window.confirmarAnalisisAtipico = function() {
     document.getElementById('alertaAtipica').style.display = 'none';
-    pendienteAtipico = false;
+    // Mantener la marca durante la segunda pasada evita que el mismo
+    // análisis vuelva a disparar la alerta antes de renderizar resultados.
     window.intentarAnalisis();
   };
 
