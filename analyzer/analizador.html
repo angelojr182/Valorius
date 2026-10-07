@@ -888,11 +888,9 @@
 
       var response = await request(token);
 
-      // Si el access token expiró, intentar una única renovación controlada
-      // antes de obligar al usuario a volver a iniciar sesión.
       if (response.status === 401) {
-        var refreshed = await renovarSesionSiEsNecesario();
-        if (refreshed && CURRENT_SESSION && CURRENT_SESSION.access_token) {
+        var renewed = await renovarSesionSiEsNecesario();
+        if (renewed && CURRENT_SESSION && CURRENT_SESSION.access_token) {
           response = await request(CURRENT_SESSION.access_token);
         }
       }
@@ -2104,9 +2102,6 @@
         });
       }
 
-      // Preferir la sesión persistida de Supabase para permitir renovación
-      // automática del access token. Mantener valorius_token como fallback
-      // de compatibilidad con el login existente.
       var sessionResult = await SUPABASE_CLIENT.auth.getSession();
       var session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
 
@@ -2196,7 +2191,6 @@
       return false;
     }
   }
-
 
   // Registrar evento de uso
   async function registrarEvento(evento, extra) {
