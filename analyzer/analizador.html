@@ -877,16 +877,42 @@
       if (!token || token === AZ_SKEY) {
         throw new Error('Sesión autenticada no disponible para Data API');
       }
-      var headers = Object.assign({}, AZ_HDRS, {
-        Authorization: 'Bearer ' + token,
-        'Accept-Profile': 'core'
-      });
-      var response = await fetch(AZ_SURL + ep, {headers: headers});
+
+      async function request(currentToken) {
+        var headers = Object.assign({}, AZ_HDRS, {
+          Authorization: 'Bearer ' + currentToken,
+          'Accept-Profile': 'core'
+        });
+        return fetch(AZ_SURL + ep, {headers: headers});
+      }
+
+      var response = await request(token);
+
+      // Si el access token expiró, intentar una única renovación controlada
+      // antes de obligar al usuario a volver a iniciar sesión.
+      if (response.status === 401) {
+        var refreshed = await renovarSesionSiEsNecesario();
+        if (refreshed && CURRENT_SESSION && CURRENT_SESSION.access_token) {
+          response = await request(CURRENT_SESSION.access_token);
+        }
+      }
+
       if (!response.ok) {
         var body = await response.text();
         console.error('[Valorius Analyzer] DB HTTP', response.status, ep, body);
+        if (response.status === 401) {
+          try {
+            await SUPABASE_CLIENT.auth.signOut({ scope: 'local' });
+          } catch (e) {}
+          try {
+            localStorage.removeItem('valorius_token');
+            localStorage.removeItem('valorius_user');
+          } catch (e) {}
+          window.location.href = LOGIN_URL;
+        }
         return [];
       }
+
       var data = await response.json();
       return Array.isArray(data) ? data : [];
     } catch(e) {
