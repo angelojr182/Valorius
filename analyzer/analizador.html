@@ -2078,90 +2078,37 @@
       return false;
     }
 
-    const { createClient } = supabase;
-    if (!SUPABASE_CLIENT) {
-      SUPABASE_CLIENT = createClient(SECRETS.SURL, SECRETS.SKEY, {
-        db: { schema: 'core' },
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: false
-        },
-        accessToken: async function() {
-          return CURRENT_SESSION ? CURRENT_SESSION.access_token : null;
-        }
-      });
-    }
-
     try {
-      // No usamos localStorage como sustituto de una sesión Supabase.
-      // La API debe recibir un JWT emitido por Auth y vigente.
-      var sessionResult = await SUPABASE_CLIENT.auth.getSession();
-      var session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
-      var tokenSource = 'supabase-session';
+      // El login guarda el access_token emitido por Supabase Auth.
+      // Ese JWT es suficiente para autenticar las consultas REST protegidas.
+      // No usamos la anon key como Authorization y no exigimos reconstruir
+      // una sesión local de supabase-js para poder entrar al Analyzer.
+      var storedToken = null;
+      var storedUser = null;
 
-      if (!session || !session.access_token) {
-        // Intentar una renovación antes de declarar la sesión inválida.
-        var refreshed = await SUPABASE_CLIENT.auth.refreshSession();
-        session = refreshed && refreshed.data ? refreshed.data.session : null;
-      }
+      try {
+        storedToken = localStorage.getItem('valorius_token');
+        storedUser = JSON.parse(localStorage.getItem('valorius_user') || 'null');
+      } catch (e) {}
 
-      // Compatibilidad segura con el flujo de login existente:
-      // el login también guarda valorius_token. No se confía en él ciegamente;
-      // primero se valida directamente contra Supabase Auth.
-      if (!session || !session.access_token) {
-        var storedToken = null;
-        try { storedToken = localStorage.getItem('valorius_token'); } catch (e) {}
-        if (storedToken) {
-          var storedUserResult = await SUPABASE_CLIENT.auth.getUser(storedToken);
-          if (!storedUserResult.error && storedUserResult.data && storedUserResult.data.user) {
-            session = {
-              access_token: storedToken,
-              user: storedUserResult.data.user
-            };
-            tokenSource = 'validated-localStorage-token';
-          }
-        }
-      }
-
-      if (!session || !session.access_token) {
-        console.warn('[Valorius] Analyzer sin sesión/token válido de Supabase; redirigiendo a login');
+      if (!storedToken || storedToken === SECRETS.SKEY) {
+        console.warn('[Valorius] Analyzer sin JWT de usuario; redirigiendo a login');
         window.location.href = LOGIN_URL;
         return false;
       }
 
-      CURRENT_SESSION = session;
-      CURRENT_USER = session.user || null;
+      CURRENT_SESSION = {
+        access_token: storedToken,
+        user: storedUser || null
+      };
+      CURRENT_USER = storedUser || null;
 
-      // El JWT validado del usuario es la identidad para PostgREST.
+      // Todas las consultas REST posteriores usan este JWT.
       AZ_HDRS = Object.assign({}, AZ_HDRS, {
-        Authorization: 'Bearer ' + session.access_token
+        Authorization: 'Bearer ' + storedToken
       });
 
-      // Validación adicional para sesiones nativas; para el fallback ya se validó
-      // el mismo JWT con getUser().
-      var userResult = tokenSource === 'validated-localStorage-token'
-        ? { data: { user: session.user }, error: null }
-        : await SUPABASE_CLIENT.auth.getUser(session.access_token);
-      if (userResult.error || !userResult.data || !userResult.data.user) {
-        console.warn('[Valorius] JWT no válido o expirado; redirigiendo a login');
-        window.location.href = LOGIN_URL;
-        return false;
-      }
-
-      CURRENT_USER = userResult.data.user;
-
-      SUPABASE_CLIENT.auth.onAuthStateChange(function(event, refreshedSession) {
-        if (refreshedSession && refreshedSession.access_token) {
-          CURRENT_SESSION = refreshedSession;
-          CURRENT_USER = refreshedSession.user || CURRENT_USER;
-          AZ_HDRS = Object.assign({}, AZ_HDRS, {
-            Authorization: 'Bearer ' + refreshedSession.access_token
-          });
-        }
-      });
-
-      console.log('[Valorius] Sesión Supabase válida; consultas REST autenticadas como usuario:', CURRENT_USER.email || CURRENT_USER.id);
+      console.log('[Valorius] JWT del login recuperado; consultas REST autenticadas.');
 
       return true;
     } catch (e) {
