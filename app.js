@@ -98,14 +98,12 @@ class DataService {
       if (!res.ok) {
         const body = await res.text();
         console.error('[Valorius Dashboard] HTTP', res.status, endpoint, body);
-        this.showDiagnostic('HTTP ' + res.status + ' · ' + endpoint + ' · ' + body.slice(0, 500));
         return [];
       }
       const data = await res.json();
       return Array.isArray(data) ? data : [];
     } catch (e) {
       console.error('[Valorius Dashboard] FETCH', endpoint, e);
-      this.showDiagnostic('FETCH · ' + endpoint + ' · ' + (e && e.message ? e.message : e));
       return [];
     }
   }
