@@ -1,3 +1,12 @@
+## 2026-10-07 — Contexto territorial en análisis manual
+
+- El Analyzer ahora resuelve contexto territorial también en análisis manual cuando existe una correspondencia validada entre la colonia seleccionada y `geo.territorial_unit`.
+- Se mantiene el flujo directo `property_id → territorial_unit_id → GIS`.
+- Las colonias sin correspondencia o pendientes permanecen sin puente territorial.
+- Se registra ADR-0005 y el puente nullable `core.dim_colonia.territorial_unit_id`.
+- El contexto GIS no modifica scoring, precio/m², comparables, IPR ni IAO.
+- Validación: 161 propiedades, 149 con territorio directo, 12 sin territorio directo y 0 conflictos propiedad/colonia.
+
 # CHANGELOG — Valorius Dashboard V2
 
 > Formato: `[FECHA] — TIPO — Descripción`
