@@ -55,7 +55,8 @@
         type: territory.type || '',
         municipalityCode: territory.municipalityCode || '',
         status: territory.status || '',
-        source: territory.source || ''
+        source: territory.source || '',
+        territoryGis: territory.territoryGis || null
       } : null,
       result: {
         veredicto: category,
