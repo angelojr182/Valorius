@@ -708,7 +708,7 @@
     </div>
     <span class="map-ctx-badge" id="territoryGisStatus"></span>
   </div>
-  <div id="territoryGisContent" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;"></div>
+  <div id="territoryGisContent" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;"></div>
   <p class="map-ctx-nota" id="territoryGisSource" style="margin-top:12px;">--</p>
 </section>
 
@@ -934,6 +934,138 @@
     status.textContent = '';
     source.textContent = '--';
 
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function titleCase(value) {
+      var text = String(value == null ? '' : value).trim().toLowerCase();
+      if (!text) return '';
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function uniqueThreatLevels(rows) {
+      var seen = {};
+      var levels = [];
+      (Array.isArray(rows) ? rows : []).forEach(function(row) {
+        var level = row && row.amenaza != null ? String(row.amenaza).trim().toLowerCase() : '';
+        if (level && !seen[level]) {
+          seen[level] = true;
+          levels.push(level);
+        }
+      });
+      return levels;
+    }
+
+    function makeSourceLink(label, url) {
+      return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer" style="color:#c59a52;text-decoration:none;">' +
+        escapeHtml(label) + '</a>';
+    }
+
+    function renderThreatCard(config, rows) {
+      var values = uniqueThreatLevels(rows);
+      var identified = values.length > 0;
+      var result = identified ? values.map(titleCase).join(' · ') : 'No identificada';
+      var finding = identified
+        ? 'La unidad territorial asociada a la propiedad intersecta una zona registrada con amenaza ' + values.map(titleCase).join(' y ').toLowerCase() + ' ' + config.subject + '.'
+        : 'No se identificó una zona de amenaza de ' + config.subject + ' en la información territorial consultada.';
+
+      var meaning;
+      if (!identified) {
+        meaning = 'La información consultada no muestra una coincidencia territorial para esta capa. Esto no significa que la propiedad esté libre de riesgo.';
+      } else if (values.length === 1 && values[0] === 'baja') {
+        meaning = 'Nivel bajo dentro de la clasificación de amenaza. La fuente advierte que pueden presentarse daños ocasionales.';
+      } else if (values.length === 1 && values[0] === 'media') {
+        meaning = 'Nivel medio dentro de la clasificación de amenaza. La fuente contempla restricciones de uso que deben revisarse según el caso.';
+      } else if (values.length === 1 && values[0] === 'alta') {
+        meaning = 'Nivel alto dentro de la clasificación de amenaza. La fuente contempla restricciones importantes que requieren revisión especial.';
+      } else {
+        meaning = 'Se encontraron una o más clasificaciones de amenaza en la información territorial consultada. Deben revisarse sus detalles antes de tomar una decisión.';
+      }
+
+      var importance = identified
+        ? 'Conviene revisar las condiciones del terreno y las restricciones aplicables antes de comprar, desarrollar o modificar el inmueble.'
+        : 'La ausencia de coincidencia en esta capa no sustituye una revisión técnica del inmueble o del entorno.';
+
+      var sourceHtml = makeSourceLink('SIMET / AMDC', config.simetUrl);
+      if (config.sinitUrl) {
+        sourceHtml += ' · ' + makeSourceLink('Referencia SINIT', config.sinitUrl);
+      }
+
+      var detailHtml =
+        '<details style="margin-top:10px;">' +
+          '<summary style="cursor:pointer;color:#cbd5e1;font-size:11px;">Ver detalle</summary>' +
+          '<div style="margin-top:10px;font-size:11px;line-height:1.55;color:#94a3b8;">' +
+            '<div><strong style="color:#e2e8f0;">Qué significa:</strong> ' + escapeHtml(meaning) + '</div>' +
+            '<div style="margin-top:8px;"><strong style="color:#e2e8f0;">Qué encontró Valorius:</strong> ' + escapeHtml(finding) + '</div>' +
+            '<div style="margin-top:8px;"><strong style="color:#e2e8f0;">Por qué importa:</strong> ' + escapeHtml(importance) + '</div>' +
+            '<div style="margin-top:8px;"><strong style="color:#e2e8f0;">Fuente:</strong> ' + sourceHtml + '</div>' +
+            '<div style="margin-top:8px;color:#64748b;"><strong style="color:#94a3b8;">Límite:</strong> este resultado describe contexto territorial asociado a la unidad territorial y no determina por sí solo la afectación específica de la parcela.</div>' +
+          '</div>' +
+        '</details>';
+
+      var card = document.createElement('div');
+      card.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:12px;min-height:118px;';
+      card.innerHTML =
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:7px;">' + escapeHtml(config.label) + '</div>' +
+        '<div style="font-size:19px;font-weight:700;color:' + (identified ? '#e2b05c' : '#e5e7eb') + ';">' + escapeHtml(result) + '</div>' +
+        '<div style="font-size:11px;color:#64748b;margin-top:4px;">' + (identified ? 'Coincidencia territorial identificada' : 'No identificada') + '</div>' +
+        detailHtml;
+      content.appendChild(card);
+    }
+
+    function renderProtectedCard(rows) {
+      var identified = Array.isArray(rows) && rows.length > 0;
+      var first = identified ? rows[0] : null;
+      var result = identified ? 'Identificada' : 'No identificada';
+
+      var finding = identified
+        ? 'La unidad territorial asociada a la propiedad intersecta un área registrada como protegida.'
+        : 'No se identificó un área protegida en la información territorial consultada.';
+
+      var detailData = '';
+      if (identified) {
+        var names = rows.map(function(row){ return row && row.nombre ? String(row.nombre) : ''; }).filter(Boolean);
+        var categories = rows.map(function(row){ return row && row.categoria ? String(row.categoria) : ''; }).filter(Boolean);
+        var legal = rows.map(function(row){ return row && row.inst_legal ? String(row.inst_legal) : ''; }).filter(Boolean);
+        var zones = rows.map(function(row){ return row && row.zona ? String(row.zona) : ''; }).filter(Boolean);
+        var areas = rows.map(function(row){ return row && row.area_ha != null ? String(row.area_ha) : ''; }).filter(Boolean);
+
+        if (names.length) detailData += '<div><strong style="color:#e2e8f0;">Nombre:</strong> ' + escapeHtml(names.join(' · ')) + '</div>';
+        if (categories.length) detailData += '<div style="margin-top:5px;"><strong style="color:#e2e8f0;">Categoría:</strong> ' + escapeHtml(categories.join(' · ')) + '</div>';
+        if (legal.length) detailData += '<div style="margin-top:5px;"><strong style="color:#e2e8f0;">Instrumento legal:</strong> ' + escapeHtml(legal.join(' · ')) + '</div>';
+        if (zones.length) detailData += '<div style="margin-top:5px;"><strong style="color:#e2e8f0;">Zona:</strong> ' + escapeHtml(zones.join(' · ')) + '</div>';
+        if (areas.length) detailData += '<div style="margin-top:5px;"><strong style="color:#e2e8f0;">Área registrada:</strong> ' + escapeHtml(areas.join(' · ')) + ' ha</div>';
+      }
+
+      var detailHtml =
+        '<details style="margin-top:10px;">' +
+          '<summary style="cursor:pointer;color:#cbd5e1;font-size:11px;">Ver detalle</summary>' +
+          '<div style="margin-top:10px;font-size:11px;line-height:1.55;color:#94a3b8;">' +
+            '<div><strong style="color:#e2e8f0;">Qué significa:</strong> ' + escapeHtml(identified ? 'Existe una intersección con un área registrada oficialmente como protegida.' : 'La información consultada no muestra una coincidencia territorial para esta capa.') + '</div>' +
+            '<div style="margin-top:8px;"><strong style="color:#e2e8f0;">Qué encontró Valorius:</strong> ' + escapeHtml(finding) + '</div>' +
+            (identified && detailData ? '<div style="margin-top:8px;">' + detailData + '</div>' : '') +
+            '<div style="margin-top:8px;"><strong style="color:#e2e8f0;">Por qué importa:</strong> ' + escapeHtml(identified ? 'Conviene revisar el nombre, categoría e instrumento legal del área para conocer las condiciones y restricciones aplicables.' : 'La ausencia de coincidencia en esta capa no sustituye una revisión de la normativa aplicable al inmueble.') + '</div>' +
+            '<div style="margin-top:8px;"><strong style="color:#e2e8f0;">Fuente:</strong> ' + makeSourceLink('SIMET / AMDC — Áreas protegidas DC', 'https://mapas.simet.amdc.hn/catalogue/csw_to_extra_format/805b2f5a-8ad1-11ec-806b-a180499e334c/areas-protegidas-dc.html') + '</div>' +
+            '<div style="margin-top:8px;color:#64748b;"><strong style="color:#94a3b8;">Límite:</strong> este resultado describe contexto territorial asociado a la unidad territorial y no determina por sí solo que la parcela esté dentro del área protegida.</div>' +
+          '</div>' +
+        '</details>';
+
+      var card = document.createElement('div');
+      card.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:12px;min-height:118px;';
+      card.innerHTML =
+        '<div style="font-size:11px;color:#94a3b8;margin-bottom:7px;">Áreas protegidas</div>' +
+        '<div style="font-size:19px;font-weight:700;color:' + (identified ? '#e2b05c' : '#e5e7eb') + ';">' + result + '</div>' +
+        '<div style="font-size:11px;color:#64748b;margin-top:4px;">' + (identified ? rows.length + ' área' + (rows.length === 1 ? '' : 's') + ' registrada' + (rows.length === 1 ? '' : 's') : 'No identificada') + '</div>' +
+        detailHtml;
+      content.appendChild(card);
+    }
+
     try {
       var territory = await resolveTerritoryForCurrentProperty(null, lastData && lastData.colonia_id);
       var assignmentSource = territory && territory.assignmentSource ? territory.assignmentSource : null;
@@ -951,30 +1083,29 @@
 
       lastData.territory = territory;
       var gis = territory.territoryGis || {};
-      var items = [
-        {label:'Amenaza de inundación', key:'amenaza_inundacion'},
-        {label:'Amenaza de ladera', key:'amenaza_ladera'},
-        {label:'Áreas protegidas', key:'areas_protegidas'},
-        {label:'PU / zonas', key:'pu_zonas'}
-      ];
+      var inundacion = Array.isArray(gis.amenaza_inundacion) ? gis.amenaza_inundacion : [];
+      var ladera = Array.isArray(gis.amenaza_ladera) ? gis.amenaza_ladera : [];
+      var protegidas = Array.isArray(gis.areas_protegidas) ? gis.areas_protegidas : [];
 
-      items.forEach(function(item) {
-        var value = Array.isArray(gis[item.key]) ? gis[item.key] : [];
-        var card = document.createElement('div');
-        card.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:12px;min-height:76px;';
-        card.innerHTML = '<div style="font-size:11px;color:#94a3b8;margin-bottom:7px;">' + item.label + '</div>' +
-          '<div style="font-size:22px;font-weight:600;color:#e5e7eb;">' + value.length + '</div>' +
-          '<div style="font-size:11px;color:#64748b;">elemento' + (value.length === 1 ? '' : 's') + ' intersectado' + (value.length === 1 ? '' : 's') + '</div>';
-        content.appendChild(card);
-      });
+      renderThreatCard({
+        label: 'Amenaza de inundación',
+        subject: 'de inundación',
+        simetUrl: 'https://mapas.simet.amdc.hn/',
+        sinitUrl: 'https://sinit.hn/download/89/boletines-ot/12886/boletin-zonas-de-riesgo.pdf'
+      }, inundacion);
 
-      var total = items.reduce(function(sum, item) {
-        var value = Array.isArray(gis[item.key]) ? gis[item.key] : [];
-        return sum + value.length;
-      }, 0);
-      status.textContent = total + ' elementos GIS';
+      renderThreatCard({
+        label: 'Amenaza de ladera',
+        subject: 'de ladera',
+        simetUrl: 'https://mapas.simet.amdc.hn/maps/49/metadata_detail',
+        sinitUrl: 'https://sinit.hn/download/89/boletines-ot/12886/boletin-zonas-de-riesgo.pdf'
+      }, ladera);
+
+      renderProtectedCard(protegidas);
+
+      status.textContent = '3 indicadores territoriales';
       source.textContent = 'Unidad territorial: ' + (territory.nameOfficial || territory.unitId || '--') +
-        ' · Fuente: ' + (territory.source || 'territorial-context') +
+        ' · Fuente: ' + (territory.source || 'SIMET / AMDC') +
         ' · Base de asignación: ' + (assignmentSource || 'territorio canónico');
       panel.style.display = 'block';
     } catch (e) {
