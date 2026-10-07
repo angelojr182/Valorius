@@ -833,7 +833,7 @@
   // ─── TERRITORIO CANÓNICO ─────────────────────────────────
   async function resolveTerritoryForCurrentProperty() {
     var propertyId = new URLSearchParams(window.location.search).get('property_id') || null;
-    if (!propertyId || !window.TerritorialAdapter) return null;
+    var coloniaId = arguments.length > 1 && arguments[1] ? arguments[1] : (lastData && lastData.colonia_id) || null;
 
     var surl = (typeof SECRETS !== 'undefined' && SECRETS.SURL) || '';
     var skey = (typeof SECRETS !== 'undefined' && SECRETS.SKEY) || '';
@@ -845,40 +845,80 @@
       Accept: 'application/json'
     };
 
-    var propertyHeaders = {
+    var coreHeaders = {
       apikey: skey,
       Authorization: AZ_HDRS.Authorization,
       Accept: 'application/json',
       'Accept-Profile': 'core'
     };
 
-    var adapter = new window.TerritorialAdapter({
-      fetchProperty: function(propertyId) {
-        return fetch(
-          surl + '/rest/v1/property?property_id=eq.' +
-          encodeURIComponent(propertyId) +
-          '&select=property_id,territorial_unit_id&limit=1',
-          {headers: propertyHeaders}
-        ).then(async function(response) {
-          return { ok: response.ok, data: await response.json() };
-        });
-      },
-      fetchTerritory: function(unitId) {
-        return fetch(
-          surl + '/functions/v1/territory-context?unit_id=' +
-          encodeURIComponent(unitId),
-          {headers: headers}
-        ).then(async function(response) {
-          var payload = await response.json();
-          return {
-            ok: response.ok && payload && payload.ok === true,
-            data: payload && Array.isArray(payload.data) ? payload.data : []
-          };
-        });
-      }
-    });
+    function fetchTerritory(unitId) {
+      return fetch(
+        surl + '/functions/v1/territory-context?unit_id=' +
+        encodeURIComponent(unitId),
+        {headers: headers}
+      ).then(async function(response) {
+        var payload = await response.json();
+        return {
+          ok: response.ok && payload && payload.ok === true,
+          data: payload && Array.isArray(payload.data) ? payload.data : []
+        };
+      });
+    }
 
-    return adapter.resolve(propertyId);
+    if (propertyId && window.TerritorialAdapter) {
+      var adapter = new window.TerritorialAdapter({
+        fetchProperty: function(propertyId) {
+          return fetch(
+            surl + '/rest/v1/property?property_id=eq.' +
+            encodeURIComponent(propertyId) +
+            '&select=property_id,territorial_unit_id&limit=1',
+            {headers: coreHeaders}
+          ).then(async function(response) {
+            return { ok: response.ok, data: await response.json() };
+          });
+        },
+        fetchTerritory: fetchTerritory
+      });
+      var propertyTerritory = await adapter.resolve(propertyId);
+      if (propertyTerritory) propertyTerritory.assignmentSource = 'propiedad registrada';
+      return propertyTerritory;
+    }
+
+    // Análisis manual: usar únicamente la correspondencia territorial
+    // validada de la colonia seleccionada. Nunca inferir desde zone_id.
+    if (!coloniaId) return null;
+
+    var coloniaResponse = await fetch(
+      surl + '/rest/v1/dim_colonia?colonia_id=eq.' +
+      encodeURIComponent(coloniaId) +
+      '&select=colonia_id,colonia,territorial_unit_id&limit=1',
+      {headers: coreHeaders}
+    );
+    if (!coloniaResponse.ok) return null;
+
+    var coloniaRows = await coloniaResponse.json();
+    var coloniaRow = Array.isArray(coloniaRows) ? coloniaRows[0] : null;
+    var unitId = coloniaRow && coloniaRow.territorial_unit_id;
+    if (!unitId) return null;
+
+    var territoryResponse = await fetchTerritory(unitId);
+    if (!territoryResponse.ok || !territoryResponse.data.length) return null;
+
+    var row = territoryResponse.data[0] || {};
+    return {
+      propertyId: null,
+      territorialUnitId: unitId,
+      unitId: row.unit_id || unitId,
+      nameOfficial: row.name_official || '',
+      type: row.type || '',
+      municipalityCode: row.municipality_code || '',
+      status: row.status || '',
+      source: row.source || '',
+      territoryGis: row.territory_gis || null,
+      assignmentSource: 'colonia seleccionada',
+      assignmentColonia: coloniaRow.colonia || ''
+    };
   }
 
 
@@ -895,8 +935,19 @@
     source.textContent = '--';
 
     try {
-      var territory = await resolveTerritoryForCurrentProperty();
-      if (!territory || !territory.territoryGis) return;
+      var territory = await resolveTerritoryForCurrentProperty(null, lastData && lastData.colonia_id);
+      var assignmentSource = territory && territory.assignmentSource ? territory.assignmentSource : null;
+
+      if (!territory || !territory.territoryGis) {
+        status.textContent = 'No disponible';
+        content.innerHTML =
+          '<div style="grid-column:1 / -1;background:rgba(255,255,255,.02);border:1px solid rgba(100,116,139,.15);border-radius:10px;padding:14px;color:#94a3b8;font-size:12px;line-height:1.5;">' +
+          'Contexto territorial no disponible para esta ubicación.' +
+          '</div>';
+        source.textContent = 'Base de asignación: ' + (lastData && lastData.colonia_id ? 'colonia seleccionada' : 'sin colonia seleccionada');
+        panel.style.display = 'block';
+        return;
+      }
 
       lastData.territory = territory;
       var gis = territory.territoryGis || {};
@@ -923,7 +974,8 @@
       }, 0);
       status.textContent = total + ' elementos GIS';
       source.textContent = 'Unidad territorial: ' + (territory.nameOfficial || territory.unitId || '--') +
-        ' · Fuente: ' + (territory.source || 'territorial-context');
+        ' · Fuente: ' + (territory.source || 'territorial-context') +
+        ' · Base de asignación: ' + (assignmentSource || 'territorio canónico');
       panel.style.display = 'block';
     } catch (e) {
       console.warn('[Valorius] No fue posible renderizar contexto GIS:', e);
@@ -2294,7 +2346,7 @@
     var fechaISO=fecha.toISOString().split('T')[0];
     var results = await Promise.all([
       azDbSelect('/rest/v1/listing?select=area_construccion,precio_original,moneda,tipo_cambio,property(zone_id,colonia_id,proyecto_id,habitaciones,banos,dim_zone(zona),dim_colonia(colonia),dim_property_type(tipo_inmueble))&fecha_registro=gte.'+fechaISO+'&area_construccion=gt.0&precio_original=gt.0'),
-      azDbSelect('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia&activo=eq.true&order=colonia'),
+      azDbSelect('/rest/v1/dim_colonia?select=colonia_id,zone_id,colonia,territorial_unit_id&activo=eq.true&order=colonia'),
       azDbSelect('/rest/v1/dim_proyecto?select=proyecto_id,proyecto,zone_id,colonia_id&activo=eq.true&order=proyecto'),
       azDbSelect('/rest/v1/dim_zone?select=zone_id,zona,lat,lng&activo=eq.true'),
       azDbSelect('/rest/v1/exchange_rate?select=tasa_usd_hnl,fecha&order=fecha.desc&limit=1')
