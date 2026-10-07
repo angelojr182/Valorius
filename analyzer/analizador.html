@@ -2066,37 +2066,81 @@
     }
 
     try {
-      // El login guarda el access_token emitido por Supabase Auth.
-      // Ese JWT es suficiente para autenticar las consultas REST protegidas.
-      // No usamos la anon key como Authorization y no exigimos reconstruir
-      // una sesión local de supabase-js para poder entrar al Analyzer.
-      var storedToken = null;
-      var storedUser = null;
+      if (!SUPABASE_CLIENT) {
+        const { createClient } = supabase;
+        SUPABASE_CLIENT = createClient(SECRETS.SURL, SECRETS.SKEY, {
+          db: { schema: 'core' },
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: false
+          }
+        });
+      }
 
-      try {
-        storedToken = localStorage.getItem('valorius_token');
-        storedUser = JSON.parse(localStorage.getItem('valorius_user') || 'null');
-      } catch (e) {}
+      // Preferir la sesión persistida de Supabase para permitir renovación
+      // automática del access token. Mantener valorius_token como fallback
+      // de compatibilidad con el login existente.
+      var sessionResult = await SUPABASE_CLIENT.auth.getSession();
+      var session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
 
-      if (!storedToken || storedToken === SECRETS.SKEY) {
-        console.warn('[Valorius] Analyzer sin JWT de usuario; redirigiendo a login');
+      if (!session || !session.access_token) {
+        var refreshed = await SUPABASE_CLIENT.auth.refreshSession();
+        session = refreshed && refreshed.data ? refreshed.data.session : null;
+      }
+
+      if (!session || !session.access_token) {
+        var storedToken = null;
+        var storedUser = null;
+        try {
+          storedToken = localStorage.getItem('valorius_token');
+          storedUser = JSON.parse(localStorage.getItem('valorius_user') || 'null');
+        } catch (e) {}
+
+        if (storedToken && storedToken !== SECRETS.SKEY) {
+          session = { access_token: storedToken, user: storedUser || null };
+        }
+      }
+
+      if (!session || !session.access_token || session.access_token === SECRETS.SKEY) {
+        console.warn('[Valorius] Analyzer sin sesión autenticada; redirigiendo a login');
         window.location.href = LOGIN_URL;
         return false;
       }
 
-      CURRENT_SESSION = {
-        access_token: storedToken,
-        user: storedUser || null
-      };
-      CURRENT_USER = storedUser || null;
-
-      // Todas las consultas REST posteriores usan este JWT.
+      CURRENT_SESSION = session;
+      CURRENT_USER = session.user || null;
       AZ_HDRS = Object.assign({}, AZ_HDRS, {
-        Authorization: 'Bearer ' + storedToken
+        Authorization: 'Bearer ' + session.access_token
       });
 
-      console.log('[Valorius] JWT del login recuperado; consultas REST autenticadas.');
+      try {
+        localStorage.setItem('valorius_token', session.access_token);
+        if (session.user) localStorage.setItem('valorius_user', JSON.stringify(session.user));
+      } catch (e) {}
 
+      SUPABASE_CLIENT.auth.onAuthStateChange(function(event, refreshedSession) {
+        if (refreshedSession && refreshedSession.access_token) {
+          CURRENT_SESSION = refreshedSession;
+          CURRENT_USER = refreshedSession.user || CURRENT_USER;
+          AZ_HDRS = Object.assign({}, AZ_HDRS, {
+            Authorization: 'Bearer ' + refreshedSession.access_token
+          });
+          try {
+            localStorage.setItem('valorius_token', refreshedSession.access_token);
+            if (refreshedSession.user) localStorage.setItem('valorius_user', JSON.stringify(refreshedSession.user));
+          } catch (e) {}
+        } else if (event === 'SIGNED_OUT') {
+          CURRENT_SESSION = null;
+          CURRENT_USER = null;
+          try {
+            localStorage.removeItem('valorius_token');
+            localStorage.removeItem('valorius_user');
+          } catch (e) {}
+        }
+      });
+
+      console.log('[Valorius] Sesión autenticada disponible para consultas REST.');
       return true;
     } catch (e) {
       console.error('[Valorius] Error en autenticación:', e);
@@ -2104,6 +2148,29 @@
       return false;
     }
   }
+
+  async function renovarSesionSiEsNecesario() {
+    if (!SUPABASE_CLIENT) return false;
+    try {
+      var refreshed = await SUPABASE_CLIENT.auth.refreshSession();
+      var session = refreshed && refreshed.data ? refreshed.data.session : null;
+      if (!session || !session.access_token) return false;
+      CURRENT_SESSION = session;
+      CURRENT_USER = session.user || CURRENT_USER;
+      AZ_HDRS = Object.assign({}, AZ_HDRS, {
+        Authorization: 'Bearer ' + session.access_token
+      });
+      try {
+        localStorage.setItem('valorius_token', session.access_token);
+        if (session.user) localStorage.setItem('valorius_user', JSON.stringify(session.user));
+      } catch (e) {}
+      return true;
+    } catch (e) {
+      console.warn('[Valorius] No fue posible renovar la sesión:', e);
+      return false;
+    }
+  }
+
 
   // Registrar evento de uso
   async function registrarEvento(evento, extra) {
