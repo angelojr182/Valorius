@@ -1,3 +1,10 @@
+## 2026-10-07 — Mejora de contexto GIS en Analyzer
+
+- El bloque de contexto territorial ahora presenta resultados comprensibles para usuario final en inundación, ladera y áreas protegidas.
+- Se reemplazan los conteos técnicos de intersecciones por estados interpretables y detalle expandible.
+- Se mantienen las reglas de contexto territorial: sin inferir riesgo predial, sin modificar scoring y sin exponer PU/zoning hasta cerrar su semántica oficial.
+- Se conservan fuente, base de asignación y límites de interpretación.
+
 ## 2026-10-07 — Contexto territorial en análisis manual
 
 - El Analyzer ahora resuelve contexto territorial también en análisis manual cuando existe una correspondencia validada entre la colonia seleccionada y `geo.territorial_unit`.
