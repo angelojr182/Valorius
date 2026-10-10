@@ -30,6 +30,9 @@
 
 ## ⚡ SESIÓN ACTIVA
 ```
+Fecha actual     : 2026-09-05
+Proyecto         : Valorius — arquitectura de datos + catálogo territorial + mapeo DB→SIMET
+Estado general   : DB→SIMET cerrado; transición controlada hacia Fase A de la nueva arquitectura
 Fecha actual     : 2026-08-23
 Proyecto         : Valorius — arquitectura de datos + catálogo territorial + mapeo DB→SIMET
 Estado general   : transición hacia la nueva arquitectura profesional de Valorius
@@ -188,6 +191,18 @@ PRÓXIMO PASO
 
 ## 📋 LOG DE SESIONES
 
+## 2026-09-05 — CIERRE DB→SIMET Y TRANSICIÓN A FASE A
+
+- Se actualizó el estado operativo del mapeo DB→SIMET.
+- `core.property`: 161 registros; 149 con `territorial_unit_id` y 12 sin correspondencia territorial segura en el catálogo SIMET.
+- Los casos sin correspondencia no se fuerzan: permanecen NULL en DB.
+- Bulevar Morazán, propiedad de 108 m² (`080101709`), quedó mapeado a `0801-COL-0418 — BARRIO PUEBLO NUEVO` con evidencia documental explícita del anuncio.
+- Se cerraron como `SIN_CORRESPONDENCIA` los casos donde la evidencia geográfica/documental no permite una equivalencia segura con SIMET: Aldea de Guasculile/Residencial Los Olivos, Altos de Zambrano, Colonia Guadalupe López Villanueva, Residencial Hacienda Real, Residencial Mirador de los Hidalgos, Residencial Quinta Isabel y los registros de Residencial Villa Elena.
+- Boulevard Fuerzas Armadas permanece sin mapeo seguro: el anuncio referencia Jardines del Country, entidad que no aparece en el catálogo SIMET.
+- Bulevar Morazán de 127 m² permanece sin mapeo por falta de evidencia suficiente para identificar la entidad territorial exacta.
+- No se realizaron cambios adicionales de DB durante este cierre.
+- La extracción SIMET se considera cerrada; la siguiente etapa territorial es la auditoría/normalización ya definida y, en paralelo según el plan vigente, la transición hacia Fase A de la nueva arquitectura.
+- Próximo paso: consolidar el cierre documental del mapeo y comenzar Fase A únicamente después de validar el modelo lógico y contar con autorización para cambios físicos en DB.
 ## 2026-08-23 — CONTEXTO ACTUALIZADO PARA NUEVO CHAT
 
 - Se redujo la gobernanza documental a DOS documentos principales:
@@ -451,6 +466,8 @@ gh CLI              : NO instalado — usar git nativo
 SELECT
   (SELECT COUNT(*) FROM core.property) as properties,
   (SELECT COUNT(*) FROM core.listing) as listings;
+-- Estado documentado previamente: 145 / 145
+-- Nota: verificar conteo en Supabase antes de cualquier nueva decisión operativa.
 -- Estado actual: 145 / 145
 ```
 
@@ -981,7 +998,6 @@ Permite conocer el esquema de una capa:
 - obligatoriedad/nulabilidad.
 
 ### GetFeature
-
 Es la operación utilizada para obtener los registros reales de una capa.
 
 ### CSW / pycsw
@@ -1980,7 +1996,6 @@ Cuando todas las extracciones estén guardadas:
 # CIERRE DE EXTRACCIÓN — SIMET
 
 **Estado oficial: FINALIZADA Y CERRADA.**
-
 La extracción de SIMET para este ciclo queda cerrada. Se completaron las capas validadas que correspondían a la fase de extracción y se consolidó el maestro auditado.
 
 Resultados de cierre:
